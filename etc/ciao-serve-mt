@@ -1,0 +1,57 @@
+#!/usr/bin/env ciao-shell
+% -*- mode: ciao; -*-
+
+%! \title Fake multi-threaded ciao-serve
+%
+%  \module This is a fake version of `ciao-serve` that supports
+%  simultaneous HTTP requests. Only usable for serving static pages
+%  from `build/site`.
+% 
+%  **Why?**: Some WASM applications are not properly loaded in Chrome
+%  due to deadlocks in single-threaded HTTP server implementations.
+%  (like the current `ciao-serve` or Python `SimpleHTTPServer`).
+
+:- use_package(fsyntax).
+:- use_module(library(system), [cd/1]).
+:- use_module(library(process), [process_call/3]).
+:- use_module(library(format), [format/3]).
+:- use_module(library(bundle/bundle_paths), [bundle_path/3]).
+
+main(Args) :- serve(Args).
+
+help_msg("Usage: ciao-serve-mt [-p Port]   (only static contents!)
+
+").
+
+help :-
+    help_msg(Msg),
+    format(user_error, "~s", [Msg]).
+
+serve_banner(Port) :-
+    format(user_error, "   Serving CIAOROOT/build/site files (only static contents!)~n", []),
+    format(user_error, "   Server reachable at http://localhost:~w~n", [Port]).
+
+serve([X]) :- ( X = help ; X = '-h' ; X = '--help' ), !,
+    help.
+serve(Args) :-
+    ( Args = ['-p', PortAtm|Rest] ->
+        atom_number(PortAtm, Port)
+    ; % (leave Port unbound)
+      Rest = Args
+    ),
+    Rest = [],
+    % Select default port
+    ( var(Port) -> Port = 8001 ; true ),
+    serve_at_port(Port).
+
+:- use_module(ciaobld(config_common), [site_root_dir/1]).
+
+serve_at_port(Port) :-
+    SiteDir = ~site_root_dir,
+    cd(SiteDir),
+    format(user_error, "=> starting HTTP server~n", []),
+    serve_banner(Port),
+    atom_number(PortAtm, Port),
+    process_call(path(python3), [~bundle_path(ciao_playground, 'etc/mt-httpd.py'), PortAtm], [status(ExitCode)]),
+    format(user_error, "=> HTTP server finished with exit code ~w~n", [ExitCode]),
+    halt(ExitCode).

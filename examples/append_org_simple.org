@@ -1,0 +1,13 @@
+#+OPTIONS:   toc:nil num:0
+
+* The append example
+
+This is a classic example of a Prolog program, which appends two lists:
+
+#+BEGIN_SRC ciao 
+app([],X,X).
+app([X|Y],Z,[X|W]) :- app(Y,Z,W).
+#+END_SRC
+
+Try now [[https://ciao-lang.org/playground/#app(%5B%5D,X,X).%0Aapp(%5BX%7CY%5D,Z,%5BX%7CW%5D)%20:-%0A%20%20%20%20%20app(Y,Z,W).%0A][running it!]]
+

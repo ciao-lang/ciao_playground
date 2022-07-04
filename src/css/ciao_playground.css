@@ -1,0 +1,236 @@
+/*
+ * Playground (standalone) stylesheet
+ *
+ * (c) 2022 The Ciao Development Team
+ */
+
+/* Defining variables */
+html {
+  --header-menu: #4263AB;
+}
+
+html[data-theme='dark'] {
+  --header-menu: #73869C;
+}
+
+/* --------------------------------------------------------------------------- */
+/* Cover screen when loading is too slow */
+
+#cover {
+    padding: 24px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    z-index: 999;
+    font-size: 16px;
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
+    background: #FFFFFF;
+    color: #111111;
+}
+#covermsg {
+    opacity: 1;
+    animation-name: fadeInOpacity;
+    animation-iteration-count: 1;
+    animation-timing-function: ease-in;
+    animation-duration: 2s;
+}
+
+@media (prefers-color-scheme: dark) {
+    #cover {
+        background: #23272D;
+        color: #AFBAC6;
+    }
+}
+
+/* --------------------------------------------------------------------------- */
+
+body {
+  display: flex;
+  flex-flow: column;
+  height: 100vh;
+  margin: 0px;
+  padding: 8px;
+  box-sizing: border-box; 
+}
+
+/* --------------------------------------------------------------------------- */
+/* Header */
+
+.title h1 {
+  font-family: -apple-system,Helvetica,Arial,sans-serif;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: bold;
+  font-size: 26px;
+  color: var(--header);
+  margin-top: 10px;
+  margin-bottom: 15px;
+  margin-left: 5px;
+  display: inline-block;
+}
+
+#logo {
+  max-width: 80px;
+  object-fit: cover;
+  margin-bottom: -2px;
+  margin-left: 3px;
+  display: inline-block;
+}
+
+.title a {
+  text-decoration: none;
+}
+
+.header {
+  margin: 0px;
+  padding: 0px;
+  flex: 0 1 auto;
+  margin-bottom: -4px; /* keep closer to menu */
+}
+
+/* --------------------------------------------------------------------------- */
+/* Top right header */
+
+.right-header {
+  text-align: right;
+  float: right;
+  /* padding: 0.5em; */
+  /* margin-left: 5px; */
+  /* margin-right: 5px; */
+  margin-top: 16px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.right-header li {
+  list-style: none;
+  display: inline-block;
+  margin-left: 20px;
+}
+
+.right-header li a {
+  font-family: -apple-system,Helvetica,Arial,sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--header-menu);
+}
+
+.right-header li a:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------- */
+
+.header-icon-img {
+  height: 22.5px;
+  width: 22.5px;
+  transition: all 0.3s ease;
+  vertical-align: middle;
+  margin-top: -5px;
+}
+
+.header-icon-img:hover {
+  transform: scale(1.1);
+}
+
+/* --------------------------------------------------------------------------- */
+/* Modal screen */
+
+#modal-screen {
+    background-color: rgba(0,0,0,0.5);
+    position: fixed;
+    z-index: 9001;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    padding-top: 96px;
+}
+
+#modal-content {
+    margin: auto;
+    padding: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: calc(80% - 96px);
+    /* border: 1px solid var(--border); */
+    border-radius: 6px;
+    /* box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); */
+    /* box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22); */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    z-index: 9002;
+    background-color: var(--dropdown-bg);
+    overflow-y: auto;
+}
+
+.big-button-wrapper {
+    width: 100%;
+    height: 50px;
+    padding: 0px;
+    marging: 0px;
+    justify-content: center;
+    display: flex;  
+    align-items: center;  
+}
+.big-button {
+  color: white;
+  width: 180px;
+  height: 40px;
+  border-radius: 6px;
+  border: 0px;
+  font-size: 20px;
+  font-weight: bold;
+  /* font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace; */
+  /* background: var(--link-fg); */
+  background: #00a0ff;
+  cursor: pointer;
+  animation: hue-anim 10s infinite normal;
+  transition: all 0.3s ease;
+}
+@-webkit-keyframes hue-anim {
+  from { -webkit-filter:hue-rotate(0deg) }
+  to   { -webkit-filter:hue-rotate(360deg) }
+}
+.big-button:hover {
+  transform: scale(1.05);
+}
+
+.disclaimer {
+    font-size: 13px;
+    /* font-size: 75%; */
+    color: var(--fgdim);
+    background-color: var(--dropdown-bg);
+    /* background-color: #f8f8f8; */
+    width: 100%;
+    padding: 3px 0 3px 0;
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* --------------------------------------------------------------------------- */
+/* Styles for small and smaller screens */
+
+@media (max-width: 750px) {
+  /* header styling */
+  #logo {
+    max-width: 64px;
+  }
+  .title h1 {
+    font-size: 20px;
+  }
+  .header-icon-img {
+    height: 18px;
+    width: 18px;
+    margin-top: -3px;
+  }
+  .right-header li a {
+    font-size: 15px;
+  }
+}
+

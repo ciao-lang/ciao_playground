@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ciao playground (on-the-fly)</title>
+    <link rel="stylesheet" href="/css/lpdoc.css" type="text/css"/>
+    <link rel="stylesheet" href="/playground/css/ciao_playground.css" type="text/css"/>
+    <!-- TODO: move justification style somewhere else? -->
+    <script>
+      var playgroundCfg = {
+        title: "playground (on-the-fly repeating last action)",
+        window_layout: ['E'/*,'T','Pt'*/],
+        storage_key: 'code', // key for local storage of draft program
+        splash_code: `\
+:- module(_, [], [assertions,basicmodes,fsyntax,regtypes,hiord,nativeprops,doccomments]).  
+ 
+%! \\title Example module
+%  \\author R. Daneel Olivaw (fictional character)
+%  \\author Elijah Baley (fictional character)
+%
+%  \\module This is where general comments on the file go. In
+%    this case the file is a library which contains some assertion examples
+%    for testing the *automatic documentation system.*
+
+:- export(tree_of/2).
+:- regtype tree_of/2. 
+:- meta_predicate tree_of(pred(1),?).
+tree_of(_) := void.
+tree_of(T) := tree(~call(T),~tree_of(T),~tree_of(T)).
+
+:- export(inttree_member/2).
+:- pred inttree_member(Tree, X)
+   : tree_of(int, Tree) => int(X) # "\`X\` is an element of \`Tree\`".
+:- doc(inttree_member(Tree,X), "
+This predicate is defined as follows:
+\`\`\`ciao_runnable
+:- module(_,_,[]).
+%! \\\\begin{focus}
+inttree_member(tree(X,_,_), X).
+inttree_member(tree(_,L,_), X) :- inttree_member(L,X).
+inttree_member(tree(_,_,R), X) :- inttree_member(R,X).
+%! \\\\end{focus}
+\`\`\`
+Example query:
+\`\`\`ciao_runnable
+?- inttree_member(tree(1,tree(2,void,void),tree(3,void,void)),X).
+\`\`\`
+").
+
+inttree_member(tree(X,L,R), X).
+inttree_member(tree(_,L,_), X) :- inttree_member(L,X).
+inttree_member(tree(_,_,R), X) :- inttree_member(R,X).
+`,
+        // Amend code (add module, etc.)
+        amend_on_save: false,
+        // Auto-* actions (on start and restart)
+        auto_action: 'doc',
+        // Do auto-* actions on the fly (as document changes)
+        on_the_fly: true
+      };
+    </script>
+    <script src="/js/lpdoc-aux.js"></script> <!-- LPdoc UI -->
+    <script src="/playground/js/ciao_playground.js"></script> <!-- main script -->
+  </head>
+  <body></body>
+</html>

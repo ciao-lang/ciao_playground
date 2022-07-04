@@ -1,0 +1,28 @@
+\documentclass{article}
+
+\usepackage{cmbright}
+
+\usepackage[ciao]{prologrun}
+
+\begin{document}
+\noindent
+This is a classic example of a Prolog program, the \texttt{append/3} predicate.
+
+\ \\
+
+%
+\def\purlesc{https://ciao-lang.org/playground/\#:-\%20module(\_,\_,\%5B\%5D).\%0A\%0Aappend(\%5B\%5D,X,X).\%0Aappend(\%5BX\%7CY\%5D,Z,\%5BX\%7CW\%5D)\%20:-\%0A\%20\%20\%20\%20\%20append(Y,Z,W).}
+%
+\begin{prologrunesc}
+append([],X,X).
+append([X|Y],Z,[X|W]) :-
+     append(Y,Z,W).
+\end{prologrunesc}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
+

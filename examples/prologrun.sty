@@ -1,0 +1,248 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% runnable Prolog (Ciao version)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\ProvidesPackage{prologrun}
+
+\DeclareOption{ciao}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Sets the default option to "ciao".
+% \ExecuteOptions{ciao}
+
+\ProcessOptions \relax
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Prolog code coloring (Ciao version)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage{textcomp}
+% \usepackage{hyperref}
+\usepackage[unicode]{hyperref}
+\usepackage{amssymb} % For triangle right
+
+\definecolor{background}    {rgb}{0.97,0.97, 1.0}
+\definecolor{shadecolor}    {rgb}{0.97,0.97, 1.0}
+% \definecolor{ciaoframe}     {rgb}{   0,   0,  0.6}
+\definecolor{ciaoframe}     {rgb}{0.8, 0.8,   0.8}
+\definecolor{ciaostring}    {rgb}{0.6, 0.46, 0.33}
+\definecolor{ciaooperators} {rgb}{0.1, 0.15,  0.6}
+\definecolor{ciaokeywords}  {rgb}{0.1, 0.15,    6}
+\definecolor{ciaoassertions}{rgb}{0.1, 0.15,  0.6}
+\definecolor{ciaotrust}     {RGB}{0.2, 0.13,    0}
+\definecolor{ciaocheck}     {rgb}{0.1, 0.2,   0.8}
+\definecolor{ciaochecked}   {rgb}{0.2, 0.34,  0.1}
+\definecolor{ciaotrue}      {rgb}{0.2, 0.34,  0.1}
+\definecolor{ciaofalse}     {rgb}{0.6,  0.0, 0.09}
+\definecolor{ciaoprops}     {rgb}{0.1,  0.2,  0.8}
+\definecolor{ciaocomment}   {rgb}{0.5,  0.5,  0.5}
+
+% Change default from Computer Modern font (which has no bold etc.)
+% \renewcommand{\ttdefault}{cmtt}
+% \renewcommand{\ttdefault}{lmtt}
+% \renewcommand{\ttdefault}{pcr}
+\renewcommand{\ttdefault}{txtt}
+
+\lstdefinelanguage{Ciao}%
+{
+  % language=Prolog,
+  % basicstyle=\small\ttfamily, % basic font setting
+  basicstyle=\ttfamily, % basic font setting
+  % 
+  % *** frameround=fttt,
+  % frame=tb,
+  frame=ltrb,
+  rulecolor={\color{ciaoframe}},
+  % *** backgroundcolor={\color{background}},
+  % backgroundcolor = \color{ligthorange},
+  % numbers=left,numberstyle=\tiny,stepnumber=1,numbersep=8pt,
+  % *** numbers=left,numberstyle=\small\sffamily,stepnumber=1,numbersep=8pt,
+  % 
+  aboveskip=3pt, 
+  belowskip=-2pt, 
+  % 
+  tabsize=4,
+  breaklines=true,breakatwhitespace=true,
+  % 
+  showlines=true,
+  showspaces=false,
+  showtabs=false,
+  % 
+  % ? escapechar=\&,
+  escapechar=@,
+  % escapeinside={(*@}{@*)},
+  escapeinside={~~}{~~},
+  % upquote=true,
+  % 
+  %% Highlighting
+  commentstyle=\color{ciaocomment},
+  % commentstyle=\color{commentgreen},
+  % commentstyle=\color{gray},
+  % 
+  stringstyle=\color{ciaostring},
+  showstringspaces=false,
+  % sensitive=f,%
+  morecomment=[l]\%,%
+  morecomment=[s]{/*}{*/},%
+  morestring=[bd]",%
+  morestring=[bd]’%
+  % 
+  % lstlistings only colors keywords made of 'letters'
+  alsoletter{>,<,.,:,;,=,!,*,\&,+,-,?,[,],|,\#},
+  % 
+  deletekeywords={true}, % Defined in Prolog defaults
+  % First, list them as 'otherkeywords', then color them (below)
+  % When one subsequence of another, list short one first
+  % Including :- and ?- here gives problems...
+  otherkeywords={>, <, =, >=, =<, ., ;, !, *, \&, +, -, ?, :, :=, ->, [, ], |, \#, /\\, \\/, \\\\ }, 
+  % keywordstyle={\color{ciaooperators}\bfseries}, % For the default language keywords
+  % 
+  keywordstyle=[1]{\color{ciaokeywords}\bfseries},
+  morekeywords=[1]{>, <, =, >=, =<, ., ;, !, *, \&, +, -, ?, :, :=, ->, [, ], |, \#, /\\, \\/, \\\\ }, 
+  % % Took out ~ (incompatible with use as escape char)
+  % 
+  % classoffset=2,
+  keywordstyle=[2]{\color{ciaokeywords}\bfseries},
+  morekeywords=[2]{module,use\_module,use\_package,dynamic,export,import,impl\_defined,debug\_module},
+  % 
+  % classoffset=3,
+  keywordstyle=[3]{\color{ciaoassertions}\bfseries},
+  morekeywords=[3]{pred,prop,calls,success,comp},
+  % 
+  % classoffset=4,
+  keywordstyle=[4]{\color{ciaotrust}\bfseries},
+  morekeywords=[4]{trust,trust\_default,entry},
+  % 
+  % classoffset=5,
+  keywordstyle=[5]{\color{ciaocheck}\bfseries},
+  morekeywords=[5]{check},
+  % 
+  % classoffset=6,
+  keywordstyle=[6]{\color{ciaochecked}\bfseries},
+  morekeywords=[6]{checked},
+  % 
+  % classoffset=7,
+  keywordstyle=[7]{\color{ciaotrue}\bfseries},
+  morekeywords=[7]{true},
+  % 
+  % classoffset=8,
+  keywordstyle=[8]{\color{ciaofalse}\bfseries},
+  morekeywords=[8]{false},
+  % 
+  % classoffset=9,
+  keywordstyle=[9]{\color{ciaoprops}\bfseries},
+  morekeywords=[9]{even,nat,int,flt,atm,term,num,var,list,ground,mshare,
+    rsize,cardinality,not\_fails,exp,cost,costb,steps\_ub,steps\_lb,
+    size\_ub,size\_lb,covered,mut\_exclusive,head\_cost,literal\_cost,
+    is\_det,length,terminates,steps\_o,resource,socket,seff,string},
+  % 
+  % classoffset=10
+  keywordstyle=[10]{\color{ciaokeywords}\bfseries},
+  morekeywords=[10]{op,mod,abort,ancestors,arg,ascii,ask,assert,asserta,%
+    assertz,atom,atomic,char,clause,close,open,concat,consult,ed,ef,em,%
+    eof,fail,file,findall,setof,bagof,write,append,display,functor,getc,is,length,%
+    listing,load,name,atom\_codes,number\_codes,nl,nonvar,not,numbervars,op,or,pp,prin,print,%
+    private,prompt,putc,ratom,read,read\_from\_this\_file,rename,repeat,%
+    retract,retractall,save,see,seeing,seen,sh,skip,statistics,%
+    subgoal\_of,system,tab,tell,telling,time,told,trace,true,unload,%
+    untrace,var,mode,public,multifile,block,meta_predicate,%
+    parallel,sequential,mod,spy,nospy,nospyall,debug,nodebug,trace,notrace,%
+    float,integer,number,gcd,truncate,floor,round,ceiling,rem,abs,sign,log,%
+    sqrt,sin,cos,atan,float_integer_part,float_fractional_part,put_code,get_code,%
+    assert,retract,asserta,retracta,assertz,retractz,abolish},%
+  classoffset=0, % Restore default
+}
+
+% Set default
+\lstset{language=Ciao}
+
+% For begin{ciao} end{ciao}
+\lstnewenvironment{ciao}[1][language=Ciao]
+{\lstset{#1}}
+{}
+
+% For begin{prolog} end{prolog}
+\lstnewenvironment{prolog}[1][language=Ciao]
+{\lstset{#1}}
+{}
+
+% For begin{ciaorun} end{ciaorun}
+\lstnewenvironment{ciaorun}[2][language=Ciao]
+{\lstset{#1}\vspace*{2mm}
+  \hfill\vspace*{-5mm}
+  \href{#2}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
+  }
+{}
+
+% \lstnewenvironment{prologrun}[2][language=Ciao]
+% {\lstset{#1}\vspace*{2mm}
+%   \hfill\vspace*{-5mm}
+%   \href{#2}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
+%   }
+% {}
+
+\lstnewenvironment{prologrunesc}[1][language=Ciao]
+{\lstset{#1}\vspace*{2mm}
+  \hfill %\vspace*{-5mm}
+  \href{\purlesc}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
+  }
+{}
+ 
+% Adapted from url.sty
+% Inserts in \programurlshow the URL with no need for escapes
+\def\runurlshow#1{
+  \begingroup
+  \setbox\z@\hbox\bgroup
+  \def\Url@HyperHook##1
+  \endgroup{\Url@def{\programurlshow}{#1}}%
+  % Because hyperref breaks \urldef and does not define its own (Grrrr!)...
+  \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurlshow{#1{##1}}}%
+  #1
+}
+
+\lstnewenvironment{prologrunshow}[1][language=Ciao]
+{\lstset{#1}\vspace*{2mm}
+  \hfill %\vspace*{-5mm}
+  \programurlshow
+  }
+{}
+ 
+% Adapted from url.sty
+% Inserts in \programurl the URL with no need for escapes
+% \def\runurl#1{
+%   \begingroup
+%   \setbox\z@\hbox\bgroup
+%   \def\Url@HyperHook##1
+%   \endgroup{\Url@def{\programurl}{#1}}%
+%   % Because hyperref breaks \urldef and does not define its own (Grrrr!)...
+%   \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurl{#1{##1}}}%
+%   #1
+% }
+\def\runurl#1{
+  \begingroup
+  \setbox\z@\hbox\bgroup
+  \def\Url@HyperHook##1
+  \endgroup{\Url@def{\programurl}{#1}}%
+  % Because hyperref breaks \urldef and does not define its own (Grrrr!)...
+  \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurl{#1{##1}}}%
+  #1
+}
+
+\lstnewenvironment{prologrun}[1][language=Ciao]
+{\lstset{#1}\vspace*{2mm}
+  \hfill %\vspace*{-5mm}
+  % \href{\programurl}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
+  \programurl
+  }
+{}
+ 
+\newcommand{\ciaoinline}[1]{\fcolorbox{ciaoframe}{white}{\lstinline[mathescape]!#1!}}
+\newcommand{\prologinline}[1]{\ciaoinline{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% End Prolog code coloring and playground connection
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <!--
+
+      This is a proof of concept of multi-window playgrounds, just to
+      test that Ciao workers and playground states are
+      independent. Use with care! (JFMC)
+    
+    -->
+  <head>
+    <title>Ciao Prolog Playground (multiwindow)</title>
+    <link rel="stylesheet" href="/css/lpdoc.css" type="text/css"/>
+    <link rel="stylesheet" href="/playground/css/ciao_playground.css" type="text/css"/>
+    <link rel="preload" href="https://cdn.jsdelivr.net/gh/nextapps-de/winbox@0.1.8/dist/winbox.bundle.js" as="script">
+    <script src="/js/lpdoc-aux.js"></script> <!-- LPdoc UI -->
+    <script src="/playground/js/ciao_playground.js"></script> <!-- main script -->
+    <script src="https://cdn.jsdelivr.net/gh/nextapps-de/winbox@0.1.8/dist/winbox.bundle.js" defer></script>
+    <style>
+      body {
+          background: black;
+          background-image: url('https://lh6.googleusercontent.com/-A0tXm8gjfMU/U08VDMRGtuI/AAAAAAAAvrI/IQEscTGZyJY/s1920-w1920-h1080-c/IMG_0293%2Bhe.jpg');
+          background-size: auto 100%;
+      }
+      .winbox {
+          border-radius: 6px;
+          background: var(--bg);
+      }
+      .newpg {
+          position: absolute;
+          left: 8px;
+          bottom: 8px;
+          width: 64px;
+          height: 64px;
+      }         
+      .pg-wrapper {
+          width: 100%;
+          height: 100%;
+          background: var(--bg);
+      }
+      .pg {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-flow: column;
+      }
+    </style>
+  </head>
+  <!-- https://raw.githubusercontent.com/dconnolly/chromecast-backgrounds/master/README.md -->
+  <body>
+    <button class="newpg" type="button" onclick="newpg_win()">NEW</button> 
+  </body>
+  <script>
+    // TODO: use pgset
+    var wincnt = 0;
+    function newpg_win() {
+      var pg_wrapper_el = elem_cn('div', 'pg-wrapper');
+      var pg_el = elem_cn('div', 'pg');
+      pg_wrapper_el.appendChild(pg_el);
+      playgroundCfg.with_header = false;
+      playgroundCfg.has_share_button = false;
+      const cproc = new ToplevelProc(); 
+      var pg = new PGCell(cproc);
+      (async() => {
+        let cell_data = { kind:'full', focus:"" };
+        await pg.setup(pg_el, cell_data, null); // TODO: use pgset?
+      })();
+      //
+      var winbox = new WinBox("Ciao Prolog playground", {
+        onresize: (w,h) => {
+          pg.update_dimensions();
+        },
+        x: wincnt*20, y: wincnt*20, // TODO: very naive
+        width: "700px",
+        height: "500px",
+        border: "5px"
+      });
+      wincnt = (wincnt + 1) % 20; 
+      winbox.body.appendChild(pg_wrapper_el);
+      pg.update_dimensions();
+    }
+
+    window.onload = function () {
+      hide_cover();
+      // Set CSS theme as soon as possible to avoid flickering
+      // Editor theme is selected on creation. It will be updated if needed.
+      update_css_theme();
+    };
+    </script>
+</html>
+
+

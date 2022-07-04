@@ -1,0 +1,78 @@
+\documentclass{article}
+
+\usepackage{cmbright}
+
+\usepackage[ciao]{prologrun}
+
+\begin{document}
+\noindent
+This is a classic example of a Prolog program, the \texttt{append/3} predicate.
+
+\ \\
+This is with a  \href{http://test.cliplab.org/ciao/bndls/ciaojs_monaco/index.html#:-%20module(_,_,%5B%5D).%0A%0Aappend(%5B%5D,X,X).%0Aappend(%5BX%7CY%5D,Z,%5BX%7CW%5D)%20:-%0A%20%20%20%20%20append(Y,Z,W).}{simple link}.
+
+\ \\
+This is with a nicer macro but the url needs to be escaped: 
+%
+\def\purlesc{http://test.cliplab.org/ciao/bndls/ciaojs\_monaco/index.html\#:-\%20module(\_,\_,\%5B\%5D).\%0A\%0Aappend(\%5B\%5D,X,X).\%0Aappend(\%5BX\%7CY\%5D,Z,\%5BX\%7CW\%5D)\%20:-\%0A\%20\%20\%20\%20\%20append(Y,Z,W).}
+%
+\begin{prologrunesc}
+append([],X,X).
+append([X|Y],Z,[X|W]) :-
+     append(Y,Z,W).
+\end{prologrunesc}
+
+\ \\
+This is with a different macro, url does not need to be escaped, but
+it appears:
+
+\runurlshow\url{http://test.cliplab.org/ciao/bndls/ciaojs_monaco/index.html#:-%20module(_,_,%5B%5D).%0A%0Aappend(%5B%5D,X,X).%0Aappend(%5BX%7CY%5D,Z,%5BX%7CW%5D)%20:-%0A%20%20%20%20%20append(Y,Z,W).}
+\begin{prologrunshow}
+append([],X,X).
+append([X|Y],Z,[X|W]) :-
+     append(Y,Z,W).
+\end{prologrunshow}
+
+\ \\
+Trying to get the ideal one running:
+
+\runurl\url{http://test.cliplab.org/ciao/bndls/ciaojs_monaco/index.html#:-%20module(_,_,%5B%5D).}
+\begin{prologrun}
+append([],X,X).
+append([X|Y],Z,[X|W]) :-
+     append(Y,Z,W).
+\end{prologrun}
+
+% \begingroup
+% \setbox\z@\hbox\bgroup
+% \def\Url@HyperHook##1
+% \endgroup
+% {\Url@def{\programurl}{#1}}%
+% % Because hyperref breaks \urldef and does not define its own (Grrrr!)...
+% \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurl{#1{##1}}}%
+% \url{http://test.cliplab.org/}
+
+
+% \runurl\url{http://test.cliplab.org/ciao/bndls/ciaojs_monaco/index.html}
+
+% \runurl\url{http://test.cliplab.org/ciao/bndls/ciaojs_monaco/index.html#:-%20module(_,_,%5B%5D).%0A%0Aappend(%5B%5D,X,X).%0Aappend(%5BX%7CY%5D,Z,%5BX%7CW%5D)%20:-%0A%20%20%20%20%20append(Y,Z,W).}
+
+% \begin{prologrun}
+% append([],X,X).
+% append([X|Y],Z,[X|W]) :-
+%      append(Y,Z,W).
+% \end{prologrun}
+
+% \href{http://test.cliplab.org/ciao/bndls/ciaojs_monaco/index.html}{hello}
+
+% {http://test.cliplab.org/ciao/bndls/ciaojs_monaco/index.html\#:-\%20module(nat,\_,\%5B\%5D).}
+   %http://test.cliplab.org/ciao/bndls/ciaojs\_monaco/index.html
+    % \#:-\%20module(nat,\_,\%5B\%5D).\%0A\%0Aappend(\%5B\%5D,X,X).\%0Aappend(\%5BX\%7CY\%5D,Z,\%5BX\%7CW\%5D)\%20:-\%0A\%20\%20\%20\%20\%20append(Y,Z,W).\%0A
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
+

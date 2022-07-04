@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ciao playground for s(CASP)</title>
+    <link rel="stylesheet" href="/css/lpdoc.css" type="text/css"/>
+    <link rel="stylesheet" href="/playground/css/ciao_playground.css" type="text/css"/>
+    <!-- TODO: move justification style somewhere else? -->
+    <style>
+      .preview-container {
+          font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
+          font-size: 10pt;
+          margin: 0px;
+          padding: 0px 8px 0px 8px;
+          overflow: auto;
+          background: var(--codeblock-bg);
+      }
+
+      .treemenu li { list-style: none; }
+      .treemenu .toggler { cursor: pointer; }
+      .treemenu .toggler:before { display: inline-block; margin-right: 2pt; }
+      li.tree-empty > .toggler { opacity: 0.3; cursor: default; }
+      li.tree-empty > .toggler:before { content: " "; }
+      li.tree-closed > .toggler:before {
+          content: "";
+          height: 0;
+          width: 0;
+          border-color: transparent var(--header-menu);
+          border-style: solid;
+          border-width: 0.25em 0 0.25em 0.5em;
+      }
+      li.tree-opened > .toggler:before {
+          content: "";
+          height: 0;
+          width: 0;
+          border-color: var(--header-menu) transparent ;
+          border-style: solid;
+          border-width: 0.5em 0.25em 0 0.25em;
+      }
+      .preview-container button {
+          font-family: 'OpenSans', sans-serif;
+          font-size: 14px;
+          background: var(--button-bg);
+          color: var(--button-color);
+          border: 1px solid var(--button-border);
+          border-radius: 6px;
+          padding: 4px 8px 4px 8px;
+          margin-right: 5px;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js" integrity="sha256-Ls0pXSlb7AYs7evhd+VLnWsZ/AqEHcXBeMZUycz/CcA=" crossorigin="anonymous"></script> <!-- TODO: avoid jquery -->
+    <script>
+      var playgroundCfg = {
+        title: "playground for s(CASP)",
+        has_run_tests_button: false, //true,
+        has_debug_button: false, //true,
+        has_doc_button: false, //true,
+        has_acheck_button: false,
+        has_spec_button: false,
+        window_layout: ['E','T','P'],
+        storage_key: 'code_scasp', // key for local storage of draft program
+        splash_code: `\
+% Write your sCASP code here, e.g.:
+
+p(X) :- not q(X).
+q(X) :- not p(X).
+
+q(1).
+
+% Example query: ?- p(X).
+`,
+        // Amend code (add module, etc.)
+        amend_on_save: false,
+        // Special queries // TODO: missing arity
+        special_query: {
+          "load": { read_code: true }
+        },
+        // Bundles required for this playground
+        init_bundles: ['core', 'builder', 'sCASP'],
+        // Initialization queries
+        init_queries: [
+          'use_module(library(classic/classic_predicates))',
+          'use_module(scasp(scasp))'
+        ]
+      };
+      // Query for loading code
+      playgroundCfg.custom_load_query = ((m) => { return "load('"+m+"')"; });
+      // Transformation for user queries
+      playgroundCfg.custom_run_query = ((q) => {
+        if (/load\(.*\)/.test(q)) { // Do not patch
+          return q;
+        } else {
+          // quote variables // TODO: pass variable names to scasp instead, this is buggy when passing quoted atoms
+          const regex = /\b([_A-Z][A-Za-z0-9]*)\b/g;
+          q = q.replaceAll(regex, '\'$1\'');
+          return "'?'(["+q+"]),DUMMYDUMMY=a";
+        }
+      });
+      // Post-print code (before update_inner_layout()) 
+      playgroundCfg.custom_postprint_sol = (async (pg) => {
+        if (pg.cproc.state === QueryState.VALIDATING) {
+          // Ugly hack, remove DUMMYDUMMY
+          pg.toplevel.move_to_end();
+          var line = pg.toplevel.editor.getPosition().lineNumber;
+          var prevcol = pg.toplevel.editor.getModel().getLineMaxColumn(line-1);
+          pg.toplevel.editor.executeEdits('', [{
+            range: new monaco.Range(line-1, prevcol, line + 1, 1),
+            text: " ? "
+          }]);
+        }
+        var html = await pg.cproc.w.readFile('draft.html');
+        if (html !== null) {
+          show_justification(pg, html);
+        }
+      });
+      /* function show_justification_iframe(pg, html) {
+        pg.show_preview(true);
+        var preview = pg.preview_el;
+        preview.innerHTML = "";
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute("style","height:100%;width:100%;");
+        preview.appendChild(iframe);
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(html);
+        iframe.contentWindow.document.close();
+      } */
+      function show_justification(pg, html) {
+        html = html.substring(html.indexOf('<h3>'), html.indexOf('\n\n\x3Cscript')); // TODO: ugly hack
+        pg.show_preview(true);
+        var preview = pg.preview_el; // TODO: do not change style dynamically for this preview_el
+        preview.innerHTML = html;
+        adjust_tree();
+      }
+    </script>
+    <script>
+      // TODO: improve, rewrite?
+      (function($){
+        $.fn.depth = function(options,depth) {
+          options = options || {};
+          options.delay = options.delay || 0;
+          this.find("> li").each(function() {
+            e = $(this)
+            var subtree = e.find('> ul');
+            if (subtree.length > 0) {
+              if (depth > 0) {
+                e.addClass('tree-opened');
+                e.removeClass('tree-closed');
+                subtree.slideDown(options.delay);
+                subtree.show(options.delay);
+                subtree.depth(options,depth-1);
+              } else {
+                e.removeClass('tree-opened');
+                e.addClass('tree-closed');
+                subtree.slideUp(options.delay);
+                subtree.hide(options.delay);
+                subtree.collapse(options);
+              }
+            }
+          });
+          return true;
+        }
+        $.fn.expand = function(options,depth) {
+          options = options || {};
+          options.delay = options.delay || 0;
+          this.find("> li").each(function() {
+            e = $(this)
+            var subtree = e.find('> ul');
+            if (subtree.length > 0) {
+              e.addClass('tree-opened');
+              e.removeClass('tree-closed');
+              subtree.slideDown(options.delay);
+              subtree.show(options.delay);
+              subtree.expand(options,depth+1);
+            }
+            g_depth=Math.max(g_depth,depth);
+          });
+          return true;
+        }
+        $.fn.collapse = function(options) {
+          options = options || {};
+          options.delay = options.delay || 0;
+          this.find("> li").each(function() {
+            e = $(this)
+            var subtree = e.find('> ul');
+            if (subtree.length > 0) {
+              e.removeClass('tree-opened');
+              e.addClass('tree-closed');
+              subtree.slideUp(options.delay);
+              subtree.hide(options.delay);
+              subtree.collapse(options);
+            }
+          });
+          return true;
+        }
+        $.fn.treemenu = function(options) {
+          options = options || {};
+          options.delay = options.delay || 0;
+          options.openActive = options.openActive || false;
+          options.closeOther = options.closeOther || false;
+          options.activeSelector = options.activeSelector || ".active";
+          this.addClass("treemenu");
+          if (!options.nonroot) {
+            this.addClass("treemenu-root");
+          }
+          options.nonroot = true;
+          this.find("> li").each(function() {
+            e = $(this);
+            var subtree = e.find('> ul');
+            var button = e.find('.toggler').eq(0);
+            if(button.length == 0) {
+              // create toggler
+              var button = $('<span>');
+              button.addClass('toggler');
+              e.prepend(button);
+            }
+            if(subtree.length > 0) {
+              subtree.hide();
+              e.addClass('tree-closed');
+              e.find(button).click(function() {
+                var li = $(this).parent('li');
+                if (options.closeOther && li.hasClass('tree-closed')) {
+                  var siblings = li.parent('ul').find("li:not(.tree-empty)");
+                  siblings.removeClass("tree-opened");
+                  siblings.addClass("tree-closed");
+                  siblings.removeClass(options.activeSelector);
+                  siblings.find('> ul').slideUp(options.delay);
+                }
+                li.find('> ul').slideToggle(options.delay);
+                li.toggleClass('tree-opened');
+                li.toggleClass('tree-closed');
+                li.toggleClass(options.activeSelector);
+              });
+              $(this).find('> ul').treemenu(options);
+            } else {
+              $(this).addClass('tree-empty');
+            }
+          });
+          if (options.openActive) {
+            var cls = this.attr("class");
+            this.find(options.activeSelector).each(function(){
+              var el = $(this).parent();
+              while (el.attr("class") !== cls) {
+                el.find('> ul').show();
+                if(el.prop("tagName") === 'UL') {
+                  el.show();
+                } else if (el.prop("tagName") === 'LI') {
+                  el.removeClass('tree-closed');
+                  el.addClass("tree-opened");
+                  el.show();
+                }
+                el = el.parent();
+              }
+            });
+          }
+          expand({delay:0},0);
+          max_depth = g_depth;
+          this.collapse({delay:0});
+          g_depth = 0;
+          return this;
+        }
+      })(jQuery);
+      var g_depth;
+      var max_depth;
+      function depth(step){
+        g_depth = g_depth + step;
+        g_depth = g_depth < 0 ? 0 : g_depth;
+        g_depth = g_depth > max_depth ? max_depth : g_depth;
+        $(".tree").depth({delay:500},g_depth);
+      }
+      function expand(){
+        g_depth = 0
+        $(".tree").expand({delay:0},0);
+      }
+      function collapse(){
+        $(".tree").collapse({delay:0});
+        g_depth = 0;
+      }
+      function adjust_tree() {
+        g_depth = 0;
+        max_depth = 4;
+        $(function(){
+          const f = $(".tree").treemenu({delay:0}).openActive;
+          if (f !== undefined) f();
+        });
+      }
+    </script>
+    <script src="/js/lpdoc-aux.js"></script> <!-- LPdoc UI -->
+    <script src="/playground/js/ciao_playground.js"></script> <!-- main script -->
+  </head>
+  <body></body>
+</html>
