@@ -1238,9 +1238,10 @@ function handle_share(btn_el, msg_el, pg) {
   });
 }
 
+const github_hash = '#https://github.com/';
+
 /* Initial editor value (splash, URI encoded, URL from a CDN, etc.) */
 async function initial_editor_value() {
-  let github_hash = '#https://github.com/';
   if (document.location.hash.startsWith(github_hash)) {
     return await fetch_from_github();
   } else if (document.URL.includes('#')) { // Code in the URL
@@ -2030,35 +2031,35 @@ function add_playground_bindings(editor, pg) {
   // Save and run code (C-c l)
   if (playgroundCfg.has_load_button) {
     editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyL), () => {
-      load_code(playground).then(() => {});
+      load_code(pg).then(() => {});
     });
   }
 
   // Run tests in current module (C-c u)
   if (playgroundCfg.has_run_tests_button) {
     editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyU), () => {
-      run_tests(playground).then(() => {});
+      run_tests(pg).then(() => {});
     });
   }
 
   // Debug source code (C-c d)
   if (playgroundCfg.has_debug_button) { // debug
     editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyD), () => {
-      debug(playground).then(() => {});
+      debug(pg).then(() => {});
     });
   }
 
   // Document source code (C-c D)
   if (playgroundCfg.has_doc_button) {
     editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KM.Shift | KC.KeyD), () => {
-      gen_doc_preview(playground).then(() => {});
+      gen_doc_preview(pg).then(() => {});
     });
   }
 
   // Document source code (C-c V)
   if (playgroundCfg.has_acheck_button) {
     editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KM.Shift | KC.KeyV), () => {
-      acheck_preview(playground).then(() => {});
+      acheck_preview(pg).then(() => {});
     });
   }
 }
