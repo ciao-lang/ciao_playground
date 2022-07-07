@@ -1448,10 +1448,13 @@ class ToplevelProc {
 
   /* ---------------------------------------------------------------------- */
 
+  // Do a query, only one solution, dump stdout/stderr, 
   async muted_query_dumpout(q) {
     if (playgroundCfg.statistics) console.log(`{implicit: ${q}}`);
-    await this.w.query(null, q); // TODO: get only one solution!
+    // await this.w.query(null, q); // TODO: get only one solution!
+    await this.w.query_one_begin(null, q);
     await this.dumpout(); // TODO: check errors!
+    await this.w.query_end();
   }
 
   // Dump last query stdout/stderr (ignore or show in console)
