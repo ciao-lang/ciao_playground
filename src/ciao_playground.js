@@ -131,6 +131,7 @@ app([X|L1],L2,[X|L3]) :-
     'builder'
   ],
   init_queries: [
+    'use_module(engine(internals), [reload_bundleregs/0])',
     'use_module(library(classic/classic_predicates))'
   ],
   // keep worker alive (only for inLPDOC at this moment)
@@ -470,13 +471,13 @@ class PGCell {
   /* Executed by ToplevelProc on (re)start */
   // TODO: one cproc may have several pg attached! (just read/write to the top one)
   async on_cproc_start() {
+    this.#cancel_autosave();
     if (this.is_R) {
       if (playgroundCfg.auto_action === 'load') {
         if (this.pgset !== null) await this.pgset.load_all_code();
         //this.cproc.comint = this.toplevel; // (re)attach to this pg comint // TODO: remove this line if everything is OK
       }
     } else {
-      this.#cancel_autosave();
       await process_code(this);
     }
   }
@@ -484,8 +485,8 @@ class PGCell {
   async set_code_and_process(code) {
     pers_set_code(code);
     this.set_editor_value(code);
+    this.#cancel_autosave();
     if (!this.is_R) { // TODO: treat is_R == true case
-      this.#cancel_autosave();
       await process_code(this);
     }
   }
@@ -1333,6 +1334,7 @@ class ToplevelProc {
     this.comint = null; // associated comint ('null' to ignore)
     this.muted = false; // temporarily ignore comint // TODO: change comint instead?
     this.state = null;
+    this.q_opts = {}; // running/validating query opts
     this.timer = undefined;
   }
 
@@ -1351,6 +1353,7 @@ class ToplevelProc {
     if (!this.muted) this.comint.set_log(''); 
     //
     this.update_state(QueryState.READY);
+    this.q_opts = {};
     if (!this.muted) this.comint.display_status_new_prompt('silent');
     await this.comint.pg.on_cproc_start();
   }
@@ -1359,6 +1362,7 @@ class ToplevelProc {
   async restart() {
     this.shutdown();
     this.update_state(QueryState.READY);
+    this.q_opts = {};
     const pmuted = this.set_muted(true); // TODO: mute on restart, make it optional?
     await this.start();
     this.muted = pmuted;
@@ -1391,7 +1395,6 @@ class ToplevelProc {
   async load_ciao_defaults() {
     // Use default bundles and show boot info (this starts the engine)
     for (const b of playgroundCfg.init_bundles) {
-      if (playgroundCfg.statistics) console.log(`{loading bundle '${b}'}`);
       await this.w.use_bundle(b);
     }
     // Boot and show system info
@@ -1432,10 +1435,15 @@ class ToplevelProc {
     for (const b of bs) {
       if (!playgroundCfg.init_bundles.includes(b)) {
         playgroundCfg.init_bundles.push(b);
+        if (started) await this.w.use_bundle(b); // load if already started
         updated = true;
       }
     }
-    if (started && updated) await this.restart(); // TODO: allow changes without a restart (also in toplevel.pl)
+    // if (started && updated) await this.restart(); // TODO: not needed now!
+    if (started && updated) {
+      await this.w.wait_no_deps(); /* wait until there are no pending loading deps */
+      await this.muted_query_dumpout('reload_bundleregs');
+    }
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1546,7 +1554,7 @@ class ToplevelProc {
    * Execute a new query on the toplevel (Pre: this.state === QueryState.READY)
    * @param {string} query - Query to be executed.
    */
-  async run_query(comint, msg, query) {
+  async run_query(comint, query, opts) {
     if (this.state !== QueryState.READY) {
       console.log('bug: already running or validating a query'); // TODO: treat_enter too fast?
       return; // TODO: query is lost!
@@ -1557,12 +1565,13 @@ class ToplevelProc {
     query = tr.q;
     // TODO: almost duplicated
     this.update_state(QueryState.RUNNING);
+    this.q_opts = opts;
     // begin a new query
-    if (!this.muted && msg !== null) this.comint.set_log(msg); 
+    if (!this.muted && opts.msg !== undefined) this.comint.set_log(opts.msg); 
     this.set_query_timeout();
     let q_out = await this.w.query_one_begin(null, query);
     this.cancel_query_timeout();
-    if (!this.muted && msg !== null) this.comint.set_log('');
+    if (!this.muted && opts.msg !== undefined) this.comint.set_log('');
     //
     await this.treat_sol(q_out, tr.treat_outerr); // print solution
   }
@@ -1580,6 +1589,7 @@ class ToplevelProc {
     if (action === '') { // accept solution, end query
       await this.w.query_end();
       this.update_state(QueryState.READY);
+      this.q_opts = {};
       /*if (!this.muted)*/ this.comint.display_status_new_prompt('yes');
     } else {// ask for the next solution
       // TODO: almost duplicated
@@ -1640,16 +1650,20 @@ class ToplevelProc {
     } else { // no more solutions
       solstatus = 'no';
     }
+    const no_treat_outerr = this.q_opts.no_treat_outerr;
     if (solstatus === '?') {
       this.update_state(QueryState.VALIDATING);
       if (!this.muted) this.comint.print_promptval();
     } else {
       await this.w.query_end();
       this.update_state(QueryState.READY);
+      this.q_opts = {};
       if (!this.muted) this.comint.display_status_new_prompt(solstatus);
     }
     if (treat_outerr !== null) {
-      await treat_outerr(out, err);
+      if (no_treat_outerr !== true) {
+        await treat_outerr(out, err);
+      }
     } else if (!this.muted) {
       if (playgroundCfg.custom_postprint_sol !== undefined) {
         // custom postprint if needed
@@ -1716,8 +1730,8 @@ async function new_code(pg) {
 
 /* Process code (load, doc, etc.) */
 async function process_code(pg) {
-  const pmuted = pg.cproc.muted;
-  if (playgroundCfg.on_the_fly) pg.cproc.muted = true; // TODO: mute in on_the_fly; make it optional?
+  let pmuted = null;
+  if (playgroundCfg.on_the_fly) pmuted = pg.cproc.set_muted(true); // TODO: mute in on_the_fly; make it optional?
   switch(playgroundCfg.auto_action) {
   case 'load': await load_code(pg); break;
   case 'doc': await gen_doc_preview(pg); break;
@@ -1725,7 +1739,7 @@ async function process_code(pg) {
   case 'acheck': await acheck_preview(pg); break;
   case 'spec': await spec_preview(pg); break;
   }
-  pg.cproc.muted = pmuted;
+  if (pmuted !== null) pg.cproc.muted = pmuted;
 }
 
 /* Load */
@@ -1740,7 +1754,7 @@ async function load_code(pg) {
   } else {
     q = "use_module('" + mod + "')";
   }
-  await pg.toplevel.do_query('Loading', q); // TODO: this last 'await' here should not be needed but it does not work otherwise... WHY? A problem with CiaoPromiseProxy? (JFMC)
+  await pg.toplevel.do_query(q, {msg:'Loading'}); // TODO: this last 'await' here should not be needed but it does not work otherwise... WHY? A problem with CiaoPromiseProxy? (JFMC)
   playgroundCfg.auto_action = 'load';
 }
 
@@ -1771,9 +1785,11 @@ async function run_tests(pg) {
   pg.update_inner_layout();
   const mod = pg.curr_mod_path();
   // await pg.upload_code_to_worker(); // TODO: do not load, just save to fs
-  await pg.toplevel.do_query(null, "use_module('" + mod + "')"); // TODO: this should not be needed, but sometimes (when there is some ':- test') code is not available anymore after run_tests_in_module/1, why?
-  await pg.cproc.muted_query_dumpout("use_module(library(unittest))"); // TODO: check errors
-  await pg.toplevel.do_query('Testing', "run_tests_in_module('" + mod + "')"); // TODO: this last 'await' here should not be needed but it does not work otherwise... WHY? A problem with CiaoPromiseProxy? (JFMC)
+  const pmuted = pg.cproc.set_muted(true); // TODO: mute in on_the_fly; make it optional?
+  await pg.toplevel.do_query("use_module('" + mod + "')", {no_treat_outerr: true}); // TODO: this should not be needed, but sometimes (when there is some ':- test') code is not available anymore after run_tests_in_module/1, why? // (do a muted query so that code status is not affected, run_tests_in_modules does use module also
+  pg.cproc.muted = pmuted;
+  // await pg.cproc.muted_query_dumpout("use_module(library(unittest))"); // (done by special_query.depends)
+  await pg.toplevel.do_query("run_tests_in_module('" + mod + "')", {msg:'Testing'}); // TODO: this last 'await' here should not be needed but it does not work otherwise... WHY? A problem with CiaoPromiseProxy? (JFMC)
   playgroundCfg.auto_action = 'test';
 }
 
@@ -1784,16 +1800,16 @@ async function debug(pg) {
   const mod = pg.curr_mod_path();
   // TODO: make debugger work in playground
   if (!pg.debugging) {
-    await pg.toplevel.do_query(null, "display_debugged");
-    await pg.toplevel.do_query(null, "debug_module_source('" + mod + "')");
-    await pg.toplevel.do_query(null, "trace");
+    await pg.toplevel.do_query("display_debugged", {});
+    await pg.toplevel.do_query("debug_module_source('" + mod + "')", {});
+    await pg.toplevel.do_query("trace", {});
     pg.debugging = true; // change debugging status
   } else {
-    await pg.toplevel.do_query(null, "nodebug_module('" + mod + "')");
-    await pg.toplevel.do_query(null, "nodebug");
+    await pg.toplevel.do_query("nodebug_module('" + mod + "')", {});
+    await pg.toplevel.do_query("nodebug", {});
     pg.debugging = false; // change debugging status
   }
-  await pg.toplevel.do_query(null, "use_module('" + mod + "')");
+  await pg.toplevel.do_query("use_module('" + mod + "')", {});
 }
 
 /* Generate documentation */
@@ -1801,8 +1817,8 @@ async function debug(pg) {
 async function gen_doc(pg) {
   const modbase = pg.curr_mod_base();
   // await pg.cproc.muted_query_dumpout("clean_mods(['"+modbase+"'])"); // (timestamps do not have the right resolution)
-  await pg.toplevel.do_query(null, "doc_cmd('"+modbase+"', [], clean(intermediate))"); // (clean mod above is not enough)
-  await pg.toplevel.do_query('Generating documentation', "doc_cmd('"+modbase+"', [], gen(html))");
+  await pg.toplevel.do_query("doc_cmd('"+modbase+"', [], clean(intermediate))", {}); // (clean mod above is not enough)
+  await pg.toplevel.do_query("doc_cmd('"+modbase+"', [], gen(html))", {msg:'Generating documentation'});
   playgroundCfg.auto_action = 'doc';
 }
 
@@ -1810,7 +1826,7 @@ async function gen_doc(pg) {
 /* (requires 'ciaopp' bundle) */
 async function acheck(pg) {
   const modbase = pg.curr_mod_base();
-  await pg.toplevel.do_query('Checking assertions', "auto_check_assert('"+modbase+"')");
+  await pg.toplevel.do_query("auto_check_assert('"+modbase+"')", {msg:'Checking assertions'});
   playgroundCfg.auto_action = 'acheck';
 }
 
@@ -1818,7 +1834,7 @@ async function acheck(pg) {
 /* (requires 'ciaopp' bundle) */
 async function opt_mod(pg) {
   const modbase = pg.curr_mod_base();
-  await pg.toplevel.do_query('Specializing', "auto_optimize('"+modbase+"')");
+  await pg.toplevel.do_query("auto_optimize('"+modbase+"')", {msg:'Specializing'});
   playgroundCfg.auto_action = 'spec';
 }
 
@@ -2556,7 +2572,7 @@ class Comint {
           this.display_status_new_prompt('silent');
         } else {
           let q = text.slice(0, -1);
-          await cproc.run_query(this, '', q);
+          await cproc.run_query(this, q, {});
         }
       }
     }
@@ -2687,8 +2703,8 @@ class Comint {
   }
 
   /* Send a query (optionally) printing it */
-  /* Show (optionally) log message `msg` if msg!==null */
-  async do_query(msg, q) {
+  /*  - opts.msg (optional): log message */
+  async do_query(q, opts) {
     const cproc = this.pg.cproc;
     if (cproc.state === QueryState.RUNNING) {
       console.log('bug: already running'); // TODO: treat_enter too fast?
@@ -2702,7 +2718,7 @@ class Comint {
       await cproc.comint.#send_validation('');
     }
     if (this.with_prompt && !cproc.muted) this.#add_query(q);
-    await cproc.run_query(this, msg, q);
+    await cproc.run_query(this, q, opts);
   }
 
   /**
