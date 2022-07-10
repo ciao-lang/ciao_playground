@@ -1451,8 +1451,7 @@ class ToplevelProc {
   // Do a query, only one solution, dump stdout/stderr, 
   async muted_query_dumpout(q) {
     if (playgroundCfg.statistics) console.log(`{implicit: ${q}}`);
-    // await this.w.query(null, q); // TODO: get only one solution!
-    await this.w.query_one_begin(null, q);
+    await this.w.query_one_begin(q);
     await this.dumpout(); // TODO: check errors!
     await this.w.query_end();
   }
@@ -1572,7 +1571,7 @@ class ToplevelProc {
     // begin a new query
     if (!this.muted && opts.msg !== undefined) this.comint.set_log(opts.msg); 
     this.set_query_timeout();
-    let q_out = await this.w.query_one_begin(null, query);
+    let q_out = await this.w.query_one_begin(query);
     this.cancel_query_timeout();
     if (!this.muted && opts.msg !== undefined) this.comint.set_log('');
     //
@@ -1627,11 +1626,10 @@ class ToplevelProc {
     if (ok) { // query has a solution
       // TODO: fixme, see toplevel.pl
       /* Pretty print query results (solutions or errors) */
-      let sol = q_out.sols[0];
       // (see ciaowasm.pl for possible cases)
-      if (sol.startsWith('success([')) { // TODO: horrible hack
+      if (q_out.cont === 'success') {
         if (this.comint.with_prompt) { /* only if itr, otherwise ignore bindings and cut */
-          let prettysol = sol.slice('success(['.length, -'])'.length).replaceAll("'", "");
+          let prettysol = q_out.arg;
           if (prettysol === '') { // (no bindings, cut)
             solstatus = 'yes';
           } else {
@@ -1639,16 +1637,16 @@ class ToplevelProc {
             if (!this.muted) this.comint.print_out('\n'+prettysol); // print output
           }
         }
-      } else if (sol.startsWith('exception(')) { // TODO: horrible hack
-        let ball = sol.slice('exception('.length, -')'.length);
+      } else if (q_out.cont === 'exception') { // TODO: horrible hack
+        let ball = q_out.arg;
         if (!this.muted) this.comint.print_msg('{ERROR: No handle found for thrown exception ' + ball + '}\n'); // print output
         solstatus = 'aborted';
-      } else if (sol === 'malformed') {
+      } else if (q_out.cont === 'malformed') {
         solstatus = 'silent';
         if (!this.muted) this.comint.print_msg('{SYNTAX ERROR: Malformed query}\n');
       } else {
         solstatus = 'silent';
-        console.log('bug: unrecognized query result ' + sol);
+        console.log(`bug: unrecognized query result cont: ${q_out.cont} ${q_out.arg}`);
       }
     } else { // no more solutions
       solstatus = 'no';
