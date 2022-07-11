@@ -1613,7 +1613,6 @@ class ToplevelProc {
    */
 
   async treat_sol(q_out, treat_outerr) {
-    let ok = await this.w.query_ok();
     if (playgroundCfg.statistics) {
       console.log('{Solved in ' + q_out.time + ' ms.}');
     }
@@ -1623,7 +1622,9 @@ class ToplevelProc {
     if (!this.muted) this.comint.print_out(out+err);
     /* print solution */
     let solstatus;
-    if (ok) { // query has a solution
+    if (q_out.cont === 'failed') { // no more solutions
+      solstatus = 'no';
+    } else {
       // TODO: fixme, see toplevel.pl
       /* Pretty print query results (solutions or errors) */
       // (see ciaowasm.pl for possible cases)
@@ -1648,8 +1649,6 @@ class ToplevelProc {
         solstatus = 'silent';
         console.log(`bug: unrecognized query result cont: ${q_out.cont} ${q_out.arg}`);
       }
-    } else { // no more solutions
-      solstatus = 'no';
     }
     const no_treat_outerr = this.q_opts.no_treat_outerr;
     if (solstatus === '?') {
