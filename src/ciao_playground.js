@@ -127,6 +127,7 @@ app([X|L1],L2,[X|L3]) :-
   },
   // Default bundles and initialization queries
   init_bundles: [
+    'ciaowasm', // (for foreign-js)
     'core',
     'builder'
   ],
@@ -1400,8 +1401,8 @@ class ToplevelProc {
     // Boot and show system info
     {
       await this.w.bootInfo(); // TODO: check errors!
-      let out = await this.w.readStdout();
-      let err = await this.w.readStderr();
+      let out = await this.w.read_stdout();
+      let err = await this.w.read_stderr();
       let info_match = out.match(/.*^(Ciao.*$).*/m);
       if (info_match != null && info_match.length == 2) {
         [...document.getElementsByClassName("lpdoc-footer")].forEach(node => {
@@ -1459,13 +1460,13 @@ class ToplevelProc {
   // Dump last query stdout/stderr (ignore or show in console)
   async dumpout() {
     let out = await this.out_and_jscont();
-    let err = await this.w.readStderr();
+    let err = await this.w.read_stderr();
     if (playgroundCfg.statistics) console.log(out+err);
   }
 
   // TODO: temporary, process from ciao-worker.js instead, reduce overheads, preload functions
   async out_and_jscont() {
-    let out = await this.w.readStdout();
+    let out = await this.w.read_stdout();
     if (out.startsWith('$$$js_eval$$$:')) { // TODO: process from ciao-worker.js instead (see fake_flush hack)
       window.curr_cproc = this;
       eval(out.slice(14)); // run javascript // TODO: use Function (or better: a predefined json protocol)
@@ -1617,7 +1618,7 @@ class ToplevelProc {
       console.log('{Solved in ' + q_out.time + ' ms.}');
     }
     let out = await this.out_and_jscont();
-    let err = await this.w.readStderr();
+    let err = await this.w.read_stderr();
     /* print stdout and stderr output */
     if (!this.muted) this.comint.print_out(out+err);
     /* print solution */
