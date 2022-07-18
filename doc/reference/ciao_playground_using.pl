@@ -200,7 +200,7 @@ improved performance and full features.
 ").
 
 /* 
-% TODO: experimental, document when it is ready
+% TODO: experimental, document and extend (ciaowasm) foreign_js
 
 @section{Prolog to JavaScript interface}
 
@@ -208,22 +208,18 @@ improved performance and full features.
 
 Taking advantage of the web environment and its capabilities, users
 can run JavaScript code from their Ciao Prolog code and interact with
-the browser. In order to access these functionities, the predicates
-need to print to the standard output the prompt @tt{$$$js_eval$$$:} +
-@tt{JavaScript code}. For example, they can employ the browser's
+the browser. For example, they can employ the browser's
 @tt{alert} feature with a predicate like this one:
 
 @begin{verbatim}
-alert(X) :- 
-   display('$$$js_eval$$$:alert(\"'), 
-   display(X), 
-   display('\")\\n').
+:- export(alert/1).
+alert(Str) :- js_call(alert(string(Str))).
+js_def(alert("x"), [], "alert(x);").
 @end{verbatim}
 
 Other functionalities include accessing the HTML to create a new
 @tt{div}, adding images and videos, or printing tables and other
 figures.
-
 
 @section{Outputting html from programs}
 

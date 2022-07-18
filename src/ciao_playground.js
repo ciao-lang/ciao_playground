@@ -1459,21 +1459,9 @@ class ToplevelProc {
 
   // Dump last query stdout/stderr (ignore or show in console)
   async dumpout() {
-    let out = await this.out_and_jscont();
+    let out = await this.w.read_stdout();
     let err = await this.w.read_stderr();
     if (playgroundCfg.statistics) console.log(out+err);
-  }
-
-  // TODO: temporary, process from ciao-worker.js instead, reduce overheads, preload functions
-  async out_and_jscont() {
-    let out = await this.w.read_stdout();
-    if (out.startsWith('$$$js_eval$$$:')) { // TODO: process from ciao-worker.js instead (see fake_flush hack)
-      window.curr_cproc = this;
-      eval(out.slice(14)); // run javascript // TODO: use Function (or better: a predefined json protocol)
-      out = "";
-      window.curr_cproc = null;
-    }
-    return out;
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1617,7 +1605,7 @@ class ToplevelProc {
     if (playgroundCfg.statistics) {
       console.log('{Solved in ' + q_out.time + ' ms.}');
     }
-    let out = await this.out_and_jscont();
+    let out = await this.w.read_stdout();
     let err = await this.w.read_stderr();
     /* print stdout and stderr output */
     if (!this.muted) this.comint.print_out(out+err);
