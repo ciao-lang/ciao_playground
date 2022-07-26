@@ -75,7 +75,7 @@ app([X|L1],L2,[X|L3]) :-
   amend_on_save: true,
   // Show statistics (and some logging info) per query (in the JS console)
   statistics: true,
-  // Query timeout (seconds)
+  // Query timeout (seconds) (0 to disable)
   query_timeout: 10,
   // Auto-* actions (on start and restart)
   auto_action: 'load',
@@ -1467,11 +1467,12 @@ class ToplevelProc {
   /* ---------------------------------------------------------------------- */
 
   set_query_timeout() {
+    if (playgroundCfg.query_timeout == 0) return; /* no timeout */
     this.timer = setTimeout((async() => {
       if (!this.muted) this.comint.print_msg('\n{ABORTED: Time limit exceeded.}\n');
       await this.restart();
       if (!this.muted) this.comint.display_status_new_prompt('silent'); /* amend prompt if needed */
-    }), playgroundCfg.query_timeout * 1000); // set a timeout
+    }), playgroundCfg.query_timeout * 1000); /* set a timeout */
   }
   cancel_query_timeout() {
     if (this.timer !== undefined) {
