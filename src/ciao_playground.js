@@ -1671,7 +1671,8 @@ class ToplevelProc {
     if (this.state === QueryState.RUNNING) {
       this.cancel_query_timeout();
       // print message
-      if (!this.muted) this.comint.print_msg('\n{ Execution aborted }\n'); // (same text as Ciao)
+      // if (!this.muted) this.comint.print_msg('\n{ Execution aborted }\n'); // (same text as Ciao)
+      if (!this.muted) this.comint.print_msg('\n{ Execution aborted (resetting dynamic database) }\n'); // TODO: remove note when preserving the database is working
       // restart worker and update variables
       // TODO: just abort query, not the worker
       await this.restart();
