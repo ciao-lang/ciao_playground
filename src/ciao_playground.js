@@ -76,7 +76,7 @@ app([X|L1],L2,[X|L3]) :-
   // Show statistics (and some logging info) per query (in the JS console)
   statistics: true,
   // Query timeout (seconds) (0 to disable)
-  query_timeout: 10,
+  query_timeout: 200,
   // Auto-* actions (on start and restart)
   auto_action: 'load',
   // Do auto-* actions on the fly (as document changes)
@@ -123,7 +123,19 @@ app([X|L1],L2,[X|L3]) :-
       mark_errs: true,
       depends: ['ciaopp','typeslib'],
       on_init: ["use_module(ciaopp(ciaopp))"]
-    }
+    },
+    "run_dynamic": { // arity {1,2}
+      read_code: true,
+      mark_errs: true,
+        depends: ['ciaopp','typeslib','exfilter'],
+      on_init: ["use_module(exfilter(exfilter))"]
+    },
+    "run_exercise": { // arity {1,2}
+     read_code: true,
+     mark_errs: true,
+     depends: ['ciaopp','typeslib','exfilter'],
+     on_init: ["use_module(exfilter(exfilter))"]
+     }
   },
   // Default bundles and initialization queries
   init_bundles: [
@@ -536,7 +548,7 @@ class PGCell {
     if (this.is_R) {
       if (this.cell_data.kind == 'exercise') {
         initial_code = this.cell_data['hint'];
-      } else if (this.cell_data.kind == 'code') {
+      } else if (this.cell_data.kind == 'code' || this.cell_data.kind == 'exfilter' || this.cell_data.kind == 'exfilterex') {
         initial_code = this.cell_data['focus'];
       }
     } else {
@@ -638,7 +650,7 @@ class PGCell {
       menu_el.appendChild(btn('lpdoc-runnable-button', "Run query", "<span>&#9654;</span>", (() => {
         this.toplevel.treat_enter().then(() => {});
       })));
-    } else if (this.cell_data.kind == 'code' || this.cell_data.kind == 'exercise') {
+    } else if (this.cell_data.kind == 'code' || this.cell_data.kind == 'exercise' || this.cell_data.kind == 'exfilter' || this.cell_data.kind == 'exfilterex') {
       this.status_el = elem_cn('span', 'lpdoc-runnable-statusmark');
       let btn_l;
       let btn_c;
@@ -647,7 +659,20 @@ class PGCell {
         btn_c = (() => {
           this.with_response(load_code).then(() => {});
         });
-      } else if (this.cell_data.kind == 'exercise') { // menu for running tests
+      }
+         else if (this.cell_data.kind == 'exfilter') { // menu for exfilter
+        btn_l = "Exfilter";
+        btn_c = (() => {
+          this.with_response(run_exfilter).then(() => {});
+        });
+         }
+        else if (this.cell_data.kind == 'exfilterex') { // menu for exfilter
+        btn_l = "Exfilter";
+        btn_c = (() => {
+          this.with_response(run_exfilter_exercise).then(() => {});
+        });
+         }
+        else if (this.cell_data.kind == 'exercise') { // menu for running tests
         btn_l = "Run tests";
         btn_c = (() => {
           this.with_response(run_tests).then(() => {});
@@ -725,7 +750,7 @@ class PGCell {
       base_el.appendChild(this.toplevel_el);
       base_el.appendChild(this.preview_el);
       // Help footer
-      if (this.cell_data.kind == 'exercise') {
+      if (this.cell_data.kind == 'exercise' || this.cell_data.kind == 'exfilterex') {
         this.#setup_help_footer(base_el);
       }
     } else {
@@ -917,13 +942,17 @@ class PGCell {
       case 'checked': txt = '&#10004;'; break;
       default: txt = '?';
       }
-    } else if (this.cell_data.kind == 'exercise') {
+    } else if (this.cell_data.kind == 'exercise' || this.cell_data.kind == 'exfilterex') {
       switch(st) {
       case 'failed': txt = '&#128576; &#10008;'; break;
       case 'checked': txt = '&#128571; &#10004;'; break;
       default: txt = '&#129300; ?';
       }
     }
+      else if (this.cell_data.kind == 'exfilter') {
+      txt =  '&#129300; ?';
+      
+       }
     if (txt !== null) {
       let sty;
       switch(st) {
@@ -950,7 +979,7 @@ class PGCell {
     //
     if (this.is_R) {
       let has_errs = (markers.length !== 0);
-      if (this.cell_data.kind == 'code') { // menu for loading (focused) code
+      if (this.cell_data.kind == 'code' || this.cell_data.kind == 'exfilter') { // menu for loading (focused) code
         this.set_code_status(has_errs ? 'failed' : 'checked');
       } else if (this.cell_data.kind == 'exercise') { /* run tests */
         const regex = /Passed: [0-9]* \((?<passed>[0-9\.]*%)\)/;
@@ -1002,6 +1031,15 @@ class PGCell {
     return code;
   }
 
+  options_exfilter() {
+      let opts = this.cell_data['opts'];    
+      return opts;
+  }
+
+  solution_exercise(){
+      let sol = this.cell_data['solution'];    
+      return sol;
+    }
   curr_mod_name() { // just the name
     if (this.is_R) {
       return this.cell_data.modname;
@@ -1729,6 +1767,8 @@ async function process_code(pg) {
   case 'test': await run_tests(pg); break;
   case 'acheck': await acheck_preview(pg); break;
   case 'spec': await spec_preview(pg); break;
+  case 'exfilter': await run_exfilter(pg); break;
+  case 'exfilter_exercise': await run_exfilter_exercise(pg); break;
   }
   if (pmuted !== null) pg.cproc.muted = pmuted;
 }
@@ -1747,6 +1787,40 @@ async function load_code(pg) {
   }
   await pg.toplevel.do_query(q, {msg:'Loading'}); // TODO: this last 'await' here should not be needed but it does not work otherwise... WHY? A problem with CiaoPromiseProxy? (JFMC)
   playgroundCfg.auto_action = 'load';
+}
+
+/* Exfilter */
+async function run_exfilter(pg) {
+  const mod = pg.curr_mod_path();
+  const modbase = pg.curr_mod_base();
+  const opts = pg.options_exfilter();
+  await pg.toplevel.do_query("run_dynamic(\"" + mod + "\",\"" + opts +"\")", {msg:'Loading exfilter'});
+  var str = await pg.cproc.w.readFile(modbase+'.txt');
+  if (str !== null) {
+    await show_text(pg, str);
+  }
+  playgroundCfg.auto_action = 'exfilter';
+}
+
+/* Exfilter */
+async function run_exfilter_exercise(pg) {
+  const mod = pg.curr_mod_path();
+  const modbase = pg.curr_mod_base();
+  const opts = pg.options_exfilter();
+  const sol = pg.solution_exercise();
+  await pg.toplevel.do_query("run_exercise(\"" + mod + "\",\"" + sol + "\",\""+ opts + "\")", {msg:'Loading exfilter'});
+  var str = await pg.cproc.w.readFile(modbase+'.txt');
+  if (str == "Correct!"){
+        pg.set_code_status('checked');
+    }
+  else {
+        pg.set_code_status('failed');
+    }
+  if (str !== null) {
+    await show_text(pg, str);
+  }
+   
+  playgroundCfg.auto_action = 'exfilter_exercise';
 }
 
 /* Gen doc and preview */
@@ -2878,7 +2952,11 @@ function scan_runnable(text) {
   const re_jse = /(.*)^%![\s]*\\begin{jseval}(.*)^%![\s]*\\end{jseval}[\s]*(.*)/sgm;
   // dynpreview regexp
   const re_dynpreview = /(.*)^%![\s]*\\begin{dynpreview}(.*)^%![\s]*\\end{dynpreview}[\s]*(.*)/sgm;
-  //
+  // exfilter exercises
+  const re_exfilter_ex = /(.*)^%![\s]*\\begin{exfilter}(.*)^%![\s]*\\end{exfilter}[\s]*^%![\s]*\\begin{opts}(.*)^%![\s]*\\end{opts}[\s]*^%![\s]*\\begin{solution}(.*)^%![\s]*\\end{solution}[\s]*(.*)/sgm;
+  // exfilter
+  const re_exfilter = /(.*)^%![\s]*\\begin{exfilter}(.*)^%![\s]*\\end{exfilter}[\s]*^%![\s]*\\begin{opts}(.*)^%![\s]*\\end{opts}[\s]*(.*)/sgm;
+  //  
   let match;
   match = re_hs.exec(text);
   if (match !== null) {
@@ -2895,6 +2973,25 @@ function scan_runnable(text) {
     cell_data['preamble'] = match[1].trim();
     cell_data['focus'] = match[2].trim();
     cell_data['postamble'] = match[3].trim();
+    return cell_data;
+  }
+  match = re_exfilter_ex.exec(text);
+  if (match !== null) {
+    cell_data.kind = 'exfilterex';
+    cell_data['preamble'] = match[1].trim(); 
+    cell_data['focus'] = match[2].trim();
+    cell_data['opts'] = match[3].trim();
+    cell_data['solution'] = match[4].trim();
+    cell_data['postamble'] = match[5].trim();
+    return cell_data;
+  }
+  match = re_exfilter.exec(text);
+  if (match !== null) {
+    cell_data.kind = 'exfilter';
+    cell_data['preamble'] = match[1].trim(); 
+    cell_data['focus'] = match[2].trim();
+    cell_data['opts'] = match[3].trim();
+    cell_data['postamble'] = match[4].trim();
     return cell_data;
   }
   match = re_mp.exec(text);
