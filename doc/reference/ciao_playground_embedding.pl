@@ -79,6 +79,12 @@ This is a simple example in LaTeX:
 
 and this [the pdf output generated](/playground/examples/append_latex_simple.pdf).
 
+These are a few more examples in LaTeX:
+
+@includecode{append_latex_nicer.tex}
+
+and this [the pdf output generated](/playground/examples/append_latex_nicer.pdf).
+
 @subsection{Word}
 
 And this is a simple example in Word (note: image below not clickable):

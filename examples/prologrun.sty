@@ -159,88 +159,81 @@
 % Set default
 \lstset{language=Ciao}
 
-% For begin{ciao} end{ciao}
+% For begin{ciao} end{ciao} (original)
 \lstnewenvironment{ciao}[1][language=Ciao]
 {\lstset{#1}}
 {}
 
-% For begin{prolog} end{prolog}
+% For begin{prolog} end{prolog} (same as above)
 \lstnewenvironment{prolog}[1][language=Ciao]
 {\lstset{#1}}
 {}
 
-% For begin{ciaorun} end{ciaorun}
-\lstnewenvironment{ciaorun}[2][language=Ciao]
-{\lstset{#1}\vspace*{2mm}
-  \hfill\vspace*{-5mm}
-  \href{#2}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
+\newcommand{\ciaoinline}[1]{\fcolorbox{ciaoframe}{white}{\lstinline[mathescape]!#1!}}
+\newcommand{\prologinline}[1]{\ciaoinline{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ciao playground connection
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The runlink macro (prints a run button, escapes # % _ in URLs automatically)
+% Use:  \runlink{<URL>}
+\DeclareRobustCommand*{\runlink}{\hyper@normalise\runlink@}
+\def\runlink@#1{\hyper@linkurl{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}{#1}}
+
+% The normlink macro (escapes # % _ in URLs)
+\DeclareRobustCommand*{\normlink}{\hyper@normalise\normlink@}
+\def\normlink@#1{#1}
+
+% The codelink macro (escapes # % _ in URLs and stores them in \thenormalizedlink)
+% Used to declare a link before a code 
+% Use:  \codelink{<URL>}
+\DeclareRobustCommand*{\codelink}{\hyper@normalise\codelink@}
+\def\codelink@#1{\newcommand{\thenormalizedlink}{#1}}
+
+\lstnewenvironment{prologrun}[1][language=Ciao]
+{ \lstset{#1}\vspace*{2mm}
+  \hfill \vspace*{-5mm}
+  % \href{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}{\myurl}
+  \href{\thenormalizedlink}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
   }
 {}
 
-% \lstnewenvironment{prologrun}[2][language=Ciao]
-% {\lstset{#1}\vspace*{2mm}
-%   \hfill\vspace*{-5mm}
-%   \href{#2}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
+% A nicer macro but URL needs to be escaped: # % _ 
+\lstnewenvironment{prologrunalt}[2][language=Ciao]
+{ \lstset{#1}\vspace*{2mm}
+  \hfill \vspace*{-5mm}
+  \runlink{#2}
+  }
+{}
+
+% % Gets in loop...
+% \lstnewenvironment{prologrunnew}[2][language=Ciao]
+% { \lstset{#1}\vspace*{2mm}
+%   \hfill \vspace*{-5mm}
+%   \href{\normlink{#2}}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
 %   }
 % {}
 
-\lstnewenvironment{prologrunesc}[1][language=Ciao]
-{\lstset{#1}\vspace*{2mm}
-  \hfill %\vspace*{-5mm}
-  \href{\purlesc}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
-  }
-{}
- 
-% Adapted from url.sty
-% Inserts in \programurlshow the URL with no need for escapes
-\def\runurlshow#1{
-  \begingroup
-  \setbox\z@\hbox\bgroup
-  \def\Url@HyperHook##1
-  \endgroup{\Url@def{\programurlshow}{#1}}%
-  % Because hyperref breaks \urldef and does not define its own (Grrrr!)...
-  \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurlshow{#1{##1}}}%
-  #1
-}
-
-\lstnewenvironment{prologrunshow}[1][language=Ciao]
-{\lstset{#1}\vspace*{2mm}
-  \hfill %\vspace*{-5mm}
-  \programurlshow
-  }
-{}
- 
-% Adapted from url.sty
-% Inserts in \programurl the URL with no need for escapes
-% \def\runurl#1{
+% % Adapted from url.sty
+% % Inserts in \programurlshow the URL with no need for escapes
+% \def\runurlshow#1{
 %   \begingroup
 %   \setbox\z@\hbox\bgroup
 %   \def\Url@HyperHook##1
-%   \endgroup{\Url@def{\programurl}{#1}}%
+%   \endgroup{\Url@def{\programurlshow}{#1}}%
 %   % Because hyperref breaks \urldef and does not define its own (Grrrr!)...
-%   \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurl{#1{##1}}}%
+%   \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurlshow{#1{##1}}}%
 %   #1
 % }
-\def\runurl#1{
-  \begingroup
-  \setbox\z@\hbox\bgroup
-  \def\Url@HyperHook##1
-  \endgroup{\Url@def{\programurl}{#1}}%
-  % Because hyperref breaks \urldef and does not define its own (Grrrr!)...
-  \def\url@##1{\egroup\endgroup\DeclareRobustCommand\programurl{#1{##1}}}%
-  #1
-}
 
-\lstnewenvironment{prologrun}[1][language=Ciao]
-{\lstset{#1}\vspace*{2mm}
-  \hfill %\vspace*{-5mm}
-  % \href{\programurl}{\textcolor{ciaochecked}{\sffamily run $\blacktriangleright$}}
-  \programurl
-  }
-{}
+% \lstnewenvironment{prologrunshow}[1][language=Ciao]
+% {\lstset{#1}\vspace*{2mm}
+%   \hfill %\vspace*{-5mm}
+%   \programurlshow
+%   }
+% {}
  
-\newcommand{\ciaoinline}[1]{\fcolorbox{ciaoframe}{white}{\lstinline[mathescape]!#1!}}
-\newcommand{\prologinline}[1]{\ciaoinline{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% End Prolog code coloring and playground connection
