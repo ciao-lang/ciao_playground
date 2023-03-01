@@ -189,7 +189,7 @@ directives. For example:
 
 @begin{verbatim}
 ` ` `ciao_runnable
-:- module(_, _, [assertions,library(bf/bfall)]).
+:- module(_, _, [assertions,sr/bfall]).
 %! \\begin{focus}
 factorial(0,s(0)).
 factorial(s(N),F) :-
@@ -211,7 +211,7 @@ plus(s(X),Y,s(Z)) :- plus(X,Y,Z).
 results in:
 
 ```ciao_runnable
-:- module(_, _, [assertions,library(bf/bfall)]).
+:- module(_, _, [assertions,sr/bfall]).
 %! \\begin{focus}
 factorial(0,s(0)).
 factorial(s(N),F) :-
