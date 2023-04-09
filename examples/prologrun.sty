@@ -186,10 +186,13 @@
 \def\normlink@#1{#1}
 
 % The codelink macro (escapes # % _ in URLs and stores them in \thenormalizedlink)
-% Used to declare a link before a code 
+% Used to declare a link before a code area
 % Use:  \codelink{<URL>}
+\newcommand{\thenormalizedlink}{}
 \DeclareRobustCommand*{\codelink}{\hyper@normalise\codelink@}
-\def\codelink@#1{\newcommand{\thenormalizedlink}{#1}}
+% \def\codelink@#1{\providecommand{\thenormalizedlink}{#1}}
+% \def\codelink@#1{\newcommand{\thenormalizedlink}{#1}}
+\def\codelink@#1{\renewcommand{\thenormalizedlink}{#1}}
 
 \lstnewenvironment{prologrun}[1][language=Ciao]
 { \lstset{#1}\vspace*{2mm}
