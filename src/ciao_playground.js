@@ -912,13 +912,18 @@ class PGCell {
 
   async #do_autosave() {
     this.autosave_redo = false;
-    //
-    if (document.URL.includes('#')) {
-      let url = document.URL.slice(0, document.URL.indexOf('#'))
+    // cleanup URL encoded info on changes
+    let prune_idx = -1;
+    let url = document.URL;
+    if (url.includes('?')) prune_idx = url.indexOf('?');
+    if (url.includes('#')) prune_idx = url.indexOf('#');
+    if (prune_idx > -1) {
+      url = url.slice(0, prune_idx);
       history.replaceState(undefined, undefined, url);
     }
-    pers_set_code(this.get_editor_value()); // update local storage
-    //
+    // update local storage
+    pers_set_code(this.get_editor_value());
+    // process if on-the-fly is set
     if (playgroundCfg.on_the_fly) {
       if (this.cproc.state !== QueryState.READY) {
         this.autosave_redo = true; /* cproc not ready, try again later... */
@@ -1265,7 +1270,7 @@ async function open_example(pg, path) {
 
 function handle_share(btn_el, msg_el, pg) {
   let value = pg.get_editor_value();
-  navigator.clipboard.writeText(obtainUrl(value)).then(() => { // success
+  navigator.clipboard.writeText(code_to_URL(value)).then(() => { // success
     let prev = msg_el.textContent;
     msg_el.textContent = 'Copied!';
     btn_el.style.color = 'var(--face-checked-assrt)';
@@ -1282,20 +1287,22 @@ const github_hash = '#https://github.com/';
 
 /* Initial editor value (splash, URI encoded, URL from a CDN, etc.) */
 async function initial_editor_value() {
+  // Try from github
   if (document.location.hash.startsWith(github_hash)) {
     return await fetch_from_github();
-  } else if (document.URL.includes('#')) { // Code in the URL
-    let value = document.location.hash.substring(1); // strip off leading #
-    value = decodeURI(value); // decode URI
-    return value;
-  } else {
-    let code = pers_get_code();
-    if (code !== null) {
-      return code;
-    } else {
-      return playgroundCfg.splash_code;
-    }
   }
+  // Extract from URL
+  {
+    let code = code_from_URL();
+    if (code !== null) return code;
+  }
+  // Try from persistent store
+  {
+    let code = pers_get_code();
+    if (code !== null) return code;
+  }
+  // Just show splash code
+  return playgroundCfg.splash_code;
 }
 
 async function fetch_from_github() {
@@ -1326,11 +1333,13 @@ async function fetch_from_worker() {
   return txt;
 }
 
+// (for dynpreview)
 function push_state_to_hash(state) {
   const hash = (state === '') ? window.location.pathname : "#"+encodeURI(state);
   history.pushState('','',hash);
 }
 
+// (for dynpreview)
 function read_state_from_hash() {
   let state='';
   if (document.URL.includes('#')) { // Code in the URL
@@ -1988,26 +1997,44 @@ function guess_mod_name(code) {
 
 // ---------------------------------------------------------------------------
 
-/**
- * Update URL to include the current code in the editor
- * @param {string} value - String containing the code in the editor
- */
-function changeUrl(value) {
-  let s = '#' + encodeURI(value);
-  history.replaceState(undefined, undefined, s);
-}
+// [deprecated]
+// /**
+//  * Update URL to include the current code in the editor
+//  * @param {string} value - String containing the code in the editor
+//  */
+// function changeUrl(value) {
+//   let s = '#' + encodeURI(value);
+//   history.replaceState(undefined, undefined, s);
+// }
 
 /**
- * Concatenate the current code in the editor to the URL.
+ * Encode the code given in value as a playground URL
  * @returns {string} Shareable link including the code in the editor.
  */
-function obtainUrl(value) {
+function code_to_URL(value) {
   let url = document.URL;
-  if (url.includes('#')) {
+  if (url.includes('#') || url.includes('?code=')) {
     // url = url.slice(0, url.indexOf('#'));
     return url; // content hasn't changed
   }
-  return url + '#' + encodeURI(value);
+  // return url + '#' + encodeURI(value); // [deprecated]
+  return url + '?code=' + encodeURIComponent(value);
+}
+
+/**
+ * Extract the code given in the current document URL (null otherwise)
+ */
+function code_from_URL() {  
+  // Code in '#' [deprecated] (legacy links)
+  if (document.URL.includes('#')) {
+    return decodeURI(document.location.hash.substring(1)); // (decode, without #)
+  }
+  // Code in ?code= param
+  const params = new URLSearchParams(document.location.search);
+  let code = params.get("code");
+  if (code !== null) return decodeURIComponent(code);
+  // Code not in URL
+  return null;
 }
 
 // =========================================================================== 
