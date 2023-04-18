@@ -2032,7 +2032,7 @@ function code_from_URL() {
   // Code in ?code= param
   const params = new URLSearchParams(document.location.search);
   let code = params.get("code");
-  if (code !== null) return decodeURIComponent(code);
+  if (code !== null) return code;
   // Code not in URL
   return null;
 }
