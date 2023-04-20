@@ -471,7 +471,7 @@ class PGCell {
   constructor(cproc) {
     this.editor = null;
     this.toplevel = null;
-    this.preview = null;
+    this.previewEd = null; // TODO: extend to multiple editor buffers
     // Autosave
     this.autosave_timer = null; // timer
     this.autosave_redo = false; // needs redo
@@ -882,7 +882,7 @@ class PGCell {
   update_dimensions() {
     if (this.editor !== null) this.editor.layout();
     if (this.toplevel !== null) this.toplevel.update_dimensions();
-    if (this.preview !== null) this.preview.layout();
+    if (this.previewEd !== null) this.previewEd.layout();
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1985,6 +1985,7 @@ async function preview_co(pg) {
   }
 }
 
+// Show raw (no highlighted) text in a PRE environment
 async function show_text(pg, d) {
   pg.show_preview('tall'); // use tall preview
   var preview = pg.preview_el; // TODO: do not change style dynamically for this preview_el
@@ -2004,21 +2005,21 @@ async function show_text(pg, d) {
   pg.update_inner_layout();
 }
 
+// Show highlighted text in a read-only editor view (playground)
 async function show_text_preview(pg, d) {
   pg.show_preview('tall'); 
   var preview = pg.preview_el; 
   preview.replaceChildren();
-  var el = document.createElement('pre');
-  el.style.height = '100%';
-  el.style.margin = '0px';
-  el.style.border = null;
-  el.style.borderRadius = null;
+  var el = elem_cn('div', 'editor-container'); //document.createElement('pre');
+  el.style.height = '100%'; // (Needed because this is inside another div) TODO: better way?
   preview.appendChild(el);
-  pg.preview = create_pg_editor(el, d, 'editor',  {});
-  pg.preview.updateOptions({ readOnly: true ,lineNumbers: 'off' });
+  pg.previewEd = create_pg_editor(el, d, 'editor',  {});
+  add_emacs_bindings(pg.previewEd);
+  pg.previewEd.updateOptions({ readOnly: true, lineNumbers: 'off' });
   pg.update_inner_layout();
 }
 
+// Show highlighted text in a read-only editor view (for lpdoc-runnable)
 async function show_text_highlight(pg, d, kind) {
   pg.show_preview('tall'); // use tall preview
   var preview = pg.preview_el; 
@@ -2031,8 +2032,8 @@ async function show_text_highlight(pg, d, kind) {
   el.style.overflowX = null;
   el.style.overflow = 'hidden'; // TODO: better way?
   preview.appendChild(el);
-  var ed = create_pg_editor(el, d, kind, {autoresize: true}); // TODO: we will make a reference to this editor 
-  ed.updateOptions({ readOnly: true, lineNumbers: 'off' });
+  var previewEd = create_pg_editor(el, d, kind, {autoresize: true}); // TODO: the reference to this editor is lost
+  previewEd.updateOptions({ readOnly: true, lineNumbers: 'off' });
   pg.update_inner_layout();
 }
 
