@@ -1,6 +1,30 @@
 #!/bin/sh
 
+# Helper build script for the Ciao Playground
+#
+# Use "FORCE_ENG_REBUILD=yes ./build.sh" to force engine rebuild.
+# 
 # ---------------------------------------------------------------------------
+
+function has_bundle() {
+    ciao info "$1" > /dev/null 2>&1
+}
+
+# ---------------------------------------------------------------------------
+
+if ! has_bundle ciao_playground; then
+    cat <<EOF
+ERROR: Cannot locate the 'ciao_playground' bundle.
+
+Make sure that Ciao is installed and this bundle enabled and
+activated.
+
+EOF
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Install ciaowasm and the playground 
 
 # (fetch externals)
 ciao custom_run ciao_playground fetch_externals
@@ -32,37 +56,47 @@ ciao custom_run ciao_playground dist
 # [[main deps]]
 # ciao install --grade=wasm core # (done with ciaowasm installation)
 ciao install --grade=wasm builder
-ciao install --grade=wasm ciaodbg
+
+# [[unit tests]]
+if has_bundle ciaodbg; then
+    ciao install --grade=wasm ciaodbg
+fi
 
 # [[website]]
 # rm -rf ../../build/site/index.cachedoc; ciao custom_run website dist
-ciao build --bin website
-ciao install --grade=wasm website
+if has_bundle website; then
+    ciao build --bin website
+    ciao install --grade=wasm website
+fi
 
 # [[lpdoc]]
-ciao install --grade=wasm lpdoc
+if has_bundle lpdoc; then
+    ciao install --grade=wasm lpdoc
+fi
 
 # [[ciaopp]]
 # (switch to lite version if needed)
-ciaopp_lite=`ciao configure --get-flag ciaopp:lite`
-if [ x"$ciaopp_lite" = x"no" ]; then
-    echo ":: Temporarily switch to ciaopp lite version"
-    ciao clean --bin ciaopp
-    ciao configure ciaopp --ciaopp:lite=yes
+if has_bundle ciaopp; then
+    ciaopp_lite=`ciao configure --get-flag ciaopp:lite`
+    if [ x"$ciaopp_lite" = x"no" ]; then
+        echo ":: Temporarily switch to ciaopp lite version"
+        ciao clean --bin ciaopp
+        ciao configure ciaopp --ciaopp:lite=yes
+    fi
+    ciao build --bin ciaopp
+    ciao install --grade=wasm ciaopp
+    # (switch back to non-lite if needed)
+    if [ x"$ciaopp_lite" = x"no" ]; then
+        echo ":: Going back to non-lite ciaopp version"
+        ciao clean --bin ciaopp
+        ciao configure ciaopp --ciaopp:lite=no
+        ciao build --bin ciaopp # recompile
+    fi
+    ciao install --grade=wasm typeslib
 fi
-ciao build --bin ciaopp
-ciao install --grade=wasm ciaopp
-# (switch back to non-lite if needed)
-if [ x"$ciaopp_lite" = x"no" ]; then
-    echo ":: Going back to non-lite ciaopp version"
-    ciao clean --bin ciaopp
-    ciao configure ciaopp --ciaopp:lite=no
-    ciao build --bin ciaopp # recompile
-fi
-ciao install --grade=wasm typeslib
 
 # # [[scasp.html]]
-if ciao list | grep sCASP > /dev/null 2>&1; then # has sCASP
+if has_bundle sCASP; then # has sCASP
     ciao install --grade=wasm sCASP
 fi
 
