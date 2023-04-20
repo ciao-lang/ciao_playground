@@ -6,7 +6,7 @@
 # 
 # ---------------------------------------------------------------------------
 
-function has_bundle() {
+has_bundle() {
     ciao info "$1" > /dev/null 2>&1
 }
 
@@ -72,6 +72,11 @@ fi
 # [[lpdoc]]
 if has_bundle lpdoc; then
     ciao install --grade=wasm lpdoc
+fi
+
+# [[exfilter]]
+if has_bundle exfilter; then
+    ciao install --grade=wasm exfilter
 fi
 
 # [[ciaopp]]
