@@ -127,7 +127,7 @@ app([X|L1],L2,[X|L3]) :-
     "filter_analyze": { // arity {1,2}
       read_code: true,
       mark_errs: true,
-      depends: ['ciaopp','typeslib','exfilter','ciaotest'],
+      depends: ['ciaopp','typeslib','exfilter'],
       on_init: ["use_module(exfilter(exfilter))"]
     },
     "filter_analyze_exercise_mode": { // arity {1,2}
