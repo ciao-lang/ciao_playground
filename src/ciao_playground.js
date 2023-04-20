@@ -124,13 +124,13 @@ app([X|L1],L2,[X|L3]) :-
       depends: ['ciaopp','typeslib'],
       on_init: ["use_module(ciaopp(ciaopp))"]
     },
-    "run_dynamic": { // arity {1,2}
+    "filter_analyze": { // arity {1,2}
       read_code: true,
       mark_errs: true,
-        depends: ['ciaopp','typeslib','exfilter'],
+      depends: ['ciaopp','typeslib','exfilter','ciaotest'],
       on_init: ["use_module(exfilter(exfilter))"]
     },
-    "run_exercise": { // arity {1,2}
+    "filter_analyze_exercise_mode": { // arity {1,2}
      read_code: true,
      mark_errs: true,
      depends: ['ciaopp','typeslib','exfilter'],
@@ -471,6 +471,7 @@ class PGCell {
   constructor(cproc) {
     this.editor = null;
     this.toplevel = null;
+    this.preview = null;
     // Autosave
     this.autosave_timer = null; // timer
     this.autosave_redo = false; // needs redo
@@ -661,13 +662,13 @@ class PGCell {
         });
       }
          else if (this.cell_data.kind == 'exfilter') { // menu for exfilter
-        btn_l = "Exfilter";
+        btn_l = "Show analysis";
         btn_c = (() => {
           this.with_response(run_exfilter).then(() => {});
         });
          }
         else if (this.cell_data.kind == 'exfilterex') { // menu for exfilter
-        btn_l = "Exfilter";
+        btn_l = "Submit answer";
         btn_c = (() => {
           this.with_response(run_exfilter_exercise).then(() => {});
         });
@@ -881,6 +882,7 @@ class PGCell {
   update_dimensions() {
     if (this.editor !== null) this.editor.layout();
     if (this.toplevel !== null) this.toplevel.update_dimensions();
+    if (this.preview !== null) this.preview.layout();
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1802,12 +1804,22 @@ async function load_code(pg) {
 async function run_exfilter(pg) {
   const mod = pg.curr_mod_path();
   const modbase = pg.curr_mod_base();
-  const opts = pg.options_exfilter();
-  await pg.toplevel.do_query("run_dynamic(\"" + mod + "\",\"" + opts +"\")", {msg:'Loading exfilter'});
+  // Heuristic to determine if the filtering output comes from a ciaopp output file or from top-level messages
+  const opts = pg.options_exfilter().split(",");
+  if (opts.includes("V") === true) {
+    if (opts.includes("output=on") === true) {
+      var kind = 'editor';
+    } else {
+      var kind = 'toplevel';
+    }
+  } else {
+    var kind = 'editor';
+  }
+  await pg.toplevel.do_query("filter_analyze(\"" + mod + "\",\"" + opts +"\")", {msg:'Analyzing'});
   var str = await pg.cproc.w.readFile(modbase+'.txt');
   if (str !== null) {
-    await show_text(pg, str);
-  }
+    await show_text_highlight(pg, str, kind);
+  } 
   playgroundCfg.auto_action = 'exfilter';
 }
 
@@ -1815,20 +1827,36 @@ async function run_exfilter(pg) {
 async function run_exfilter_exercise(pg) {
   const mod = pg.curr_mod_path();
   const modbase = pg.curr_mod_base();
-  const opts = pg.options_exfilter();
-  const sol = pg.solution_exercise();
-  await pg.toplevel.do_query("run_exercise(\"" + mod + "\",\"" + sol + "\",\""+ opts + "\")", {msg:'Loading exfilter'});
-  var str = await pg.cproc.w.readFile(modbase+'.txt');
-  if (str == "Correct!"){
-        pg.set_code_status('checked');
-    }
-  else {
-        pg.set_code_status('failed');
-    }
-  if (str !== null) {
-    await show_text(pg, str);
+  // Heuristic to determine if the filtering output comes from a ciaopp output file or from top-level messages
+  const opts = pg.options_exfilter().split(",");
+  if (opts.includes("solution=errors") === true) {
+    var kind = 'toplevel';
+
+  } else {
+    var kind = 'editor';
   }
-   
+  const sol = pg.solution_exercise();
+  await pg.toplevel.do_query("filter_analyze_exercise_mode(\"" + mod + "\",\"" + sol + "\",\""+ opts + "\")", {msg:'Analyzing answer'});
+  var str = await pg.cproc.w.readFile(modbase+'.txt');
+  let msgs = parse_error_msg(str);
+  if (str !== null) {
+    await show_text_highlight(pg, str, kind);
+    if (str == "Correct"){
+      pg.set_code_status('checked');
+      var preview = pg.preview_el; 
+      preview.replaceChildren();
+    } else if (str == "Incorrect") {
+      pg.set_code_status('failed');
+      var preview = pg.preview_el; 
+      preview.replaceChildren();
+    } else if ( msgs.errors.length !== 0 || msgs.warnings.length !== 0 ) {
+      pg.set_code_status('failed');
+    } else if ( str.match(/:\-\s*false/) !== null) {
+      pg.set_code_status('failed');
+    } else {
+      pg.set_code_status('checked');
+    }            
+  }
   playgroundCfg.auto_action = 'exfilter_exercise';
 }
 
@@ -1953,7 +1981,7 @@ async function preview_co(pg) {
   const modbase = pg.curr_mod_base();
   var str = await pg.cproc.w.readFile(modbase+'_co.pl');
   if (str !== null) {
-    await show_text(pg, str);
+    await show_text_preview(pg, str);
   }
 }
 
@@ -1973,6 +2001,38 @@ async function show_text(pg, d) {
   el.style.overflowX = null;
   el.style.overflow = 'auto';
   preview.appendChild(el);
+  pg.update_inner_layout();
+}
+
+async function show_text_preview(pg, d) {
+  pg.show_preview('tall'); 
+  var preview = pg.preview_el; 
+  preview.replaceChildren();
+  var el = document.createElement('pre');
+  el.style.height = '100%';
+  el.style.margin = '0px';
+  el.style.border = null;
+  el.style.borderRadius = null;
+  preview.appendChild(el);
+  pg.preview = create_pg_editor(el, d, 'editor',  {});
+  pg.preview.updateOptions({ readOnly: true ,lineNumbers: 'off' });
+  pg.update_inner_layout();
+}
+
+async function show_text_highlight(pg, d, kind) {
+  pg.show_preview('tall'); // use tall preview
+  var preview = pg.preview_el; 
+  preview.replaceChildren();
+  var el = elem_cn('pre', 'lpdoc-codeblock');
+  el.style.height = '100%';
+  el.style.marginTop = '5px';
+  el.style.border = null;
+  el.style.borderRadius = null;
+  el.style.overflowX = null;
+  el.style.overflow = 'hidden'; // TODO: better way?
+  preview.appendChild(el);
+  var ed = create_pg_editor(el, d, kind, {autoresize: true}); // TODO: we will make a reference to this editor 
+  ed.updateOptions({ readOnly: true, lineNumbers: 'off' });
   pg.update_inner_layout();
 }
 
@@ -2980,9 +3040,9 @@ function scan_runnable(text) {
   // dynpreview regexp
   const re_dynpreview = /(.*)^%![\s]*\\begin{dynpreview}(.*)^%![\s]*\\end{dynpreview}[\s]*(.*)/sgm;
   // exfilter exercises
-  const re_exfilter_ex = /(.*)^%![\s]*\\begin{exfilter}(.*)^%![\s]*\\end{exfilter}[\s]*^%![\s]*\\begin{opts}(.*)^%![\s]*\\end{opts}[\s]*^%![\s]*\\begin{solution}(.*)^%![\s]*\\end{solution}[\s]*(.*)/sgm;
+  const re_exfilter_ex = /(.*)^%![\s]*\\begin{code}(.*)^%![\s]*\\end{code}[\s]*^%![\s]*\\begin{opts}(.*)^%![\s]*\\end{opts}[\s]*^%![\s]*\\begin{solution}(.*)^%![\s]*\\end{solution}[\s]*(.*)/sgm;
   // exfilter
-  const re_exfilter = /(.*)^%![\s]*\\begin{exfilter}(.*)^%![\s]*\\end{exfilter}[\s]*^%![\s]*\\begin{opts}(.*)^%![\s]*\\end{opts}[\s]*(.*)/sgm;
+  const re_exfilter = /(.*)^%![\s]*\\begin{code}(.*)^%![\s]*\\end{code}[\s]*^%![\s]*\\begin{opts}(.*)^%![\s]*\\end{opts}[\s]*(.*)/sgm;
   //  
   let match;
   match = re_hs.exec(text);
