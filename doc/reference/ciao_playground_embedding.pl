@@ -57,7 +57,7 @@ Now, if one clicks on this link, the playground will be opened with
 the example program loaded.
 
 For example,
-@href{https://ciao-lang.org/playground/#%25%20Try:%20%20?-%20is_in_list(X,%5B1,2,3%5D).%0A%0Ais_in_list(X,%5BX%7C_%5D).%0Ais_in_list(X,%5B_%7CT%5D)%20:-%0A%20%20%20%20%20%20is_in_list(X,T).}{this link}
+@href{https://ciao-lang.org/playground/?code=%25%20Try%3A%20%20%3F-%20is_in_list(X%2C%5B1%2C2%2C3%5D).%0A%0Ais_in_list(X%2C%5BX%7C_%5D).%0Ais_in_list(X%2C%5B_%7CT%5D)%20%3A-%0A%20%20%20%20%20%20is_in_list(X%2CT).}{this link}
 (@em{obtained as described above}) opens the playground and loads into its
 editor the following program:
 
@@ -145,8 +145,8 @@ factorial(N,F) :-
 Can be generated including in the source file (e.g., in markdown) the
 following code:
 
-@begin{verbatim}
-` ` ` ciao_runnable
+~~~
+```ciao_runnable
 :- module(_, _, [assertions]).
 
 :- test factorial(A, B) : (A = 0) => (B = 1) + (not_fails, is_det).
@@ -177,8 +177,8 @@ factorial(N,F) :-
     factorial(N1,F1),
     F is F1*N.
 %! \\end{solution}
-` ` ` 
-@end{verbatim}
+```
+~~~
 
 As shown above, tests can be included, hints and solutions provided,
 etc. 
@@ -187,8 +187,8 @@ It is also possible to specify that only some parts of the code be
 shown by placing those parts between begin focus and end focus
 directives. For example:
 
-@begin{verbatim}
-` ` `ciao_runnable
+~~~
+```ciao_runnable
 :- module(_, _, [assertions,sr/bfall]).
 %! \\begin{focus}
 factorial(0,s(0)).
@@ -205,8 +205,8 @@ times(s(X),Y,Z) :- plus(W,Y,Z), times(X,Y,W).
 
 plus(0,Y,Y) :- nat_num(Y).
 plus(s(X),Y,s(Z)) :- plus(X,Y,Z).
-` ` `
-@end{verbatim}
+```
+~~~
 
 results in:
 
@@ -237,11 +237,11 @@ etc.) are shown in the output or not.
 Finally, runnable and editable queries can also be easily defined as
 follows:
 
-@begin{verbatim}
-` ` `ciao_runnable
+~~~
+```ciao_runnable
 ?- factorial(X,s(s(s(s(s(s(0))))))).
-` ` `
-@end{verbatim}
+```
+~~~
 
 resulting in: 
 
