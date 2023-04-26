@@ -83,6 +83,7 @@ fi
 # rm -rf ../../build/site/index.cachedoc; ciao custom_run website dist
 if has_bundle website; then
     ciao build --bin website
+    ciao build --grade=wasm website
     ciao install --grade=wasm website
 fi
 
