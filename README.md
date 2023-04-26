@@ -2,8 +2,7 @@
 
 This bundle implements the Ciao Playground. It supports local
 (browser-side) execution of Ciao code based on `ciaowasm` and offers a
-code edition based on the [Monaco
-Editor](https://microsoft.github.io/monaco-editor/) component.
+code edition based on the [Monaco Editor](https://microsoft.github.io/monaco-editor/) component.
 
 `ciaowasm` is a Ciao engine compiled to the WebAssembly platform using
 [Emscripten](https://emscripten.org), together with a JavaScript
@@ -43,7 +42,7 @@ fault). The `ciao-serve-mt` module wraps a Python3 multi-threaded HTTP
 server (which seems to work properly) with a `ciao-serve`-like
 interface.
 
-> **NOTE**: When developing, it is sometimes convenient to [bypass your
+**NOTE**: When developing, it is sometimes convenient to [bypass your
 cache](https://en.wikipedia.org/wiki/Wikipedia:Bypass_your_cache).
 
 ## Documentation
