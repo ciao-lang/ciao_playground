@@ -1,0 +1,5 @@
+
+:- true pred app(Xs,Ys,Zs)
+   : ( list(Xs), list(Ys), term(Zs) )
+   => ( list(Xs), list(Ys), list(Zs) )
+   + cost(ub,steps,inf).

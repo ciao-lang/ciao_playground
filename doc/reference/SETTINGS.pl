@@ -11,9 +11,17 @@ doc_structure :=
         [ 
               factorial_peano_iso_source
             , factorial_peano_iso
+        ],
+          verification_documents-
+        [ 
+              append_verification_source
+            , append_verification
         ]
     ].
 
 allow_markdown := yes.
 syntax_highlight := yes.
 allow_runnable := yes.
+
+% (extensions)
+load_doc_module := exfilter(exfilter_lpdoc).
