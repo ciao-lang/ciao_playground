@@ -39,6 +39,10 @@ functionalities:
   Here is an [example of an exercise generated with the LPdoc
   tool](/ciao/build/doc/ciao_playground.html/factorial_peano_iso.html).
 
+@item An [easy way to create interactive verification
+  tutorials](/ciao/build/doc/ciao_playground.html/exfilter_documents.html)
+  for CiaoPP.
+
 @item An easy way to create and distribute applications.
 
   The Playground can be specialized to create standalone web-based

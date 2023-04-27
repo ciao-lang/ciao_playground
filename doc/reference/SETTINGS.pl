@@ -12,7 +12,7 @@ doc_structure :=
               factorial_peano_iso_source
             , factorial_peano_iso
         ],
-          verification_documents-
+          exfilter_documents-
         [ 
               append_verification_source
             , append_verification
