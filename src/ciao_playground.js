@@ -131,11 +131,11 @@ app([X|L1],L2,[X|L3]) :-
       on_init: ["use_module(exfilter(exfilter))"]
     },
     "filter_analyze_exercise_mode": { // arity {1,2}
-     read_code: true,
-     mark_errs: true,
-     depends: ['ciaopp','typeslib','exfilter'],
-     on_init: ["use_module(exfilter(exfilter))"]
-     }
+      read_code: true,
+      mark_errs: true,
+      depends: ['ciaopp','typeslib','exfilter'],
+      on_init: ["use_module(exfilter(exfilter))"]
+    }
   },
   // Default bundles and initialization queries
   init_bundles: [
@@ -1818,6 +1818,7 @@ async function run_exfilter(pg) {
   await pg.toplevel.do_query("filter_analyze(\"" + mod + "\",\"" + opts +"\")", {msg:'Analyzing'});
   var str = await pg.cproc.w.readFile(modbase+'.txt');
   if (str !== null) {
+    str = str.trim(); // TODO: this should be done by exfilter
     await show_text_highlight(pg, str, kind);
   } 
   playgroundCfg.auto_action = 'exfilter';
@@ -1831,15 +1832,15 @@ async function run_exfilter_exercise(pg) {
   const opts = pg.options_exfilter().split(",");
   if (opts.includes("solution=errors") === true) {
     var kind = 'toplevel';
-
   } else {
     var kind = 'editor';
   }
   const sol = pg.solution_exercise();
   await pg.toplevel.do_query("filter_analyze_exercise_mode(\"" + mod + "\",\"" + sol + "\",\""+ opts + "\")", {msg:'Analyzing answer'});
   var str = await pg.cproc.w.readFile(modbase+'.txt');
-  let msgs = parse_error_msg(str);
   if (str !== null) {
+    str = str.trim(); // TODO: this should be done by exfilter
+    let msgs = parse_error_msg(str);
     await show_text_highlight(pg, str, kind);
     if (str == "Correct"){
       pg.set_code_status('checked');
@@ -1849,9 +1850,9 @@ async function run_exfilter_exercise(pg) {
       pg.set_code_status('failed');
       var preview = pg.preview_el; 
       preview.replaceChildren();
-    } else if ( msgs.errors.length !== 0 || msgs.warnings.length !== 0 ) {
+    } else if (msgs.errors.length !== 0 || msgs.warnings.length !== 0) {
       pg.set_code_status('failed');
-    } else if ( str.match(/:\-\s*false/) !== null) {
+    } else if (str.match(/:\-\s*false/) !== null) {
       pg.set_code_status('failed');
     } else {
       pg.set_code_status('checked');
