@@ -30,7 +30,7 @@ site_build :-
 
 site_copy_files :-
     site_glob_cp(lpdoc, 'etc', '*.css', '/css'), % (for lpdoc.css) % TODO: better way?
-    site_glob_cp(lpdoc, 'etc', '*.js', '/js'), % (for lpdoc-aux.js) % TODO: better way?
+    site_glob_cp(lpdoc, 'etc', '*.js', '/js'), % (for lpdoc.js) % TODO: better way?
     site_glob_cp(ciao_playground, 'src', '*.html', '/playground'),
     site_glob_cp(ciao_playground, 'src', '*.js', '/playground/js'),
     site_glob_cp(ciao_playground, 'src/syntax', '*.js', '/playground/js/syntax'),

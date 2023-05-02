@@ -11,7 +11,7 @@
  * @author Jose F. Morales
  */
 
-/* (requires lpdoc-aux.js) */
+/* (must be loaded from lpdoc.js) */
 
 /* --------------------------------------------------------------------------- */
 /* Playground defaults */
@@ -147,8 +147,8 @@ app([X|L1],L2,[X|L3]) :-
     'use_module(engine(internals), [reload_bundleregs/0])',
     'use_module(library(classic/classic_predicates))'
   ],
-  // keep worker alive (only for inLPDOC at this moment)
-  inLPDOC_keep_alive: true
+  // keep worker alive (only when lpdocPG=='runnable' at this moment)
+  runnable_keep_alive: true
 };
 // Query for loading code
 //   playgroundCfg.custom_load_query = ((m) => ...);
@@ -182,8 +182,16 @@ if (typeof playgroundCfg === 'undefined') {
 }
 playgroundCfg = Object.assign({...playgroundCfg_defaults}, playgroundCfg);
 
-if (typeof inLPDOC === 'undefined') {
-  var inLPDOC = false;
+// lpdocPG:
+//   'raw': do not setup pgset (custom setups)
+//   'runnable': setup runnable code blocks in a LPdoc document
+//   'playground': setup a playground
+if (typeof lpdocPG === 'undefined') {
+  console.error('loading ciao_playground.js without lpdocPG');
+  var lpdocPG = 'raw';
+}
+if (typeof urlPREFIX === 'undefined') {
+  var urlPREFIX = ''; 
 }
 
 // ===========================================================================
@@ -192,21 +200,21 @@ if (typeof inLPDOC === 'undefined') {
 // TODO: this one is not very fast but it seems to be robust enough;
 //   better ways?
 
-var require = { paths: { vs: '/node_modules/monaco-editor/min/vs' } };
+var require = { paths: { vs: urlPREFIX+'/node_modules/monaco-editor/min/vs' } };
 (function() {
   //importCSS('/playground/css/ciao_playground.css'); // (better from main html)
-  importCSS('/node_modules/monaco-editor/min/vs/editor/editor.main.css');
+  importCSS(urlPREFIX+'/node_modules/monaco-editor/min/vs/editor/editor.main.css');
   // aux for UI
-  importScript('/playground/js/split.min.js'); // old split.js
+  importScript(urlPREFIX+'/playground/js/split.min.js'); // old split.js
   // monaco
-  importScript('/node_modules/monaco-editor/min/vs/loader.js');
-  importScript('/node_modules/monaco-editor/min/vs/editor/editor.main.js');
-  importScript('/node_modules/monaco-editor/min/vs/editor/editor.main.nls.js');
+  importScript(urlPREFIX+'/node_modules/monaco-editor/min/vs/loader.js');
+  importScript(urlPREFIX+'/node_modules/monaco-editor/min/vs/editor/editor.main.js');
+  importScript(urlPREFIX+'/node_modules/monaco-editor/min/vs/editor/editor.main.nls.js');
   // Ciao syntax for monaco
-  importScript('/playground/js/syntax/ciao-language.js');
-  importScript('/playground/js/syntax/ciao-toplevel-language.js');
-  // ciaowasm
-  importScript('/ciao/build/bin/ciao-async.js');
+  importScript(urlPREFIX+'/playground/js/syntax/ciao-language.js');
+  importScript(urlPREFIX+'/playground/js/syntax/ciao-toplevel-language.js');
+  // Ciao engine and interface (ciaowasm)
+  importScript(urlPREFIX+'/js/ciao-prolog.js');
 })();
 
 // ---------------------------------------------------------------------------
@@ -643,7 +651,7 @@ class PGCell {
     base_el.appendChild(menu_el);
   }
 
-  /* Editor menu (inLPDOC) */
+  /* Editor menu (lpdocPG === 'runnable') */
   #setup_menu_R(base_el) {
     const menu_el = elem_cn('div', 'lpdoc-runnable-buttons');
     this.status_el = null; // TODO: set status_el to null before
@@ -1180,7 +1188,7 @@ class PGCell {
     this.toplevel.clear_output(); // TODO: customize?
     await f(this);
     this.toplevel.reveal_first(); // TODO: customize?
-    if (!playgroundCfg.inLPDOC_keep_alive) {
+    if (!playgroundCfg.runnable_keep_alive) {
       this.cproc.shutdown();
     }
   }
@@ -1190,7 +1198,7 @@ class PGCell {
   // redirect to playground
   load_in_playground() { /* pre: this.is_R */
     let code = this.complete_code();
-    window.open('/playground/index.html#' + encodeURI(code)); // open playground in new tab
+    window.open(urlPREFIX+'/playground/index.html#' + encodeURI(code)); // open playground in new tab
   }
 
   // Setup cell with dynamic preview (TODO: experimental)
@@ -1398,7 +1406,7 @@ class ToplevelProc {
   /* Start the worker (and load defaults, show prompt, load program) */
   async start() {
     if (!this.muted) this.comint.set_log('Loading bundles and booting');
-    this.w = new CiaoWorker('/ciao/'); // create a Ciao worker
+    this.w = new CiaoWorker(urlPREFIX+'/ciao/'); // create a Ciao worker
     await this.load_ciao_defaults(); // TODO: check result?
     if (!this.muted) this.comint.set_log(''); 
     //
@@ -1969,7 +1977,7 @@ async function show_lpdoc_html(pg, d) {
   preview.appendChild(d);
   /* enable code runnable */ // TODO: experimental!
   if (preview_pgset == null) preview_pgset = new PGSet();
-  await preview_pgset.setup_inLPDOC();
+  await preview_pgset.setup_runnable();
   update_dimensions();
   if (preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
     await preview_pgset.load_all_code();
@@ -2992,7 +3000,7 @@ class PGSet {
     await this.cells[i].setup(base_el, cell_data, this);
   }
 
-  async setup_inLPDOC() { // playground cells for an LPdoc document
+  async setup_runnable() { // playground cells for an LPdoc document
     let i = 0;
     for (let node of [...document.getElementsByClassName("lpdoc-codeblock-runnable")]) {
       let txt = node.innerText;
@@ -3125,7 +3133,7 @@ function scan_runnable(text) {
 // ===========================================================================
 // Setup mathjax (dynamically)
 
-// TODO: integrate or move closer to lpdoc-aux.js?
+// TODO: integrate or move closer to lpdoc.js?
 
 function setup_mathjax() {
   window.MathJax = {
@@ -3156,7 +3164,7 @@ function setup_mathjax() {
   
   (function() {
     let script = document.createElement('script');
-    script.src = '/node_modules/mathjax/es5/tex-svg.js';
+    script.src = urlPREFIX+'/node_modules/mathjax/es5/tex-svg.js';
     script.async = true;
     document.head.appendChild(script);
   })();
@@ -3178,7 +3186,10 @@ function show_cover() {
   });
 }
 function hide_cover() {
-  cover_div.remove();
+  if (cover_div !== null) {
+    cover_div.remove();
+    cover_div = null;
+  }
 }
 
 // ===========================================================================
@@ -3288,24 +3299,26 @@ function update_dimensions() {
 }
 window.addEventListener("resize", update_dimensions);
 
-if (inLPDOC) setup_mathjax();
-if (!inLPDOC) show_cover();
+if (lpdocPG === 'runnable') setup_mathjax();
+if (lpdocPG === 'playground') show_cover();
 
 window.onload = function () {
-  if (!inLPDOC) hide_cover();
+  if (lpdocPG === 'playground') hide_cover();
   // Set CSS theme as soon as possible to avoid flickering
   // Editor theme is selected on creation. It will be updated if needed.
   update_theme_hook();
 
-  pgset = new PGSet();
-  (async() => {
-    if (inLPDOC) { // LPdoc with runnable code
-      await pgset.setup_inLPDOC();
-    } else { // Full playground
-      const base_el = document.body;
-      const text = await initial_editor_value();
-      await pgset.setup(base_el, text);
-    }
-    update_dimensions();
-  })();
+  if (lpdocPG !== 'raw') {
+    pgset = new PGSet();
+    (async() => {
+      if (lpdocPG === 'runnable') { // LPdoc with runnable code
+        await pgset.setup_runnable();
+      } else { // Full playground
+        const base_el = document.body;
+        const text = await initial_editor_value();
+        await pgset.setup(base_el, text);
+      }
+      update_dimensions();
+    })();
+  }
 };

@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="/css/lpdoc.css" type="text/css"/>
     <link rel="stylesheet" href="/playground/css/ciao_playground.css" type="text/css"/>
     <link rel="preload" href="https://cdn.jsdelivr.net/gh/nextapps-de/winbox@0.1.8/dist/winbox.bundle.js" as="script">
-    <script src="/js/lpdoc-aux.js"></script> <!-- LPdoc UI -->
-    <script src="/playground/js/ciao_playground.js"></script> <!-- main script -->
+    <script> var lpdocPG='raw'; </script>
+    <script src="/js/lpdoc.js"></script> <!-- LPdoc UI -->
     <script src="https://cdn.jsdelivr.net/gh/nextapps-de/winbox@0.1.8/dist/winbox.bundle.js" defer></script>
     <style>
       body {
@@ -83,7 +83,7 @@
       hide_cover();
       // Set CSS theme as soon as possible to avoid flickering
       // Editor theme is selected on creation. It will be updated if needed.
-      update_css_theme();
+      update_theme_hook();
     };
     </script>
 </html>
