@@ -1457,7 +1457,7 @@ class ToplevelProc {
     }
     // Boot and show system info
     {
-      await this.w.bootInfo(); // TODO: check errors!
+      await this.w.boot_info(); // TODO: check errors!
       let out = await this.w.read_stdout();
       let err = await this.w.read_stderr();
       let info_match = out.match(/.*^(Ciao.*$).*/m);
