@@ -74,6 +74,7 @@ const toplevel_lang = {
       [/^WARNING: [a-zA-Z 0-9:.+!\(\)\-=_/"',{}\\|\[\]]+/m, 'toplevel-warning'],
       [/^WARNING \([a-zA-Z 0-9_]+\): [a-zA-Z 0-9:.+!\(\)\-=_\/"',{}\\|\[\]]+/m, 'toplevel-warning'],
       [/^NOTE: [a-zA-Z 0-9:.+\(\)\-=_/"',{}|\\]+/m, 'toplevel-note'],
+      [/^NOTE \([a-zA-Z 0-9_]+\): [a-zA-Z 0-9:.+\(\)\-=_/"',{}|\\]+/m, 'toplevel-note'],
       [/^Note: [a-zA-Z 0-9:.+\(\)\-=_/"',{}|\\]+/m, 'toplevel-note'],
       [/^{[a-zA-Z 0-9:.+\(\)\-=_/"',|\\{}\[\]]*/m, 'toplevel-note'],
       [/^}/m, 'toplevel-note'],
