@@ -1457,9 +1457,11 @@ class ToplevelProc {
     }
     // Boot and show system info
     {
-      await this.w.boot_info(); // TODO: check errors!
+      await this.w.query_one_begin("'$:'('internals:$bootversion')"); // TODO: check errors!
       let out = await this.w.read_stdout();
       let err = await this.w.read_stderr();
+      await this.w.query_end();
+      //
       let info_match = out.match(/.*^(Ciao.*$).*/m);
       if (info_match != null && info_match.length == 2) {
         [...document.getElementsByClassName("lpdoc-footer")].forEach(node => {
