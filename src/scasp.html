@@ -70,6 +70,7 @@ q(1).
 `,
         // Amend code (add module, etc.)
         amend_on_save: false,
+        // ------
         // Special queries // TODO: missing arity
         special_query: {
           "load": { read_code: true }
@@ -83,9 +84,9 @@ q(1).
         ]
       };
       // Query for loading code
-      playgroundCfg.custom_load_query = ((m) => { return "load('"+m+"')"; });
+      toplevelCfg.custom_load_query = ((m) => { return "load('"+m+"')"; });
       // Transformation for user queries
-      playgroundCfg.custom_run_query = ((q) => {
+      toplevelCfg.custom_run_query = ((q) => {
         if (/load\(.*\)/.test(q)) { // Do not patch
           return q;
         } else {
@@ -96,7 +97,7 @@ q(1).
         }
       });
       // Post-print code (before update_inner_layout()) 
-      playgroundCfg.custom_postprint_sol = (async (pg) => {
+      toplevelCfg.custom_postprint_sol = (async (pg) => {
         if (pg.cproc.state === QueryState.VALIDATING) {
           // Ugly hack, remove DUMMYDUMMY
           pg.toplevel.move_to_end();
