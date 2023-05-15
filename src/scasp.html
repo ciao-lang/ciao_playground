@@ -69,7 +69,10 @@ q(1).
 % Example query: ?- p(X).
 `,
         // Amend code (add module, etc.)
-        amend_on_save: false,
+        amend_on_save: false
+      };
+      // Query for loading code
+      var toplevelCfg = {
         // ------
         // Special queries // TODO: missing arity
         special_query: {
@@ -83,7 +86,6 @@ q(1).
           'use_module(scasp(scasp))'
         ]
       };
-      // Query for loading code
       toplevelCfg.custom_load_query = ((m) => { return "load('"+m+"')"; });
       // Transformation for user queries
       toplevelCfg.custom_run_query = ((q) => {
