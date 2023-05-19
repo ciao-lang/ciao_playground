@@ -34,12 +34,11 @@ We can also code it using ISO-Prolog arithmetic, i.e., `is/2`:
 ```ciao
  ... Z is X * Y ... 
 ```
-Note that this type of arithmetic has limitations: it only works in
-one direction, i.e., `X` and `Y` must be bound to 
-arithmetic terms.
+Note that this type of arithmetic has limitations: it only works
+in one direction, i.e., `X` and `Y` must be bound to arithmetic terms.
 
-But it provides a (large!) performance gain.  Also, meta-logical tests
-(see later) allow using it in more modes.
+But it provides a (large!) performance gain.  Also, meta-logical 
+tests (see later) allow using it in more modes.
 
 Try to encode the factorial program using `is/2`:
 ```ciao_runnable
@@ -57,14 +56,13 @@ Try to encode the factorial program using `is/2`:
 
 %! \begin{hint}
 % TASK 1 - Rewrite with Prolog arithmetic 
-
 factorial(0,s(0)).    % TODO: Replace s(0) by 1
 factorial(M,F) :-     % TODO: Make sure that M > 0
-    M = s(N),         % TODO: Compute N from M using is/2 (note that N is unbound! clear the equation)
-    factorial(N,F1),
+    M = s(N),         % TODO: Compute N from M using is/2 (note that N is 
+    factorial(N,F1),  %       unbound, so you need to compute N from M!)
     times(M,F1,F).    % TODO: Replace times/3 by a call to is/2 (using *)
-
-% When you are done, press the triangle (\"Run tests\") or the arrow (\"Load into playground\").
+% When you are done, press the circle ("Run tests") or the arrow 
+% ("Load into playground").
 %! \end{hint}
 %! \begin{solution}
 factorial(0,1). 

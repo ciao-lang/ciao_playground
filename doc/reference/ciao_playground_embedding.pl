@@ -48,10 +48,11 @@ following example:
 % TASK 1 - Rewrite with Prolog arithmetic 
 factorial(0,s(0)).    % TODO: Replace s(0) by 1
 factorial(M,F) :-     % TODO: Make sure that M > 0
-    M = s(N),         % TODO: Compute N from M using is/2 (note that N is unbound! clear the equation)
-    factorial(N,F1),
+    M = s(N),         % TODO: Compute N from M using is/2 (note that N is 
+    factorial(N,F1),  %       unbound, so you need to compute N from M!)
     times(M,F1,F).    % TODO: Replace times/3 by a call to is/2 (using *)
-% When you are done, press the triangle (\"Run tests\") or the arrow (\"Load into playground\").
+% When you are done, press the circle (\"Run tests\") or the arrow
+% (\"Load into playground\").
 %! \\end{hint}
 
 %! \\begin{solution}
@@ -85,10 +86,11 @@ following code:
 % TASK 1 - Rewrite with Prolog arithmetic 
 factorial(0,s(0)).    % TODO: Replace s(0) by 1
 factorial(M,F) :-     % TODO: Make sure that M > 0
-    M = s(N),         % TODO: Compute N from M using is/2 (note that N is unbound! clear the equation)
-    factorial(N,F1),
+    M = s(N),         % TODO: Compute N from M using is/2 (note that N is 
+    factorial(N,F1),  %       unbound, so you need to compute N from M!)
     times(M,F1,F).    % TODO: Replace times/3 by a call to is/2 (using *)
-% When you are done, press the triangle (\"Run tests\") or the arrow (\"Load into playground\").
+% When you are done, press the circle (\"Run tests\") or the arrow 
+% (\"Load into playground\").
 %! \\end{hint}
 
 %! \\begin{solution}
