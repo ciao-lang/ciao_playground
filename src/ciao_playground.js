@@ -1844,18 +1844,28 @@ function parse_error_msg(msg) {
       file = line.slice(line.indexOf('/'));
     }
     else if (line.includes('WARNING')) {
-      warnings.push({
-        file: file,
-        lines: line.slice(line.indexOf('(') + 5, line.indexOf(')')),
-        msg: line.slice(line.indexOf(')') + 2)
-      });
+      let msglns = line.slice(line.indexOf(':') + 1);
+      if (line.includes('lns')) {
+        warnings.push({
+          file: file,
+          lines: msglns.slice(msglns.indexOf('(') + 5, msglns.indexOf(')')),
+          msg: msglns.slice(msglns.indexOf(')') + 2)
+        });
+      } else {
+        warnings.push({
+          file: file,
+          lines: undefined,
+          msg: line.slice(7)
+        });
+      }
     }
     else if (line.includes('ERROR')) {
+      let msglns = line.slice(line.indexOf(':') + 1);
       if (line.includes('lns')) {
         errors.push({
           file: file,
-          lines: line.slice(line.indexOf('(') + 5, line.indexOf(')')),
-          msg: line.slice(line.indexOf(')') + 2)
+          lines: msglns.slice(msglns.indexOf('(') + 5, msglns.indexOf(')')),
+          msg: msglns.slice(msglns.indexOf(')') + 2)
         });
       } else {
         errors.push({
