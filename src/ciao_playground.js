@@ -7,8 +7,6 @@
  * toplevel makes use of CiaoWasm to run locally in the browser.
  *
  * @author The Ciao Development Team
- * @author Guillermo García
- * @author Jose F. Morales
  */
 
 /* (must be loaded from lpdoc.js) */
@@ -26,7 +24,7 @@ const playgroundCfg_defaults = {
   //
   has_load_button: true,
   has_run_tests_button: true,
-  has_debug_button: false,
+  has_debug_button: true,
   has_doc_button: true,
   has_acheck_button: true,
   has_spec_button: true,
@@ -991,14 +989,14 @@ class PGCell {
   }
 
   options_exfilter() {
-      let opts = this.cell_data['opts'];    
-      return opts;
+    let opts = this.cell_data['opts'];    
+    return opts;
   }
 
-  solution_exercise(){
-      let sol = this.cell_data['solution'];    
-      return sol;
-    }
+  solution_exercise() {
+    let sol = this.cell_data['solution'];    
+    return sol;
+  }
   curr_mod_name() { // just the name
     if (this.is_R) {
       return this.cell_data.modname;
@@ -1465,14 +1463,15 @@ async function debug(pg) {
   pg.show_toplevel(true);
   pg.update_inner_layout();
   const mod = pg.curr_mod_path();
+  const modname = pg.curr_mod_name();
   // TODO: make debugger work in playground
   if (!pg.debugging) {
     await pg.toplevel.do_query("display_debugged", {});
-    await pg.toplevel.do_query("debug_module_source('" + mod + "')", {});
+    await pg.toplevel.do_query("debug_module_source('" + modname + "')", {});
     await pg.toplevel.do_query("trace", {});
     pg.debugging = true; // change debugging status
   } else {
-    await pg.toplevel.do_query("nodebug_module('" + mod + "')", {});
+    await pg.toplevel.do_query("nodebug_module('" + modname + "')", {});
     await pg.toplevel.do_query("nodebug", {});
     pg.debugging = false; // change debugging status
   }
@@ -1942,21 +1941,38 @@ class Comint {
 
     let comint_editor_el = elem_cn('div', 'comint-editor-container');
     //
-    this.next_button = btn('comint-button', "Next solution", "Next", () => {
-      this.#send_validation(';').then(()=>{});
-    });
-    this.stop_button = btn('comint-button', "Stop query", "Stop", () => {
-      this.#send_validation('').then(()=>{});
-    });
+    const valbtn = (title, text, cmd) => {
+      return btn('comint-button', title, text, () => {
+        this.#send_validation(cmd).then(()=>{});
+      });
+    }
+    this.next_button = valbtn("Next solution", "Next", ';');
+    this.stop_button = valbtn("Stop query", "Stop", '');
     this.abort_button = btn('comint-button', "Abort query", "&#10005; Abort", () => {
       const cproc = this.pg.cproc;
       cproc.abort().then(() => {});
     });
     this.abort_button.classList.add('comint-button-abort');
     //
+    const dbgbtn = (title, text, cmd) => {
+      return btn('comint-button', title, text, () => {
+        this.#send_dbgcmd(cmd).then(()=>{});
+      });
+    }
+    this.creep_button = dbgbtn("Continue execution", "Creep", 'c');
+    this.leap_button = dbgbtn("Continue until next spypoint", "Leap", 'l');
+    this.skip_button = dbgbtn("Skip children calls", "Skip", 's');
+    this.retry_button = dbgbtn("Retry this call", "Retry", 'r');
+    this.fail_button = dbgbtn("Force failure", "Fail", 'f');
+    //
     this.control_el = elem_cn('div', 'comint-control');
     this.control_el.appendChild(this.next_button);
     this.control_el.appendChild(this.stop_button);
+    this.control_el.appendChild(this.creep_button);
+    this.control_el.appendChild(this.leap_button);
+    this.control_el.appendChild(this.skip_button);
+    this.control_el.appendChild(this.retry_button);
+    this.control_el.appendChild(this.fail_button);
     this.control_el.appendChild(this.echo_el);
     this.control_el.appendChild(this.abort_button);
     this.control_el.style.display = "none"; // (hidden by default)
@@ -1982,18 +1998,28 @@ class Comint {
     // Display/hide buttons based on query state
     //  - "Abort query" if QueryState.RUNNING
     //  - "Next" and "Stop" if QueryState.VALIDATING
+    //  - Debug buttons if QueryState.DBGTRACE
     const cproc = this.pg.cproc;
+    // TODO: when debugging is activated, replace abort by 'stop' (as C-c)
     this.vis.set('abort_button', (cproc !== undefined && cproc.state === QueryState.RUNNING));
-    this.vis.set('nextstop_button', (cproc !== undefined && cproc.state === QueryState.VALIDATING));
+    this.vis.set('nextstop_btns', (cproc !== undefined && cproc.state === QueryState.VALIDATING));
+    this.vis.set('debug_btns', (cproc !== undefined && cproc.state === QueryState.DBGTRACE));
     this.vis.inc_update('abort_button', (st) => {
       this.abort_button.style.display = st ? "inline-block" : "none";
     });
-    this.vis.inc_update('nextstop_button', (st) => {
+    this.vis.inc_update('nextstop_btns', (st) => {
       this.next_button.style.display = st ? "inline-block" : "none";
       this.stop_button.style.display = st ? "inline-block" : "none";
     });
+    this.vis.inc_update('debug_btns', (st) => {
+      this.creep_button.style.display = st ? "inline-block" : "none";
+      this.leap_button.style.display = st ? "inline-block" : "none";
+      this.skip_button.style.display = st ? "inline-block" : "none";
+      this.retry_button.style.display = st ? "inline-block" : "none";
+      this.fail_button.style.display = st ? "inline-block" : "none";
+    });
     // Show control button menu if needed
-    this.vis.set('control', (this.vis.get('abort_button') || this.vis.get('nextstop_button')));
+    this.vis.set('control', (this.vis.get('abort_button') || this.vis.get('nextstop_btns') || this.vis.get('debug_btns')));
     this.vis.inc_update('control', (st) => {
       this.#show_control(st);
     });
@@ -2052,9 +2078,14 @@ class Comint {
     let line = this.editor.getPosition().lineNumber;
     if (line !== this.editor.getModel().getLineCount()) {
       return ''; // Like 'Enter' if not the last line
-    } else { // Whatever comes after ' ? ' // TODO: only enter non-enter is recognized
+    } else { // Whatever comes after the last ' ? ' in the line (promptval)
       let text = this.editor.getModel().getLineContent(line);
-      return (text.slice(-this.promptval.length) === this.promptval) ? '' : ';';
+      let i = text.lastIndexOf(this.promptval);
+      if (i === -1) {
+        return ''; // TODO: promptval not found, just ''?
+      } else {
+        return text.slice(i + this.promptval.length);
+      }
     }
   }
 
@@ -2254,14 +2285,12 @@ class Comint {
   async treat_enter() {
     const cproc = this.pg.cproc;
     if (!cproc.check_not_running()) return;
-    if (cproc.comint !== this && cproc.state === QueryState.VALIDATING) {
-      // NOTE: This validates any previous running query (even if it was not in this comint)
-      // If validating, just accept and continue
-      // TODO: do this in the ciao-emacs mode? or remove this feature?
-      await cproc.comint.#send_validation('');
+    if (cproc.comint !== this) {
+      // Deal with previously running queries (not in this comint)
+      await this.#ensure_no_pending_query();
     }
     let text;
-    if (cproc.state === QueryState.VALIDATING) {
+    if (cproc.state === QueryState.VALIDATING || cproc.state === QueryState.DBGTRACE) {
       text = this.#current_inputVal();
       this.display('\n');
       this.reveal_end();
@@ -2296,6 +2325,9 @@ class Comint {
     if (cproc.state === QueryState.VALIDATING) {
       if (!cproc.check_not_locked(this)) return; // TODO: not possible?
       await cproc.validate_sol(this, text);
+    } else if (cproc.state === QueryState.DBGTRACE) {
+      if (!cproc.check_not_locked(this)) return; // TODO: not possible?
+      await cproc.resume_dbgtrace(this, text);
     } else {
       // Perform query
       if (text === '') {
@@ -2315,6 +2347,18 @@ class Comint {
           await cproc.run_query(this, q, {});
         }
       }
+    }
+  }
+
+  // Cancel any query pending for validation of debugging
+  async #ensure_no_pending_query() {
+    const cproc = this.pg.cproc;
+    if (cproc.state === QueryState.VALIDATING) { // If validating, just accept and continue
+      // TODO: do this in the ciao-emacs mode? or remove this feature?
+      await cproc.comint.#send_validation('');
+    }
+    if (cproc.state === QueryState.DBGTRACE) {
+      await cproc.comint.#send_dbgcmd('a'); // abort // TODO: do other command?
     }
   }
 
@@ -2428,7 +2472,7 @@ class Comint {
   /* ---------------------------------------------------------------------- */
   /* Queries and validation */
 
-  /* Send output (move to end, print, treat_enter) */
+  /* Send validation text */
   async #send_validation(text) {
     const cproc = this.pg.cproc;
     if (cproc.state !== QueryState.VALIDATING) {
@@ -2442,6 +2486,20 @@ class Comint {
     await cproc.validate_sol(this, text);
   }
 
+  /* Send debug command */
+  async #send_dbgcmd(text) {
+    const cproc = this.pg.cproc;
+    if (cproc.state !== QueryState.DBGTRACE) {
+      console.log('bug: not debugging');
+      return;
+    }
+    if (!cproc.check_not_locked(this)) return; // TODO: not possible?
+    this.display(text);
+    this.display('\n');
+    this.reveal_end();
+    await cproc.resume_dbgtrace(this, text);
+  }
+
   /* Send a query (optionally) printing it */
   /*  - opts.msg (optional): log message */
   async do_query(q, opts) {
@@ -2450,13 +2508,8 @@ class Comint {
       console.log('bug: already running'); // TODO: treat_enter too fast?
       return; // TODO: query is lost!
     }
-    if (cproc.state === QueryState.VALIDATING) {
-      // if (!cproc.check_not_locked(this)) return;
-      // NOTE: This validates any previous running query (even if it was not in this comint)
-      // If validating, just accept and continue
-      // TODO: do this in the ciao-emacs mode? or remove this feature?
-      await cproc.comint.#send_validation('');
-    }
+    await this.#ensure_no_pending_query();
+    //
     if (this.with_prompt && !cproc.muted) this.#add_query(q);
     await cproc.run_query(this, q, opts);
   }
