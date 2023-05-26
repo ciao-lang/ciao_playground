@@ -1941,29 +1941,24 @@ class Comint {
 
     let comint_editor_el = elem_cn('div', 'comint-editor-container');
     //
-    const valbtn = (title, text, cmd) => {
+    const linebtn = (title, text, cmd) => {
       return btn('comint-button', title, text, () => {
-        this.#send_validation(cmd).then(()=>{});
+        this.#send_line(cmd).then(()=>{});
       });
     }
-    this.next_button = valbtn("Next solution", "Next", ';');
-    this.stop_button = valbtn("Stop query", "Stop", '');
+    this.next_button = linebtn("Next solution", "Next", ';');
+    this.stop_button = linebtn("Stop query", "Stop", '');
     this.abort_button = btn('comint-button', "Abort query", "&#10005; Abort", () => {
       const cproc = this.pg.cproc;
       cproc.abort().then(() => {});
     });
     this.abort_button.classList.add('comint-button-abort');
     //
-    const dbgbtn = (title, text, cmd) => {
-      return btn('comint-button', title, text, () => {
-        this.#send_dbgcmd(cmd).then(()=>{});
-      });
-    }
-    this.creep_button = dbgbtn("Continue execution", "Creep", 'c');
-    this.leap_button = dbgbtn("Continue until next spypoint", "Leap", 'l');
-    this.skip_button = dbgbtn("Skip children calls", "Skip", 's');
-    this.retry_button = dbgbtn("Retry this call", "Retry", 'r');
-    this.fail_button = dbgbtn("Force failure", "Fail", 'f');
+    this.creep_button = linebtn("Continue execution", "Creep", 'c');
+    this.leap_button = linebtn("Continue until next spypoint", "Leap", 'l');
+    this.skip_button = linebtn("Skip children calls", "Skip", 's');
+    this.retry_button = linebtn("Retry this call", "Retry", 'r');
+    this.fail_button = linebtn("Force failure", "Fail", 'f');
     //
     this.control_el = elem_cn('div', 'comint-control');
     this.control_el.appendChild(this.next_button);
@@ -2290,7 +2285,7 @@ class Comint {
       await this.#ensure_no_pending_query();
     }
     let text;
-    if (cproc.state === QueryState.VALIDATING || cproc.state === QueryState.DBGTRACE) {
+    if (cproc.is_waiting_for_line()) {
       text = this.#current_inputVal();
       this.display('\n');
       this.reveal_end();
@@ -2322,12 +2317,9 @@ class Comint {
 
   async #treat_enter_(text) {
     const cproc = this.pg.cproc;
-    if (cproc.state === QueryState.VALIDATING) {
+    if (cproc.is_waiting_for_line()) {
       if (!cproc.check_not_locked(this)) return; // TODO: not possible?
-      await cproc.validate_sol(this, text);
-    } else if (cproc.state === QueryState.DBGTRACE) {
-      if (!cproc.check_not_locked(this)) return; // TODO: not possible?
-      await cproc.resume_dbgtrace(this, text);
+      await cproc.send_line(this, text);
     } else {
       // Perform query
       if (text === '') {
@@ -2355,10 +2347,10 @@ class Comint {
     const cproc = this.pg.cproc;
     if (cproc.state === QueryState.VALIDATING) { // If validating, just accept and continue
       // TODO: do this in the ciao-emacs mode? or remove this feature?
-      await cproc.comint.#send_validation('');
+      await cproc.comint.#send_line('');
     }
     if (cproc.state === QueryState.DBGTRACE) {
-      await cproc.comint.#send_dbgcmd('a'); // abort // TODO: do other command?
+      await cproc.comint.#send_line('a'); // abort // TODO: do other command?
     }
   }
 
@@ -2472,32 +2464,18 @@ class Comint {
   /* ---------------------------------------------------------------------- */
   /* Queries and validation */
 
-  /* Send validation text */
-  async #send_validation(text) {
+  /* Send validation or dbgcmd text */
+  async #send_line(text) {
     const cproc = this.pg.cproc;
-    if (cproc.state !== QueryState.VALIDATING) {
-      console.log('bug: not validating a solution');
+    if (!cproc.is_waiting_for_line()) {
+      console.log('bug: not validating/debugging');
       return;
     }
     if (!cproc.check_not_locked(this)) return; // TODO: not possible?
     this.display(text);
     this.display('\n');
     this.reveal_end();
-    await cproc.validate_sol(this, text);
-  }
-
-  /* Send debug command */
-  async #send_dbgcmd(text) {
-    const cproc = this.pg.cproc;
-    if (cproc.state !== QueryState.DBGTRACE) {
-      console.log('bug: not debugging');
-      return;
-    }
-    if (!cproc.check_not_locked(this)) return; // TODO: not possible?
-    this.display(text);
-    this.display('\n');
-    this.reveal_end();
-    await cproc.resume_dbgtrace(this, text);
+    await cproc.send_line(this, text);
   }
 
   /* Send a query (optionally) printing it */
@@ -2553,7 +2531,7 @@ class ConsoleComint {
   print_msg(str) {
     console.log(str);
   }
-  // async #send_validation(text) // (not yet)
+  // async #send_line(text) // (not yet)
 }
 
 // ===========================================================================
