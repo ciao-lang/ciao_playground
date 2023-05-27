@@ -126,6 +126,7 @@ build_bundles() {
             ciao configure ciaopp --ciaopp:lite=yes
         fi
         ciao build --bin ciaopp
+        ciaopp --gen-lib-cache # update lib cache
         ciao install --grade=wasm ciaopp
         # (switch back to non-lite if needed)
         if [ x"$ciaopp_lite" = x"no" ]; then
@@ -133,6 +134,7 @@ build_bundles() {
             ciao clean --bin ciaopp
             ciao configure ciaopp --ciaopp:lite=no
             ciao build --bin ciaopp # recompile
+            ciaopp --gen-lib-cache # update lib cache
         fi
         ciao install --grade=wasm typeslib
     fi
