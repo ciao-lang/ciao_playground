@@ -548,13 +548,15 @@ class PGCell {
     if (playgroundCfg.has_debug_button) adv_list.push({ k:'debug', n:'Debug (C-c d)' });
     if (playgroundCfg.has_doc_button) adv_list.push({ k:'doc', n:'Preview documentation (C-c D)' });
     if (playgroundCfg.has_acheck_button) adv_list.push({ k:'acheck', n:'Analyze and check assertions (C-c V)' });
+    if (playgroundCfg.has_acheck_button) adv_list.push({ k:'acheck_output', n:'Analyze and check assertions (w/ output)' });
     if (playgroundCfg.has_spec_button) adv_list.push({ k:'spec', n:'Specialize code (C-c O)' });
     if (adv_list.length > 0) {
       let do_action = {};
       do_action['test'] = run_tests;
       do_action['debug'] = debug;
       do_action['doc'] = gen_doc_preview;
-      do_action['acheck'] = acheck_preview;
+      do_action['acheck'] = acheck;
+      do_action['acheck_output'] = acheck_output;
       do_action['spec'] = spec_preview;
       const adv_button =
             new DropdownButton(menu_el,
@@ -1338,7 +1340,8 @@ async function process_code(pg) {
   case 'load': await load_code(pg); break;
   case 'doc': await gen_doc_preview(pg); break;
   case 'test': await run_tests(pg); break;
-  case 'acheck': await acheck_preview(pg); break;
+  case 'acheck': await acheck(pg); break;
+  case 'acheck_output': await acheck_output(pg); break;
   case 'spec': await spec_preview(pg); break;
   case 'exfilter': await run_exfilter(pg); break;
   case 'exfilter_exercise': await run_exfilter_exercise(pg); break;
@@ -1349,8 +1352,10 @@ async function process_code(pg) {
 /* Load */
 async function load_code(pg) {
   let q;
-  pg.show_toplevel(true);
-  pg.update_inner_layout();
+  if (!pg.cproc.muted) {
+    pg.show_toplevel(true);
+    pg.update_inner_layout();
+  }
   const mod = pg.curr_mod_path();
   if (toplevelCfg.statistics) console.log(`{loading '${mod}'}`);
   if (toplevelCfg.custom_load_query !== undefined) {
@@ -1430,13 +1435,6 @@ async function gen_doc_preview(pg) {
   pg.set_auto_action('doc');
 }
 
-/* Check assertions and preview */
-async function acheck_preview(pg) {
-  await acheck(pg);
-  await preview_co(pg);
-  pg.set_auto_action('acheck');
-}
-
 /* Run optimizations and preview */
 async function spec_preview(pg) {
   await opt_mod(pg);
@@ -1446,8 +1444,10 @@ async function spec_preview(pg) {
 
 /* Run tests */
 async function run_tests(pg) {
-  pg.show_toplevel(true);
-  pg.update_inner_layout();
+  if (!pg.cproc.muted) {
+    pg.show_toplevel(true);
+    pg.update_inner_layout();
+  }
   const mod = pg.curr_mod_path();
   // await pg.upload_code_to_worker(); // TODO: do not load, just save to fs
   const pmuted = pg.cproc.set_muted(true); // TODO: mute in on_the_fly; make it optional?
@@ -1460,8 +1460,10 @@ async function run_tests(pg) {
 
 /* Debug code (it loads the libraries needed and starts the debugger) */
 async function debug(pg) {
-  pg.show_toplevel(true);
-  pg.update_inner_layout();
+  if (!pg.cproc.muted) {
+    pg.show_toplevel(true);
+    pg.update_inner_layout();
+  }
   const mod = pg.curr_mod_path();
   const modname = pg.curr_mod_name();
   // TODO: make debugger work in playground
@@ -1488,12 +1490,24 @@ async function gen_doc(pg) {
   pg.set_auto_action('doc');
 }
 
-/* Analyze assertions */
+/* Analyze and check assertions */
 /* (requires 'ciaopp' bundle) */
 async function acheck(pg) {
+  if (!pg.cproc.muted) {
+    pg.show_toplevel(true);
+    pg.update_inner_layout();
+  }
   const modbase = pg.curr_mod_base();
+  if (pg.get_auto_action() !== 'acheck') await pg.toplevel.do_query("set_menu_flag(ana, output, off)", {});
   await pg.toplevel.do_query("auto_check_assert('"+modbase+"')", {msg:'Checking assertions'});
   pg.set_auto_action('acheck');
+}
+async function acheck_output(pg) { // (shows output, which can be slower)
+  const modbase = pg.curr_mod_base();
+  if (pg.get_auto_action() !== 'acheck_output') await pg.toplevel.do_query("set_menu_flag(ana, output, on)", {});
+  await pg.toplevel.do_query("auto_check_assert('"+modbase+"')", {msg:'Checking assertions'});
+  await preview_co(pg);
+  pg.set_auto_action('acheck_output');
 }
 
 /* Optimize (spec) module */
@@ -1789,10 +1803,10 @@ function add_playground_bindings(editor, pg) {
     });
   }
 
-  // Document source code (C-c V)
+  // Analyze and check assertions (C-c V)
   if (playgroundCfg.has_acheck_button) {
     editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KM.Shift | KC.KeyV), () => {
-      acheck_preview(pg).then(() => {});
+      acheck(pg).then(() => {});
     });
   }
 }
