@@ -599,20 +599,17 @@ class PGCell {
         btn_c = (() => {
           this.with_response(load_code).then(() => {});
         });
-      }
-         else if (this.cell_data.kind == 'exfilter') { // menu for exfilter
+      } else if (this.cell_data.kind == 'exfilter') { // menu for exfilter
         btn_l = "Show analysis";
         btn_c = (() => {
           this.with_response(run_exfilter).then(() => {});
         });
-         }
-        else if (this.cell_data.kind == 'exfilterex') { // menu for exfilter
+      } else if (this.cell_data.kind == 'exfilterex') { // menu for exfilter
         btn_l = "Submit answer";
         btn_c = (() => {
           this.with_response(run_exfilter_exercise).then(() => {});
         });
-         }
-        else if (this.cell_data.kind == 'exercise') { // menu for running tests
+      } else if (this.cell_data.kind == 'exercise') { // menu for running tests
         btn_l = "Run tests";
         btn_c = (() => {
           this.with_response(run_tests).then(() => {});
@@ -907,11 +904,9 @@ class PGCell {
       case 'checked': txt = '&#128571; &#10004;'; break;
       default: txt = '&#129300; ?';
       }
+    } else if (this.cell_data.kind == 'exfilter') {
+      txt = '&#129300; ?';
     }
-      else if (this.cell_data.kind == 'exfilter') {
-      txt =  '&#129300; ?';
-      
-       }
     if (txt !== null) {
       let sty;
       switch(st) {
