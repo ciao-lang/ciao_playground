@@ -74,7 +74,7 @@ const lang = {
 
   operators: [
     "\\+", "/=", ">", "<", ">=", "=<", "=:=", "=\\=", "=", ":-",
-    "+", "-", "*", "/", "**", "//", "mod", "is", "||", "<-", "-->", ":="
+    "+", "-", "*", "/", "**", "//", "mod", "is", "||", "->", "-->", ":="
   ],
 
   builtins: [
@@ -85,7 +85,7 @@ const lang = {
     "load_test_package", "extra_compiler_opts", "extra_linker_opts"
   ],
 
-  symbols: /[=><~?@&+*\/\^%>]+/,
+  symbols: /[=><~?@&+*\/\^%>\-\\]+/,
 
   // escapes: /[0-7]{1,3}|[bdefnrstv\\"']|\^[a-zA-Z]|x[0-9a-zA-Z]{2}|x{[0-9a-zA-Z]+}/,
   escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
