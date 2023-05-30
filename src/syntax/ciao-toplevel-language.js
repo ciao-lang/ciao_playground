@@ -79,6 +79,12 @@ const toplevel_lang = {
       [/^{[a-zA-Z 0-9:.+\(\)\-=_/"',|\\{}\[\]]*/m, 'toplevel-note'],
       [/^}/m, 'toplevel-note'],
 
+      // debugger
+      [/^   [0-9]+  [0-9]+  Call: /m, 'comment'],
+      [/^   [0-9]+  [0-9]+  Exit: /m, 'comment'],
+      [/^   [0-9]+  [0-9]+  Redo: /m, 'comment'],
+      [/^   [0-9]+  [0-9]+  Fail: /m, 'comment'],
+
       // whitespace
       { include: '@whitespace' },
 
