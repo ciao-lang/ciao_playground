@@ -2458,7 +2458,10 @@ class Comint {
       await cproc.comint.#send_line('');
     }
     if (cproc.state === QueryState.DBGTRACE) {
-      await cproc.comint.#send_line('a'); // abort // TODO: do other command?
+      // await cproc.comint.#send_line('a'); // abort // TODO: fix 'abort' (it should not end the engine)
+      // workaround: leap and try ending the query gracefully
+      await cproc.comint.#send_line('l');
+      await this.#ensure_no_pending_query();
     }
   }
 
