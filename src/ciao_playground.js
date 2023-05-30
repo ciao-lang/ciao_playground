@@ -953,6 +953,104 @@ class PGCell {
     monaco.editor.setModelMarkers(this.editor.getModel(), 'errors', markers);
   }
 
+  // Extract range from srcdbg_info
+  //
+  // TODO: this is an approximation similar to what is implemented in
+  //   ciao-debugger.el, we'd need to identify goal locations (at
+  //   compile time).
+  srcdbg_info_to_range(info) {
+    const model = this.editor.getModel();
+    let search_range = new monaco.Range(info.ln0, 1, info.ln1+1, 1);
+    let text = model.getValueInRange(search_range);
+    // Tokenize the search region and find matches.
+    // See debugger_tr.pl for the meaning of num (it included substrings)
+    let tokens = monaco.editor.tokenize(text, 'ciao-prolog');
+    var cnt = 0;
+    for (let row = 0; row < tokens.length; row++) {
+      let line = model.getLineContent(info.ln0+row);
+      for (let tk = 0; tk < tokens[row].length; tk++) {
+        var offset = tokens[row][tk].offset;
+        var next_offset;
+        if (tk == tokens[row].length-1) {
+          next_offset = line.length;
+        } else {
+          next_offset = tokens[row][tk+1].offset;
+        }
+        let txt = line.slice(offset, next_offset);
+        // console.log(`(${row}) tk ${tk} ${offset} ${txt} ${tokens[row][tk].type}`);
+        let type = tokens[row][tk].type;
+        switch(type) {
+        case 'predefined.operator.ciao-prolog': break;
+        case 'type.identifier.ciao-prolog': break; // TODO: fix name (should be vars)
+        case 'string-single.ciao-prolog': break; // TODO: fix name (should be quoted atom)
+        case 'operator.ciao-prolog': break;
+        case 'source.ciao-prolog': 
+          // amend wrong tokenizer // TODO: fixme
+          if (txt.endsWith('.')) {
+            txt = txt.slice(0,-1);
+            next_offset--;
+          }
+          break;
+        case 'pred-name.ciao-prolog': break;
+        default: continue; // skip this token
+        }
+        // Increment for each (non-overlapping) occurrence in 'txt'
+        // (this is what we require for ciao-debugger.el)
+        var pos = 0;
+        while (pos < txt.length) {
+          pos = txt.indexOf(info.pred, pos);
+          if (pos === -1) break;
+          cnt++; // found one occurrence
+          pos += info.pred.length; // move forward
+        }
+        if (cnt === info.num) {
+          return new monaco.Range(info.ln0+row, offset+1, info.ln0+row, next_offset+1);
+        }
+      }
+    }
+    return search_range;
+  }
+
+  /* mark source debug info (unmark if info === null or source is not visible) */
+  /* Note: based on ciao-debugger.el:ciao-debug-display-line */
+  mark_srcdbg_info(info) {
+    if (this.dbg_decorations === undefined) this.dbg_decorations = [];
+    let decs = [];
+    if (info !== null && info.src === this.curr_mod_path()) {
+      var cl;
+      switch(info.port) {
+      case '  Call: ': cl = 'ciao-face-debug-call'; break;
+      case '  Exit: ': cl = 'ciao-face-debug-exit'; break;
+      case '  Redo: ': cl = 'ciao-face-debug-redo'; break;
+      case '  Fail: ': cl = 'ciao-face-debug-fail'; break;
+      default: cl = 'ciao-face-debug-expansion'; break; // TODO: unknown port
+      }
+      // see debugger_lib.pl
+      // TODO: ciao-face-debug-expansion is used differently
+      // TODO: missing ciao-face-debug-breakpoint
+      let range = this.srcdbg_info_to_range(info);
+      // // mark the whole line // TODO: not working? wrong monaco version?
+      // decs.push({
+      //   range: new monaco.Range(range.startLineNumber, 1, range.endLineNumber, 1),
+      //   options: {
+      //     isWholeLine: true,
+      //     lineDecorationsClassName: cl
+      //   }
+      // });
+      // and the token
+      decs.push({
+        range: range,
+        options: {
+          isWholeLine: false,
+          // after: { content: "..." }, // TODO: mark the goal, add bindings?
+          inlineClassName: cl
+        }
+      });
+      this.editor.revealLine(range.startLineNumber);
+    }
+    this.dbg_decorations = this.editor.deltaDecorations(this.dbg_decorations, decs);
+  }
+
   /* ---------------------------------------------------------------------- */
   /* Code editor and toplevel process */
 
@@ -2168,6 +2266,7 @@ class Comint {
     if (this.needs_clean_output) {
       this.clear_output();
     }
+    this.pg.mark_srcdbg_info(null); /* TODO: better place? */
     if (!this.with_prompt) return; /* (skip in non-interactive) */
     this.#add_prompt();
   }
