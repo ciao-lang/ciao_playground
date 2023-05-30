@@ -1586,6 +1586,7 @@ async function gen_doc(pg) {
 /* Analyze and check assertions */
 /* (requires 'ciaopp' bundle) */
 async function acheck(pg) {
+  await discard_preview(pg);
   if (!pg.cproc.muted) {
     pg.show_toplevel(true);
     pg.update_inner_layout();
@@ -1674,6 +1675,13 @@ async function show_text(pg, d) {
   el.style.overflow = 'auto';
   preview.appendChild(el);
   pg.update_inner_layout();
+}
+
+// Discard preview contents and hide
+async function discard_preview(pg) {
+  pg.show_preview(false); 
+  var preview = pg.preview_el; 
+  preview.replaceChildren();
 }
 
 // Show highlighted text in a read-only editor view (playground)
