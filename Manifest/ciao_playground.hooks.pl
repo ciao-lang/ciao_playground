@@ -8,7 +8,7 @@
 
 m_bundle_foreign_dep(ciao_playground, cmd, 'node', 'Node (http://nodejs.org)').
 m_bundle_foreign_dep(ciao_playground, cmd, 'npm', 'NPM (http://www.npmjs.com)').
-m_bundle_foreign_dep(ciao_playground, npm, 'monaco-editor@0.30', 'https://microsoft.github.io/monaco-editor/index.html').
+m_bundle_foreign_dep(ciao_playground, npm, 'monaco-editor@0.38', 'https://microsoft.github.io/monaco-editor/index.html').
 % (optional extension)
 m_bundle_foreign_dep(ciao_playground, npm, 'mathjax@3', 'https://www.mathjax.org').
 
