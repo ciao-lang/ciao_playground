@@ -282,6 +282,8 @@ const share_svg = elem_from_str(`<svg class="header-icon-img" viewBox="0 0 20 20
 
 // ---------------------------------------------------------------------------
 
+var pg_editor_num = 0;
+
 /* Create a playground code or toplevel editor. If opts.autoresize==true then
    the size will dinamically change with contents (for
    lpdoc-runnable). */
@@ -299,6 +301,7 @@ function create_pg_editor(container, text, kind, opts) {
     minimap: {
       enabled: false
     },
+    "bracketPairColorization.enabled": false,
     theme: theme,
     autoClosingBrackets: false,
     overviewRulerLanes: 0,
@@ -350,6 +353,19 @@ function create_pg_editor(container, text, kind, opts) {
     ed.onDidContentSizeChange(updateHeight);
     ed.onDidLayoutChange(updateHeight); /* when scrollbars (dis)appear */
     updateHeight();
+  }
+  {
+    // workaround regression in Monaco 0.32.0 https://github.com/microsoft/monaco-editor/issues/2947
+    // This creates a context key that is enabled only when the editor is focused.
+    const focused_key_name = `__isEditorFocused-${pg_editor_num}`;
+    pg_editor_num++;
+    //
+    ed.addCommandFocused = (keybinding, handler) => {
+      return ed.addCommand(keybinding, handler, focused_key_name);
+    };
+    const ctxkey = ed.createContextKey(focused_key_name, false);
+    ed.onDidBlurEditorWidget(() => ctxkey.set(false));
+    ed.onDidFocusEditorText(() => ctxkey.set(true));
   }
   return ed;
 }
@@ -1014,7 +1030,6 @@ class PGCell {
   /* mark source debug info (unmark if info === null or source is not visible) */
   /* Note: based on ciao-debugger.el:ciao-debug-display-line */
   mark_srcdbg_info(info) {
-    if (this.dbg_decorations === undefined) this.dbg_decorations = [];
     let decs = [];
     if (info !== null && info.src === this.curr_mod_path()) {
       var cl;
@@ -1030,13 +1045,13 @@ class PGCell {
       // TODO: missing ciao-face-debug-breakpoint
       let range = this.srcdbg_info_to_range(info);
       // // mark the whole line // TODO: not working? wrong monaco version?
-      // decs.push({
-      //   range: new monaco.Range(range.startLineNumber, 1, range.endLineNumber, 1),
-      //   options: {
-      //     isWholeLine: true,
-      //     lineDecorationsClassName: cl
-      //   }
-      // });
+      decs.push({
+        range: new monaco.Range(range.startLineNumber, 1, range.startLineNumber, 1),
+        options: {
+          isWholeLine: true,
+          className: cl+"-bg"
+        }
+      });
       // and the token
       decs.push({
         range: range,
@@ -1048,7 +1063,10 @@ class PGCell {
       });
       this.editor.revealLine(range.startLineNumber);
     }
-    this.dbg_decorations = this.editor.deltaDecorations(this.dbg_decorations, decs);
+    if (decs.length > 0) {
+      if (this.dbg_decorations !== undefined) this.dbg_decorations.clear();
+      this.dbg_decorations = this.editor.createDecorationsCollection(decs);
+    }
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1800,63 +1818,63 @@ function add_emacs_bindings(editor) {
   */
 
   // Find key binding (C-s and C-r)
-  editor.addCommand(KM.WinCtrl | KC.KeyS, () => {
+  editor.addCommandFocused(KM.WinCtrl | KC.KeyS, () => {
     editor.trigger('editor', 'actions.find');
   });
-  editor.addCommand(KM.WinCtrl | KC.KeyR, () => {
+  editor.addCommandFocused(KM.WinCtrl | KC.KeyR, () => {
     editor.trigger('editor', 'actions.find');
   });
 
   // Select all binding (C-x C-p)
-  editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyP), () => {
+  editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyP), () => {
     // editor.getAction('editor.action.selectAll').run();
     editor.trigger('editor', 'editor.action.selectAll');
   });
 
   // Insert line after binding (C-m)
-  editor.addCommand(KM.WinCtrl | KC.KeyM, () => {
+  editor.addCommandFocused(KM.WinCtrl | KC.KeyM, () => {
     editor.trigger('editor', 'editor.action.insertLineAfter');
   });
 
   // Undo binding (C-z and C-x u)
-  editor.addCommand(KM.WinCtrl | KC.KeyZ, () => {
+  editor.addCommandFocused(KM.WinCtrl | KC.KeyZ, () => {
     editor.trigger(null, 'undo');
   });
-  editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyX, KC.KeyU), () => {
+  editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyX, KC.KeyU), () => {
     editor.trigger(null, 'undo');
   });
 
   // Tranform selected text to upper case binding (C-x C-u)
-  editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyU), () => {
+  editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyU), () => {
     editor.trigger('editor', 'editor.action.transformToUppercase');
   });
 
   // Tranform selected text to lower case binding (C-x C-l)
-  editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyL), () => {
+  editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyL), () => {
     editor.trigger('editor', 'editor.action.transformToLowercase');
   });
 
   // Delete right word (M-d)
-  editor.addCommand(KM.WinCtrl | KC.KeyD, () => {
+  editor.addCommandFocused(KM.WinCtrl | KC.KeyD, () => {
     editor.trigger(null, 'deleteWordRight');
   });
 
   // Page Up (M-v)
-  editor.addCommand(KM.chord(KC.Escape, KC.KeyV), () => {
+  editor.addCommandFocused(KM.chord(KC.Escape, KC.KeyV), () => {
     editor.trigger(null, 'cursorPageUp');
   });
   // Page Down (C-v)
-  editor.addCommand(KM.WinCtrl | KC.KeyV, () => {
+  editor.addCommandFocused(KM.WinCtrl | KC.KeyV, () => {
     editor.trigger(null, 'cursorPageDown');
   });
 
   // Delete left word (M-backspace)
-  editor.addCommand(KM.chord(KC.Escape, KC.Backspace), () => {
+  editor.addCommandFocused(KM.chord(KC.Escape, KC.Backspace), () => {
     editor.trigger(null, 'deleteWordLeft');
   });
 
   // Comment line (M-;)
-  editor.addCommand(KM.chord(KC.Escape, KC.Semicolon), () => {
+  editor.addCommandFocused(KM.chord(KC.Escape, KC.Semicolon), () => {
     editor.trigger(null, 'editor.action.commentLine');
   });
 }
@@ -1867,46 +1885,46 @@ function add_playground_bindings(editor, pg) {
   const KC = monaco.KeyCode;
 
   // Save file to local file-system (C-x C-s)
-  editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyS), () => {
+  editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyS), () => {
     pg.click_save_button(); // click the 'a' element
   });
 
   // Go to the other window (C-x o)
-  editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyX, KC.KeyO), () => {
+  editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyX, KC.KeyO), () => {
     pg.change_focus();
   });
 
   // Save and run code (C-c l)
   if (playgroundCfg.has_load_button) {
-    editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyL), () => {
+    editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyL), () => {
       load_code(pg).then(() => {});
     });
   }
 
   // Run tests in current module (C-c u)
   if (playgroundCfg.has_run_tests_button) {
-    editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyU), () => {
+    editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyU), () => {
       run_tests(pg).then(() => {});
     });
   }
 
   // Debug source code (C-c d)
   if (playgroundCfg.has_debug_button) { // debug
-    editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyD), () => {
+    editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyC, KC.KeyD), () => {
       debug(pg).then(() => {});
     });
   }
 
   // Document source code (C-c D)
   if (playgroundCfg.has_doc_button) {
-    editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KM.Shift | KC.KeyD), () => {
+    editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyC, KM.Shift | KC.KeyD), () => {
       gen_doc_preview(pg).then(() => {});
     });
   }
 
   // Analyze and check assertions (C-c V)
   if (playgroundCfg.has_acheck_button) {
-    editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KM.Shift | KC.KeyV), () => {
+    editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyC, KM.Shift | KC.KeyV), () => {
       acheck(pg).then(() => {});
     });
   }
@@ -2485,35 +2503,35 @@ class Comint {
 
     if (this.with_prompt) {
       // Ring up (up arrow)
-      this.editor.addCommand(KC.UpArrow, () => {
+      this.editor.addCommandFocused(KC.UpArrow, () => {
         this.#ring_up();
       });
       // Ring up (C-p)
-      this.editor.addCommand(KM.WinCtrl | KC.KeyP, () => {
+      this.editor.addCommandFocused(KM.WinCtrl | KC.KeyP, () => {
         this.#ring_up();
       });
       // Ring down (down arrow)
-      this.editor.addCommand(KC.DownArrow, () => {
+      this.editor.addCommandFocused(KC.DownArrow, () => {
         this.#ring_down();
       });
       // Ring down (C-n)
-      this.editor.addCommand(KM.WinCtrl | KC.KeyN, () => {
+      this.editor.addCommandFocused(KM.WinCtrl | KC.KeyN, () => {
         this.#ring_down();
       });
       // Clean screen (C-l)
-      this.editor.addCommand(KM.WinCtrl | KC.KeyL, () => {
+      this.editor.addCommandFocused(KM.WinCtrl | KC.KeyL, () => {
         this.clear_text_above();
       });
       // Move cursor to the beginning of line, avoid the prompt
-      this.editor.addCommand(KM.WinCtrl | KC.KeyA, () => {
+      this.editor.addCommandFocused(KM.WinCtrl | KC.KeyA, () => {
         this.#treat_line_start();
       });
       // Move left, avoid the prompt
-      this.editor.addCommand(KC.LeftArrow, () => {
+      this.editor.addCommandFocused(KC.LeftArrow, () => {
         this.#treat_left_arrow();
       });
       // Treat the enter binding to run the written query (Enter)
-      this.editor.addCommand(KC.Enter, () => {
+      this.editor.addCommandFocused(KC.Enter, () => {
         this.treat_enter().then(() => {});
       });
       // Other playground commands
@@ -2521,7 +2539,7 @@ class Comint {
     }
 
     // Abort running query (C-c C-c)
-    this.editor.addCommand(KM.chord(KM.WinCtrl | KC.KeyC, KM.WinCtrl | KC.KeyC), () => {
+    this.editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyC, KM.WinCtrl | KC.KeyC), () => {
       const cproc = this.pg.cproc;
       if (cproc.state === QueryState.RUNNING) {
         this.display('C-c C-c\n');
