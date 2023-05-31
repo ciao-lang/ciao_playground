@@ -1063,8 +1063,11 @@ class PGCell {
       });
       this.editor.revealLine(range.startLineNumber);
     }
+    if (this.dbg_decorations !== undefined) {
+      this.dbg_decorations.clear();
+      this.dbg_decorations = undefined;
+    }
     if (decs.length > 0) {
-      if (this.dbg_decorations !== undefined) this.dbg_decorations.clear();
       this.dbg_decorations = this.editor.createDecorationsCollection(decs);
     }
   }
