@@ -88,6 +88,7 @@ var miniPlaygroundCfg = {
   has_save_button: false,
   has_load_button: false,
   has_run_tests_button: false,
+  has_debug_button: false,
   has_doc_button: false,
   has_acheck_button: false,
   has_spec_button: false,
@@ -2428,6 +2429,7 @@ class Comint {
       this.reveal_end();
     } else {
       text = this.#current_input();
+      // if (text === '') return; // TODO: make it optional? disallow empty prompt lines
       if (text !== '') this.#ring_push(text); // Add to ring if not empty
       if (this.single_query_output) { // only one query at a time in output
         this.clear_output();
