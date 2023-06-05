@@ -1970,51 +1970,66 @@ const WARNING = 1;
  * @returns {MsgObject} - Object containing all the info from the message.
  */
 // TODO: this parser is incomplete; it does not deal correctly with 'file'
-function parse_error_msg(msg) {
+function parse_error_msg(msgs) {
   let file = undefined;
   let warnings = [];
   let errors = [];
 
-  msg.split('\n').forEach(line => {
-    if (line.includes('Reading')) {
-      file = line.slice(line.indexOf('/'));
-    }
-    else if (line.includes('WARNING')) {
-      let msglns = line.slice(line.indexOf(':') + 1);
-      if (line.includes('lns')) {
-        warnings.push({
-          file: file,
-          lines: msglns.slice(msglns.indexOf('(') + 5, msglns.indexOf(')')),
-          msg: msglns.slice(msglns.indexOf(')') + 2)
-        });
-      } else {
-        warnings.push({
-          file: file,
-          lines: undefined,
-          msg: line.slice(7)
-        });
-      }
-    }
-    else if (line.includes('ERROR')) {
-      let msglns = line.slice(line.indexOf(':') + 1);
-      if (line.includes('lns')) {
-        errors.push({
-          file: file,
-          lines: msglns.slice(msglns.indexOf('(') + 5, msglns.indexOf(')')),
-          msg: msglns.slice(msglns.indexOf(')') + 2)
-        });
-      } else {
-        errors.push({
-          file: file,
-          lines: undefined,
-          msg: line.slice(7)
-        });
-      }
+  const regexp = /{[^{}]*\b(WARNING|ERROR|Reading)\b([^{}]+)}/g; 
+
+  msgs.match(regexp)?.forEach(e =>  {
+    let lines = undefined;
+    let msg = undefined;    
+    if (e.includes('Reading')) {
+      e.split('\n').filter(line => line.includes('WARNING') || line.includes('ERROR'))
+      .forEach(line => {
+	let errmsg = line.slice(line.indexOf(':') + 2);
+        if (line.includes('lns')) {
+          lines = errmsg.slice(errmsg.indexOf('(') + 5, errmsg.indexOf(')'));
+          msg = errmsg.slice(errmsg.indexOf(')') + 2);
+        } else {
+          msg = errmsg;   
+        }
+        if (line.includes('WARNING')) {
+          warnings.push({
+            file: file,
+            lines: lines,
+            msg: msg
+          });
+        } else if (line.includes('ERROR')) {
+          errors.push({
+            file: file,
+            lines: lines,
+            msg: msg
+          });
+        } else {
+          return;
+        }
+      });
     } else {
-      return;
+      const errmsg = e.slice(e.indexOf(':') + 2);
+      if (e.includes('lns')) {
+        lines = errmsg.slice(errmsg.indexOf('(') + 5, errmsg.indexOf(')'));
+        msg = errmsg.slice(errmsg.indexOf(')') + 2, errmsg.indexOf('}') - 1);
+      } else {
+        msg = errmsg.slice(0, errmsg.indexOf('}') - 1);  
+      }
+      if (e.includes('WARNING')) {
+        warnings.push({
+          file: file,
+          lines: lines,
+          msg: msg
+        });
+      } else if (e.includes('ERROR')) {
+        errors.push({
+          file: file,
+          lines: lines,
+          msg: msg
+        });
+      }         
     }
   });
-
+    
   return { warnings: warnings, errors: errors };
 }
 
