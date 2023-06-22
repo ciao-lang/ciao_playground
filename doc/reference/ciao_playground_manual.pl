@@ -10,7 +10,7 @@
 
 :- doc(module,"
 
-The [Ciao Prolog Playground](/playground) offers three main
+The [Ciao Prolog Playground](/playground) offers several main
 functionalities:
 
 @begin{itemize}
