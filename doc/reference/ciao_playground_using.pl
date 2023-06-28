@@ -86,12 +86,12 @@ top-level.
 
 @end{alert}
 
+@item{@key{Debug}} Loads the interactive debugger into the top-level which enables
+tracing the control flow of the program. You can ask queries about your program.
+
 @item{@key{Preview documentation}} Loads the documentation generator LPdoc,
 generates the documentation and previews the documentation generated
 for the current module in the (right) editor.
-
-@item{@key{Debug}} Loads the interactive debugger into the top-level which enables
-tracing the control flow of the program. You can ask queries about your program.
 
 @item{@key{Analyze and check assertions}} Loads the CiaoPP program processor,
  analyzes the program and checks the assertions. The output is shown in the (right) editor.
