@@ -14,18 +14,19 @@ which are both editable (note that the arrangement of the areas is
 configurable):
 
 @begin{itemize}
+
 @item The left area (or top area, if the window is narrow) is an
-editor for the program. Users can add their code into this editor and
-modify it there. The program can then be loaded into the system's top
-level, in the right area, where it can be run by entering queries at
-the prompt.
+  editor for the program. Users can add their code into this editor
+  and modify it there. The program can then be loaded into the
+  system's top level, in the right area, where it can be run by
+  entering queries at the prompt.
 
 @item The right area (or bottom area, if the window is narrow) hosts
-the top-level, where most communication with the system takes
-place. The top-level first shows @tt{Loading Ciao...}  while the
-system is loading its dependencies.  When the top-level is completely
-ready to use, it will show the prompt @tt{?- }. Now programs can be
-loaded and queries issued.
+  the top-level, where most communication with the system takes
+  place. The top-level first shows @tt{Loading Ciao...}  while the
+  system is loading its dependencies.  When the top-level is
+  completely ready to use, it will show the prompt @tt{?- }. Now
+  programs can be loaded and queries issued.
 
 @end{itemize}
 
@@ -38,29 +39,28 @@ There is also a preview area for graphical program output.
 @item{@key{New}} Erases all previous content from the editor.
 
 @item{@key{Open}} Lets you upload your own Prolog code from your local
-filesytem. This action also erases all previous content present in the
-editor.
+  filesytem. This action also erases all previous content present in
+  the editor.
 
-@item{@key{Save}} Allows downloading the code written in the playground
-directly to your filesystem.
+@item{@key{Save}} Allows downloading the code written in the
+  playground directly to your filesystem.
 
 @item{@key{Load}} Loads the code in the editor into the top-level. It
-compiles it and, in case there are any errors, they are printed in the
-right (bottom) editor and highlighted in the left (top) one. Once you
-click this button, you can ask queries about your code in the
-top-level.
+  compiles it and, in case there are any errors, they are printed in
+  the right (bottom) editor and highlighted in the left (top)
+  one. Once you click this button, you can ask queries about your code
+  in the top-level.
 
 @item{@key{Run tests}} Loads the unit test library (@lib{unittest})
-into the top-level and runs any unit tests (test assertions) that may
-appear in the code.
+  into the top-level and runs any unit tests (test assertions) that
+  may appear in the code.
 
 @item{@key{Share!}} Is an alternative form of save: it copies into the
-clipboard a link that allows opening the playground with the current
-state of the program loaded in the editor area.
+  clipboard a link that allows opening the playground with the current
+  state of the program loaded in the editor area.
 
 @comment{ % begin comment
 @begin{alert} 
-
 Currently all tests are required to set the default timeout to 0 by
 adding a @tt{timeout(0)} global property, e.g.:
 
@@ -69,33 +69,30 @@ adding a @tt{timeout(0)} global property, e.g.:
 @end{verbatim}
 
 (We are currently working on a solution for this issue.)
-
 @end{alert}
 % end comment }
 
 @item{@key{Abort query}} This button will appear below the top-level
-when running a query that is taking too long. It terminates the query
-currently running.
+  when running a query that is taking too long. It terminates the
+  query currently running.
 
 @begin{alert} 
-
 This button fully terminates the Ciao worker executing the Ciao
 process, so it may take a some time to reload dependencies after
 aborting. The code in the editor area will be reloaded into the
 top-level.
-
 @end{alert}
 
-@item{@key{Debug}} Loads the interactive debugger into the top-level which enables
-tracing the control flow of the program. You can ask queries about your program.
+@item{@key{Debug}} Debug (or stop debugging) source and enable tracing
+  the control flow of the program for the next queries (see debugger
+  documentation for more information).
 
-@item{@key{Preview documentation}} Loads the documentation generator LPdoc,
-generates the documentation and previews the documentation generated
-for the current module in the (right) editor.
+@item{@key{Preview documentation}} Generate and preview the
+  documentation for the current module (using LPdoc).
 
-@item{@key{Analyze and check assertions}} Loads the CiaoPP program processor,
- analyzes the program and checks the assertions. The output is shown in the (right) editor.
-
+@item{@key{Analyze and check assertions}} Analyze the program and
+  perform compile-time checking of the assertions (types, modes,
+  determinacy, ...) in the current module (using CiaoPP).
 
 @end{description}
 
