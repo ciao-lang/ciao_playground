@@ -23,6 +23,7 @@ const playgroundCfg_defaults = {
   has_save_button: true,
   //
   has_load_button: true,
+  has_toggle_on_the_fly_button: true,
   has_run_tests_button: true,
   has_debug_button: true,
   has_doc_button: true,
@@ -87,6 +88,7 @@ var miniPlaygroundCfg = {
   has_open_button: false,
   has_save_button: false,
   has_load_button: false,
+  has_toggle_on_the_fly_button: false,
   has_run_tests_button: false,
   has_debug_button: false,
   has_doc_button: false,
@@ -561,6 +563,7 @@ class PGCell {
     if (playgroundCfg.has_load_button) this.#setup_load_button(menu_el);
     // (advanced actions)
     const adv_list = [];
+    if (playgroundCfg.has_toggle_on_the_fly_button) adv_list.push({ k:'toggle_on_the_fly', n:'Toogle on-the-fly' });
     if (playgroundCfg.has_run_tests_button) adv_list.push({ k:'test', n:'Run tests (C-c u)' });
     if (playgroundCfg.has_debug_button) adv_list.push({ k:'debug', n:'Debug (C-c d)' });
     if (playgroundCfg.has_doc_button) adv_list.push({ k:'doc', n:'Preview documentation (C-c D)' });
@@ -569,6 +572,7 @@ class PGCell {
     if (playgroundCfg.has_spec_button) adv_list.push({ k:'spec', n:'Specialize code (C-c O)' });
     if (adv_list.length > 0) {
       let do_action = {};
+      do_action['toggle_on_the_fly'] = toggle_on_the_fly;
       do_action['test'] = run_tests;
       do_action['debug'] = debug;
       do_action['doc'] = gen_doc_preview;
@@ -1555,6 +1559,12 @@ async function spec_preview(pg) {
   await opt_mod(pg);
   await preview_co(pg);
   pg.set_auto_action('spec');
+}
+
+/* Toggle on-the-fly mode */
+async function toggle_on_the_fly(pg) {
+  // TODO: show status
+  playgroundCfg.on_the_fly = !playgroundCfg.on_the_fly;
 }
 
 /* Run tests */
