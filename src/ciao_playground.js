@@ -1526,7 +1526,7 @@ async function run_exfilter_exercise(pg) {
   var str = await pg.cproc.w.readFile(modbase+'.txt');
   if (str !== null) {
     str = str.trim(); // TODO: this should be done by exfilter
-    let msgs = parse_error_msg(str);
+    let msgs = parse_error_msg("{Reading\n"+str+"\n}"); // note: surround by {Reading ... } so that the parser understands it
     await show_text_highlight(pg, str, kind);
     if (str == "Correct"){
       pg.set_code_status('checked');
