@@ -1985,12 +1985,13 @@ function parse_error_msg(msgs) {
   let warnings = [];
   let errors = [];
 
-  const regexp = /{[^{}]*\b(WARNING|ERROR|Reading)\b([^{}]+)}/g; 
+  const regexp = /{[^{}]*\b(WARNING|ERROR|Reading|In|Compiling|Checking|Loading)\b([^{}]+)}/g; 
+  const w_regexp = /(Reading|In|Compiling|Checking|Loading)/g; 
 
   msgs.match(regexp)?.forEach(e =>  {
     let lines = undefined;
     let msg = undefined;    
-    if (e.includes('Reading')) {
+    if (e.match(w_regexp)) {
       e.split('\n').filter(line => line.includes('WARNING') || line.includes('ERROR'))
       .forEach(line => {
 	let errmsg = line.slice(line.indexOf(':') + 2);
