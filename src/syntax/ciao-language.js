@@ -198,8 +198,9 @@ const lang = {
       [/:\-\s*doc/, 'doc-decl'],
       [/:\-\s*mydirective/, 'doc-decl'],
       [/:\-/, 'operator'], // :-
+      [/=:=/, 'operator'], // :=
       [/:=/, 'operator'], // :=
-      [/\-\->/, 'operator'], // :=
+      [/\-\->/, 'operator'], // -->
 
       // identifiers and keywords
       [/[a-z_][\w\-\.']*/, {
