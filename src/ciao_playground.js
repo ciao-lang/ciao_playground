@@ -45,6 +45,12 @@ const playgroundCfg_defaults = {
 app([],X,X).
 app([X|L1],L2,[X|L3]) :-
      app(L1,L2,L3).
+
+% Press "Load" and you can then type your 
+% queries in the other pane, e.g.:
+%
+% ?- app([1,2],[3,4],L).
+% ?- app(A,B,[1,2,3,4]).
 `,
   example_list: [
     // TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
