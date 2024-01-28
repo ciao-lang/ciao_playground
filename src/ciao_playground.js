@@ -1267,7 +1267,7 @@ class PGCell {
   // redirect to playground
   load_in_playground() { /* pre: this.is_R */
     let code = this.complete_code();
-    window.open(urlPREFIX+'/playground/index.html#' + encodeURI(code)); // open playground in new tab
+    window.open(urlPREFIX + '/playground/index.html' + '?code=' + encodeURIComponent(code)); // open playground in new tab
   }
 
   // Setup cell with dynamic preview (TODO: experimental)
@@ -1775,16 +1775,6 @@ function guess_mod_name(code) {
 
 // ---------------------------------------------------------------------------
 
-// [deprecated]
-// /**
-//  * Update URL to include the current code in the editor
-//  * @param {string} value - String containing the code in the editor
-//  */
-// function changeUrl(value) {
-//   let s = '#' + encodeURI(value);
-//   history.replaceState(undefined, undefined, s);
-// }
-
 /**
  * Encode the code given in value as a playground URL
  * @returns {string} Shareable link including the code in the editor.
@@ -1795,7 +1785,6 @@ function code_to_URL(value) {
     // url = url.slice(0, url.indexOf('#'));
     return url; // content hasn't changed
   }
-  // return url + '#' + encodeURI(value); // [deprecated]
   return url + '?code=' + encodeURIComponent(value);
 }
 
