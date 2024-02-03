@@ -10,6 +10,10 @@ has_bundle() {
     ciao info "$1" > /dev/null 2>&1
 }
 
+bundle_dir() {
+    ciao info "$1" | sed -n '/src:/s/^[[:space:]]*src:[[:space:]]*//p' 
+}
+
 # ---------------------------------------------------------------------------
 
 check_bundle() { # bundle
@@ -138,11 +142,18 @@ build_bundles() {
         fi
         ciao install --grade=wasm typeslib
     fi
+}
 
-    # # [[scasp.html]]
-    if has_bundle sCASP; then # has sCASP
-        ciao install --grade=wasm sCASP
-    fi
+# (Note: Use builder/etc/publish-bundle.sh to publish directly to ciao-lang.org)
+# This will install all the bundles that contains a playground/ directory
+build_extra_bundles() {
+    check_bundle ciao_playground
+    check_emcc
+    for b in `ciao custom_run ciao_playground list_playgrounds`; do
+        ciao install --grade=wasm "$b"
+        # TODO: better way? this installs html files into the playground/ directory
+        ciao custom_run ciao_playground dist_playground "$b"
+    done
 }
 
 # ---------------------------------------------------------------------------
@@ -150,10 +161,12 @@ build_bundles() {
 case $1 in
     ciaowasm) build_ciaowasm ;;
     ciao_playground) build_ciao_playground ;;
+    extra_bundles) build_extra_bundles ;;
     *) 
         build_ciaowasm
         build_ciao_playground
         build_bundles
+        build_extra_bundles
         ;;
 esac
 

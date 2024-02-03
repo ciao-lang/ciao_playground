@@ -41,3 +41,30 @@ site_copy_files :-
     site_glob_cp(ciao_playground, 'examples', '*.tex', '/playground/examples'),
     site_glob_cp(ciao_playground, 'examples', '*.pdf', '/playground/examples'),
     site_glob_cp(ciao_playground, 'examples', '*.docx', '/playground/examples').
+
+% ---------------------------------------------------------------------------
+% (helper for other playgrounds)
+
+:- use_module(library(bundle/bundle_paths), [bundle_path/3]).
+:- use_module(engine(internals), ['$bundle_id'/1]).
+:- use_module(library(system), [file_exists/1]).
+:- use_module(library(streams), [display/1, nl/0]).
+
+% (hook)
+% List bundles that have a playground/ directory
+'$builder_hook'(custom_run(list_playgrounds, [])) :- !,
+    ( % (failure-driven loop)
+      '$bundle_id'(Bndl),
+        bundle_path(Bndl, 'playground', PG),
+        file_exists(PG),
+        display(Bndl), nl,
+        fail
+    ; true
+    ).
+
+% (hook)
+% Site copy playground/ directory
+'$builder_hook'(custom_run(dist_playground, [Bndl])) :- !,
+    site_glob_cp(Bndl, 'playground', '*.html', '/playground'),
+    site_glob_cp(Bndl, 'playground', '*.js', '/playground/js').
+

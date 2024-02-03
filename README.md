@@ -10,25 +10,24 @@ client layer.
 
 ## Build instructions
 
-Steps to build this bundle:
+Steps to build this bundle and prepare a working playground in your
+`build/site` area:
 
  - Install the `ciaowasm` bundle (see `ciaowasm/README.md`)
- - Install external dependencies: `ciao custom_run ciao_playground fetch_externals`
-   (which use [NPM](https://www.npmjs.com/))
- - Prepare and pack bundles at the `build/site/` area:
-```
-ciao install --grade=wasm ciaowasm # (if not done before)
-ciao install --grade=wasm core
-ciao install --grade=wasm builder
-ciao install --grade=wasm ciaodbg
-ciao install ciao_playground # (wasm grade not needed)
-```
- - Finish the distribution at `build/site/`:
-```
-ciao custom_run ciao_playground dist
-```
+ - Execute the `build.sh` script. 
 
-You may use the `build.sh` to automate all the steps.
+The script above performs several steps:
+
+ - Install external dependencies (using `ciao custom_run
+   ciao_playground fetch_externals` (which use
+   [NPM](https://www.npmjs.com/)).
+ - Prepare and pack bundles at the `build/site/` area (using `ciao
+   install --grade=wasm BUNDLE` for the `ciaowasm`, `core`, `builder`,
+   `ciaodbg`, and other bundles).
+ - Install the `ciao_playground` bundle (using `ciao install ciao_playground`).
+ - Finish the distribution at `build/site/` (using `ciao custom_run ciao_playground dist`).
+ - Prepare and install all the bundles that contain a `playground/`
+   directory.
 
 ## Usage 
 
