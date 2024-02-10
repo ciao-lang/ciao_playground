@@ -76,5 +76,5 @@ the @href{http://ciao-lang.org}{Ciao Prolog site}.
 
 % End comment } 
 
+@include{../../CHANGELOG.md}
 ").
-

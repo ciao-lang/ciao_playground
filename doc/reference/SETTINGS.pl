@@ -16,6 +16,8 @@ doc_structure := ciao_playground_manual-[
     ]
 ].
 
+doc_mainopts := /*no_patches|no_biblio|no_math.*/ _ :- fail.
+
 allow_markdown := yes.
 syntax_highlight := yes.
 allow_runnable := yes.
