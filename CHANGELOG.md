@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.23.0] - 2024-3-04
+
+### Added
+
+ - Add debugger support.
+ - Menu buttons for analysis (w/ and w/o output).
+ - A simple on-the-fly button under the More menu.
+
+### Improved
+
+ - Towards relocatable URL for playgrounds. The auxiliary `lpdoc.js`
+   loaded in HTML backend of LPdoc is extended to automatically load
+   the playground when needed. It will attept several locations: local
+   URL, and then `https://ciao-lang.org`. Note that due to CORS
+   limitations, serving from `file:///` is not fully working.
+ - Build and distribute ciaopp library cache.
+ - More flexible installation of custom playgrounds.
+ - Updated documentation.
+ - Upgraded to Monaco Editor 0.38.
+ - Recolor port in toplevel while debugging.
+ - Patterns for warning/error parsing.
+
+### Fixed
+
+ - Use `?code=` in URL for "load in playground" links from active
+   logic documents.
+ - Fixed error location from CiaoPP.
+ - Workaround new `addCommand` behavior in Monaco >=0.32 ()
+ - Hide previous analysis output in acheck.
+ - Allow CORS in local server.
+ - Fix syntax highlight for `=:=`.
+ - Trim results of exfilter (in active logic documents).
+
 ## [1.22.0] - 2023-04-27
 
 ### Added
