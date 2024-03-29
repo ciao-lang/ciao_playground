@@ -29,9 +29,9 @@ Automatic analysis can be performed by clicking @key{?} button.
 
 By default, @apl{CiaoPP} analyzes programs with a type domain (@tt{eterms}) and a
 sharing/freeness domain (@tt{shfr}).  The inferred information is expressed with
-(@tt{true}) assertions (for a more
-extensive tutorial of the assertion language see @ref{Using assertions for
-preprocessing programs}).
+(@tt{true}) assertions (for a more extensive tutorial of the assertion
+language see section @em{Using assertions for preprocessing programs}
+in the @apl{CiaoPP} manual).
 @tt{true} represents abstractions of the behaviour of the program inferred by the
 analyzer. In this case, it was inferred:
 

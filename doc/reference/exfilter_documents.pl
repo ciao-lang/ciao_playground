@@ -147,9 +147,9 @@ Output result:
 
 The playground already included specific commands for embedding
 editable and runnable code in place. The @apl{exfilter} bundle extends
-this functionality with additional steps that turns code snippents
+this functionality with additional steps that turn code snippets
 into exercises.  In particular, the analysis and the filtering method
-are executed directly from the browser.
+are executed directly in the browser.
 
 For example, in this exercise we want the user to correct the
 singleton variable written in the base case of predicate @pred{app/3}:
