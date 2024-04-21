@@ -12,7 +12,7 @@
 /* (must be loaded from lpdoc.js) */
 
 /* --------------------------------------------------------------------------- */
-/* Playground defaults */
+// * Playground defaults
 
 const playgroundCfg_defaults = {
   title: "Prolog playground",
@@ -146,8 +146,7 @@ if (typeof playgroundCfg === 'undefined') { var playgroundCfg = {}; }
 playgroundCfg = Object.assign({...playgroundCfg_defaults}, playgroundCfg);
 
 /* --------------------------------------------------------------------------- */
-
-// lpdocPG:
+// * lpdocPG:
 //   'raw': do not setup pgset (custom setups)
 //   'runnable': setup runnable code blocks in a LPdoc document
 //   'playground': setup a playground
@@ -160,7 +159,7 @@ if (typeof urlPREFIX === 'undefined') {
 }
 
 // ===========================================================================
-// Dynamically load dependencies
+// * Dynamically load dependencies
 
 // TODO: this one is not very fast but it seems to be robust enough;
 //   better ways?
@@ -183,7 +182,7 @@ var require = { paths: { vs: urlPREFIX+'/node_modules/monaco-editor/min/vs' } };
 })();
 
 // ---------------------------------------------------------------------------
-// UI - Modal dialog windows
+// * UI - Modal dialog windows
 
 function modal_elm() {
   return document.getElementById('modal-content');
@@ -214,7 +213,7 @@ function modal_alloc(w) {
 }
 
 // ---------------------------------------------------------------------------
-// UI - Layouts for playground
+// * UI - Layouts for playground
 
 var layout_modif_list = [
   { k:'E', n:'Editor' }, // Toggle editor
@@ -299,7 +298,7 @@ class Layout {
 }
 
 // ---------------------------------------------------------------------------
-// SVGs (Note: clone with .cloneNode(true) if needed)
+// * SVGs (Note: clone with .cloneNode(true) if needed)
 
 const help_svg = elem_from_str(`<svg class="header-icon-img" version="1.1" viewBox="0 0 34 34" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g>
 <path d="M17.123,9.2c-1.44,0-2.642,0.503-3.604,1.32S11.994,12,11.832,14h2.937c0.064-1,0.303-1.231,0.716-1.611 s0.926-0.618,1.541-0.618c0.615,0,1.116,0.174,1.504,0.571c0.389,0.396,0.583,0.882,0.583,1.48s-0.187,1.094-0.558,1.499 l-1.772,1.769c-0.518,0.518-0.626,0.934-0.78,1.249C15.849,18.654,16,19.133,16,19.78V21h2v-0.832c0-0.646,0.289-1.148,0.581-1.504 c0.112-0.129,0.333-0.287,0.521-0.473c0.186-0.187,0.448-0.405,0.715-0.656c0.267-0.25,0.5-0.457,0.662-0.619 c0.161-0.161,0.404-0.437,0.712-0.825c0.533-0.647,0.805-1.456,0.805-2.427c0-1.408-0.45-2.503-1.356-3.289 C19.732,9.592,18.563,9.2,17.123,9.2z" fill="currentColor"/>
@@ -326,6 +325,8 @@ const share_svg = elem_from_str(`<svg class="header-icon-img" viewBox="0 0 20 20
 </svg>`);
 
 // ---------------------------------------------------------------------------
+
+// * Create a pg editor (for input file or top level)
 
 var pg_editor_num = 0;
 
@@ -416,7 +417,7 @@ function create_pg_editor(container, text, kind, opts) {
 }
 
 // ---------------------------------------------------------------------------
-// Visibility state
+// * Visibility state
 
 class Vis {
   #ref;
@@ -447,15 +448,14 @@ class Vis {
 }
 
 // ---------------------------------------------------------------------------
-// UI - Main playground cell class
-
-// Editor theme for each UI theme
+// * UI - Main playground cell class
+// ** Editor theme for each UI theme
 const editor_theme = {
   "light": "ciao-light",
   "dark": "ciao-dark"
 };
 
-/* A playground cell with an IDE layout */
+// ** A playground cell with an IDE layout
 class PGCell {
   constructor(cproc) {
     this.file_ext = null;
@@ -472,7 +472,7 @@ class PGCell {
     this.vis = new Vis(); // visibility state
   }
 
-  /* Executed by ToplevelProc on (re)start */
+// ** Executed by ToplevelProc on (re)start
   // TODO: one cproc may have several pg attached! (just read/write to the top one)
   async on_cproc_start() {
     this.#cancel_autosave();
@@ -487,7 +487,7 @@ class PGCell {
     }
   }
 
-  // Set code and process
+// ** Set code and process
   async set_code_and_process(file_ext,code) {
     pers_set_code({code:code,file_ext:file_ext});
     this.file_ext = file_ext;       
@@ -503,7 +503,7 @@ class PGCell {
     }
   }
 
-  // Set/get auto action 
+// ** Set/get auto action 
   set_auto_action(action) {
     // TODO: set a field in the PGCell instead
     playgroundCfg.auto_action = action;
@@ -514,7 +514,7 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Set up layout */
+// ** Set up layout
 
   async setup(base_el, cell_data, pgset) {
     this.pgset = pgset;
@@ -577,7 +577,7 @@ class PGCell {
     this.#setup_toplevel();
     // Preview
     this.#setup_preview();
-    // Set up window layout
+    // Setup window layout
     this.#setup_layout(base_el);
     // Start cell (if needed)
     if (this.is_R) {
@@ -606,7 +606,7 @@ class PGCell {
     }
   }
 
-  /* Editor menu (menubar) */
+// ** Editor menu (menubar)
   #setup_menu(base_el) {
     let menu_el = elem_cn('div', 'main-menu');
     //
@@ -681,7 +681,7 @@ class PGCell {
     base_el.appendChild(menu_el);
   }
 
-  /* Editor menu (lpdocPG === 'runnable') */
+// ** Editor menu (lpdocPG === 'runnable')
   #setup_menu_R(base_el) {
     const menu_el = elem_cn('div', 'lpdoc-runnable-buttons');
     this.status_el = null; // TODO: set status_el to null before
@@ -726,7 +726,7 @@ class PGCell {
     base_el.appendChild(menu_el);
   }
 
-  /* The code editor (creates editor_el and editor) */
+// ** The code editor (creates editor_el and editor)
   #setup_editor(text) {
     if (this.is_R) {
       this.editor_el = elem_cn('div', 'lpdoc-runnable-editor-container');
@@ -748,7 +748,7 @@ class PGCell {
     }
   }
 
-  /* Comint (toplevel) */
+// ** Comint (toplevel)
   #setup_toplevel() {
     if (this.is_R) {
       this.toplevel_el = elem_cn('div', 'lpdoc-runnable-comint');
@@ -758,7 +758,7 @@ class PGCell {
     }
   }
 
-  /* Preview */
+// ** Preview 
   #setup_preview() {
     if (this.is_R) {
       this.preview_el = elem_cn('div', 'lpdoc-runnable-preview');
@@ -767,7 +767,7 @@ class PGCell {
     }
   }
 
-  /* Help footer */
+// ** Help footer
   #setup_help_footer(base_el) {
     const el = btn('lpdoc-runnable-help', "Copy the solution", "&#9733; Show solution", () => {
       let sol = this.cell_data['solution'];
@@ -779,7 +779,7 @@ class PGCell {
     base_el.appendChild(this.help_el);
   }
 
-  /* Setup internal layout */
+// ** Setup internal layout
   #setup_layout(base_el) {
     if (this.is_R) {
       if (this.editor_el !== null) base_el.appendChild(this.editor_el);
@@ -802,7 +802,7 @@ class PGCell {
     }
   }
 
-  /* Update (internal) layout (incrementally) */
+// ** Update (internal) layout (incrementally)
   update_inner_layout() {
     if (this.is_R) return;
     let update_dim = false;
@@ -845,13 +845,13 @@ class PGCell {
     return e;
   }
 
-  /* Destroy splits */
+// ** Destroy splits
   #destroy_splits() {
     for (const s of this.splits) { s.destroy(); }
     this.splits = [];
   }
 
-  /* Create a split resizable div (s directon, el1, el2 elems) */
+// ** Create a split resizable div (s directon, el1, el2 elems)
   #setup_split(s, el1, el2) {
     let opts = {};
     let el = document.createElement("div");
@@ -876,7 +876,7 @@ class PGCell {
 
   /* ---------------------------------------------------------------------- */
 
-  /* Make version visible */
+// ** Make version visible
   show_version(str) {
     let info_match = str.match(/.*^(Ciao.*$).*/m);
     if (info_match != null && info_match.length == 2) {
@@ -889,7 +889,7 @@ class PGCell {
 
   /* ---------------------------------------------------------------------- */
 
-  /* Set window layout (not visible until update_inner_layout() is called) */
+// ** Set window layout (not visible until update_inner_layout() is called)
   set_window_layout(modifs) {
     this.vis.set('layout', Layout.create(modifs));
   }
@@ -926,7 +926,7 @@ class PGCell {
 
   /* ---------------------------------------------------------------------- */
 
-  /* Update layout of editors (after redimensioning) */
+// ** Update layout of editors (after redimensioning)
   update_dimensions() {
     if (this.editor !== null) this.editor.layout();
     if (this.toplevel !== null) this.toplevel.update_dimensions();
@@ -935,7 +935,7 @@ class PGCell {
 
   /* ---------------------------------------------------------------------- */
 
-  /* Change focus (editor <-> toplevel). */
+// ** Change focus (editor <-> toplevel).
   change_focus() {
     if (this.editor.hasWidgetFocus()) {
       this.toplevel.editor.focus();
@@ -946,7 +946,7 @@ class PGCell {
 
   /* ---------------------------------------------------------------------- */
 
-  /* Schedule autosave */
+// ** Schedule autosave
   #sched_autosave() {
     if (this.autosave_timer !== null) return; // Already set, do nothing
     this.autosave_timer = setTimeout(() => {
@@ -972,7 +972,8 @@ class PGCell {
       history.replaceState(undefined, undefined, url);
     }
     // update local storage
-    pers_set_code(this.get_editor_value());
+    let prevcode = this.pers_get_code();
+    pers_set_code({code:this.get_editor_value(),file_ext:prevcode.file_ext});
     // process if on-the-fly is set
     if (playgroundCfg.on_the_fly) {
       if (this.cproc.state !== QueryState.READY) {
@@ -987,7 +988,7 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Marks and code status (on the editor side) */
+// ** Marks and code status (on the editor side)
 
   set_code_status(st) {
     let txt = null;
@@ -1024,7 +1025,7 @@ class PGCell {
     e.innerHTML = text;
   }
 
-  /* Post-process warning/error messages after load */ // TODO: generalize
+// ** Post-process warning/error messages after load // TODO: generalize
   mark_errs(out, err) {
     let msgs = parse_error_msg(err); // obtain object with parsed errors
     let file = this.curr_mod_path();
@@ -1052,7 +1053,7 @@ class PGCell {
     monaco.editor.setModelMarkers(this.editor.getModel(), 'errors', markers);
   }
 
-  // Extract range from srcdbg_info
+// ** Extract range from srcdbg_info
   //
   // TODO: this is an approximation similar to what is implemented in
   //   ciao-debugger.el, we'd need to identify goal locations (at
@@ -1110,7 +1111,7 @@ class PGCell {
     return search_range;
   }
 
-  /* mark source debug info (unmark if info === null or source is not visible) */
+// ** Mark source debug info (unmark if info === null or source is not visible)
   /* Note: based on ciao-debugger.el:ciao-debug-display-line */
   mark_srcdbg_info(info) {
     let decs = [];
@@ -1156,7 +1157,7 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Code editor and toplevel process */
+// ** Code editor and toplevel process
 
   /* Get editor value (text) */
   get_editor_value() {
@@ -1214,7 +1215,7 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Save current code into the worker file system (possibly "amending it") */
+// ** Save current code into the worker file system (possibly "amending it")
   async upload_code_to_worker() {
     if (!this.cproc.check_not_running()) return;
     let code = this.complete_code();
@@ -1223,7 +1224,7 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Menu buttons */
+// ** Menu buttons
 
   update_layout_sel_button_marks() {
     const filter = (k) => {
@@ -1319,7 +1320,7 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  // Execute command on response view
+// ** Execute command on response view
 
   async with_response(f) { /* pre: this.is_R */
     if (!this.cproc.check_not_running()) return;
@@ -1335,13 +1336,13 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  // Redirect to playground (open playground in new tab from URL)
+// ** Redirect to playground (open playground in new tab from URL)
   load_in_playground() { /* pre: this.is_R */
     let code = this.complete_code();
     window.open(urlPREFIX + '/playground/index.html' + '?code=' + encodeURIComponent(code)); // open playground in new tab
   }
 
-  // Set up cell with dynamic preview (TODO: experimental)
+// ** Set up cell with dynamic preview (TODO: experimental)
   async setup_dynpreview(opts) { /* pre: this.is_R */
     let render_pred = opts.render_pred;
     // extend dependencies and init queries (before start)
@@ -1385,13 +1386,13 @@ class PGCell {
   }
 }
 
-/* Get extension from file name */
+// * Get extension from file name
 
 function getFileExtension(filename) {
   return filename.match(/\.[0-9a-z]+$/i)[0]; 
 }
 
-/* Handle file upload */
+// * Handle file upload 
 
 function handle_file_upload(event, file_el, pg) {
   let allowedExtensions = /(\.pl|\.md|\.lpdoc)$/i;
@@ -1412,7 +1413,8 @@ function handle_file_upload(event, file_el, pg) {
   }
 }
 
-// Mini-playgrond (e.g, for website)
+// * Mini-playgrond (e.g, for website)
+
 function setup_mini_pg(el) {
   playgroundCfg = Object.assign({...playgroundCfg}, miniPlaygroundCfg); // TODO: local cfg?
   el.style.width='100%';
@@ -1422,7 +1424,7 @@ function setup_mini_pg(el) {
   el.style.flexFlow='column';
 }
 
-// Open example
+// * Open example
 
 async function open_example(pg, path) {
   var str = await pg.cproc.w.readFile(path);
@@ -1430,7 +1432,7 @@ async function open_example(pg, path) {
   await pg.set_code_and_process(file_ext,str);
 }  
 
-// Handle share
+// * Handle share
 
 function handle_share(btn_el, msg_el, pg) {
   let value = pg.get_editor_value();
@@ -1447,9 +1449,10 @@ function handle_share(btn_el, msg_el, pg) {
   });
 }
 
+// * Initial editor value (splash, URI encoded, URL from a CDN, from storage, etc.)
+
 const github_hash = '#https://github.com/';
 
-/* Initial editor value (splash, URI encoded, URL from a CDN, etc.) */
 async function initial_editor_value() {
   // Try from github
   if (document.location.hash.startsWith(github_hash)) {
@@ -1515,6 +1518,7 @@ function read_state_from_hash() {
 }
 
 // ---------------------------------------------------------------------------
+// * Update editor theme
 
 function update_editor_theme() {
   monaco.editor.setTheme(editor_theme[get_actual_theme()]);
@@ -1532,9 +1536,8 @@ function update_editor_theme() {
 };
 
 // ---------------------------------------------------------------------------
-// Playground actions on code  - new, process, actions (load, gen_doc, exfilter, ...)
-
-/* New code (reset editor contents) */
+// * Playground actions on code  - new, process, actions (load, gen_doc, exfilter, ...)
+// ** New code (reset editor contents)
 async function new_code(pg) {
   let text = "Discard the current editor contents?";
   // TODO: use custom dialog, make default to cancel
@@ -1543,7 +1546,7 @@ async function new_code(pg) {
   }  
 }
 
-/* New document (reset editor contents) */
+// ** New document (reset editor contents)
 async function new_document(pg) {
   let text = "Discard the current code?";
   // TODO: use custom dialog, make default to cancel
@@ -1552,7 +1555,7 @@ async function new_document(pg) {
   }  
 }
 
-/* Process code (load, doc, etc.) */
+// ** Process code (load, doc, etc.)
 async function process_code(pg) {
   let pmuted = null;
   if (playgroundCfg.on_the_fly) pmuted = pg.cproc.set_muted(true); // TODO: mute in on_the_fly; make it optional?
@@ -1569,7 +1572,7 @@ async function process_code(pg) {
   if (pmuted !== null) pg.cproc.muted = pmuted;
 }
 
-/* Load */
+// ** Load code
 async function load_code(pg) {
   let q;
   if (!pg.cproc.muted) {
@@ -1587,7 +1590,7 @@ async function load_code(pg) {
   pg.set_auto_action('load');
 }
 
-/* Exfilter */
+// ** Exfilter
 async function run_exfilter(pg) {
   const mod = pg.curr_mod_path();
   const modbase = pg.curr_mod_base();
@@ -1611,7 +1614,7 @@ async function run_exfilter(pg) {
   pg.set_auto_action('exfilter');
 }
 
-/* Exfilter */
+// ** Exfilter exrcise
 async function run_exfilter_exercise(pg) {
   const mod = pg.curr_mod_path();
   const modbase = pg.curr_mod_base();
@@ -1648,27 +1651,27 @@ async function run_exfilter_exercise(pg) {
   pg.set_auto_action('exfilter_exercise');
 }
 
-/* Gen doc and preview */
+// ** Gen doc and preview
 async function gen_doc_preview(pg) {
   await gen_doc(pg);
   await preview_doc(pg);
   pg.set_auto_action('doc');
 }
 
-/* Run optimizations and preview */
+// ** Run optimizations and preview
 async function spec_preview(pg) {
   await opt_mod(pg);
   await preview_co(pg);
   pg.set_auto_action('spec');
 }
 
-/* Toggle on-the-fly mode */
+// ** Toggle on-the-fly mode
 async function toggle_on_the_fly(pg) {
   // TODO: show status
   playgroundCfg.on_the_fly = !playgroundCfg.on_the_fly;
 }
 
-/* Run tests */
+// ** Run tests
 async function run_tests(pg) {
   if (!pg.cproc.muted) {
     pg.show_toplevel(true);
@@ -1684,7 +1687,7 @@ async function run_tests(pg) {
   pg.set_auto_action('test');
 }
 
-/* Debug code (it loads the libraries needed and starts the debugger) */
+// ** Debug code (it loads the libraries needed and starts the debugger)
 async function debug(pg) {
   if (!pg.cproc.muted) {
     pg.show_toplevel(true);
@@ -1706,7 +1709,7 @@ async function debug(pg) {
   await pg.toplevel.do_query("use_module('" + mod + "')", {});
 }
 
-/* Generate documentation */
+// ** Generate documentation
 /* (requires 'lpdoc' bundle) */
 async function gen_doc(pg) {
   const filename = pg.curr_mod_name_ext();
@@ -1722,7 +1725,7 @@ async function gen_doc(pg) {
   pg.set_auto_action('doc');
 }
 
-/* Analyze and check assertions */
+// ** Analyze and check assertions
 /* (requires 'ciaopp' bundle) */
 async function acheck(pg) {
   await discard_preview(pg);
@@ -1743,7 +1746,7 @@ async function acheck_output(pg) { // (shows output, which can be slower)
   pg.set_auto_action('acheck_output');
 }
 
-/* Optimize (spec) module */
+// ** Optimize (spec) module
 /* (requires 'ciaopp' bundle) */
 async function opt_mod(pg) {
   const modbase = pg.curr_mod_base();
@@ -1751,7 +1754,7 @@ async function opt_mod(pg) {
   pg.set_auto_action('spec');
 }
 
-// Preview the documentation generated for the current module
+// ** Preview the documentation generated for the current module
 async function preview_doc(pg) {
   const modbase = pg.curr_mod_base();
   var str = await pg.cproc.w.readFile(modbase+'.html/index.html');
@@ -1787,7 +1790,7 @@ async function show_lpdoc_html(pg, d) {
   pg.update_inner_layout();
 }
 
-// Preview _co.pl contents for the current module
+// ** Preview _co.pl contents for the current module
 async function preview_co(pg) {
   const modbase = pg.curr_mod_base();
   var str = await pg.cproc.w.readFile(modbase+'_co.pl');
@@ -1796,7 +1799,7 @@ async function preview_co(pg) {
   }
 }
 
-// Show raw (no highlighted) text in a PRE environment
+// ** Show raw (no highlighted) text in a PRE environment
 async function show_text(pg, d) {
   pg.show_preview('tall'); // use tall preview
   var preview = pg.preview_el; // TODO: do not change style dynamically for this preview_el
@@ -1816,14 +1819,14 @@ async function show_text(pg, d) {
   pg.update_inner_layout();
 }
 
-// Discard preview contents and hide
+// ** Discard preview contents and hide
 async function discard_preview(pg) {
   pg.show_preview(false); 
   var preview = pg.preview_el; 
   preview.replaceChildren();
 }
 
-// Show highlighted text in a read-only editor view (playground)
+// ** Show highlighted text in a read-only editor view (playground)
 async function show_text_preview(pg, d) {
   pg.show_preview('tall'); 
   var preview = pg.preview_el; 
@@ -1837,7 +1840,7 @@ async function show_text_preview(pg, d) {
   pg.update_inner_layout();
 }
 
-// Show highlighted text in a read-only editor view (for lpdoc-runnable)
+// ** Show highlighted text in a read-only editor view (for lpdoc-runnable)
 async function show_text_highlight(pg, d, kind) {
   pg.show_preview('tall'); // use tall preview
   var preview = pg.preview_el; 
@@ -1856,7 +1859,7 @@ async function show_text_highlight(pg, d, kind) {
 }
 
 // ---------------------------------------------------------------------------
-// Guess module name
+// * Guess module name
 
 /**
  * Guess the module name from the code (no extension, no path). It
@@ -1876,7 +1879,7 @@ function guess_mod_name(code) {
 }
 
 // ---------------------------------------------------------------------------
-// Encode/decode code as URL
+// * Encode/decode code as URL
 
 /**
  * Encode the code given in value as a playground URL
@@ -1908,7 +1911,7 @@ function code_from_URL() {
 }
 
 // =========================================================================== 
-// Monaco Editor configuration for an Emacs mode
+// * Monaco Editor configuration for an Emacs mode
 
 /* Adds some Emacs edition key bindings */
 function add_emacs_bindings(editor) {
@@ -2043,7 +2046,7 @@ function add_playground_bindings(editor, pg) {
 }
 
 // =========================================================================== 
-// Error parser and handler
+// * Error parser and handler
 
 /**
  * An error.
@@ -2184,7 +2187,7 @@ function add_markers(file, array, markers, type) {
 };
 
 /* =========================================================================== */
-/* Comint (for interacting with a ToplevelProc) */
+// * Comint (for interacting with a ToplevelProc)
 
 class Comint {
   constructor(container, pg, opts) {
@@ -2771,7 +2774,7 @@ class Comint {
   }
 }
 
-// Console based Comint (reduced functionality)
+// * Console based Comint (reduced functionality)
 class ConsoleComint {
   constructor(pg) {
     this.pg = pg; // associated pgcell
@@ -2801,7 +2804,7 @@ class ConsoleComint {
 }
 
 // ===========================================================================
-/* Code persistence (in web local storage) */
+// * Code persistence (in web local storage)
 
 /**
  * Obtain the value of the item with the key `code`, containing the
@@ -2863,7 +2866,7 @@ function pers_remove_code() {
 }
 
 // ---------------------------------------------------------------------------
-// Set of playground cells
+// * Set of playground cells
 
 class PGSet {
   constructor() {
@@ -3015,7 +3018,7 @@ function scan_runnable(text) {
 }
 
 // ===========================================================================
-// Set up mathjax (dynamically)
+// * Set up mathjax (dynamically)
 
 // TODO: integrate or move closer to lpdoc.js?
 
@@ -3055,7 +3058,7 @@ function setup_mathjax() {
 }
 
 // ===========================================================================
-// UI - cover window
+// * UI - cover window
 
 // A cover div (just in case it needs time to load).  There is a fade
 // in animation (see CSS for 'covermsg') so that quick loads are not
@@ -3077,7 +3080,7 @@ function hide_cover() {
 }
 
 // ===========================================================================
-// UI - splash modal dialog
+// * UI - splash modal dialog
 
 function show_splash(base_el) {
   modal_alloc(base_el);
@@ -3132,7 +3135,7 @@ consider <a href="/install.html">native installation</a> if needed.
 }
 
 // ===========================================================================
-// UI - Playground header
+// * UI - Playground header
 
 /* Header (with top-right menu) */
 function setup_header(base_el) {
@@ -3172,6 +3175,7 @@ function setup_header(base_el) {
 }
 
 // ===========================================================================
+// * Final
 
 var pgset = null; // (collection of playgrounds for this document)
 var preview_pgset = null; // (experimental for lpdoc preview)
@@ -3206,3 +3210,7 @@ window.onload = function () {
     })();
   }
 };
+
+// Local Variables:
+// eval: (outshine-mode)
+// End:
