@@ -1970,7 +1970,7 @@ function add_emacs_bindings(editor) {
   });
 
   // Delete right word (M-d)
-  editor.addCommandFocused(KM.WinCtrl | KC.KeyD, () => {
+  editor.addCommandFocused(KM.chord(KC.Escape, KC.KeyD), () => {
     editor.trigger(null, 'deleteWordRight');
   });
 
