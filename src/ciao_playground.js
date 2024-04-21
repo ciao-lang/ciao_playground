@@ -51,7 +51,43 @@ app([X|L1],L2,[X|L3]) :-
 %
 % ?- app([1,2],[3,4],L).
 % ?- app(A,B,[1,2,3,4]).
-`,
+
+% Or choose 'New'->'New document' to start
+% a new Active Logic Document.
+`, // TODO: Better splash doc
+  splash_doc: `\
+\\title A simple Active Logic Document (ALD)
+
+This is a sample document. In it you can use:
+
+- @bf{LPdoc commands}, or
+- **LPdoc markdown**
+
+You can include **runnable examples** inside it:
+
+\`\`\`ciao_runnable
+:- module(_,_).
+
+app([],X,X).
+app([X|L1],L2,[X|L3]) :-
+     app(L1,L2,L3).
+\`\`\`
+
+and **queries** to those examples:
+
+\`\`\`ciao_runnable
+  ?- app([1,2],[3,4],L).
+\`\`\`
+
+\`\`\`ciao_runnable
+?- app(A,B,[1,2,3,4]).
+\`\`\`
+
+You can save the document source with the 'Save'
+button above and upload it at any other time.
+
+Check out much more in the LPdoc manual!
+`, 
   example_list: [
     // TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
     { k:'core/examples/general/bignums.pl', n:'bignums.pl' },
@@ -79,7 +115,7 @@ app([X|L1],L2,[X|L3]) :-
   // Amend code (add module, etc.)
   amend_on_save: true,
   // Auto-* actions (on start and restart)
-  auto_action: 'load',
+  auto_action: null,
   // Do auto-* actions on the fly (as document changes)
   on_the_fly: false,
   // Keep worker alive (only when lpdocPG=='runnable' at this moment)
@@ -293,9 +329,9 @@ const share_svg = elem_from_str(`<svg class="header-icon-img" viewBox="0 0 20 20
 
 var pg_editor_num = 0;
 
-/* Create a playground code or toplevel editor. If opts.autoresize==true then
-   the size will dinamically change with contents (for
-   lpdoc-runnable). */
+/* Create a playground input file or toplevel editor. If
+   opts.autoresize==true then the size will dinamically
+   change with contents (for lpdoc-runnable). */
 function create_pg_editor(container, text, kind, opts) {
   const theme = editor_theme[get_actual_theme()];
   let maxh = 500;
@@ -422,6 +458,7 @@ const editor_theme = {
 /* A playground cell with an IDE layout */
 class PGCell {
   constructor(cproc) {
+    this.file_ext = null;
     this.editor = null;
     this.toplevel = null;
     this.previewEd = null; // TODO: extend to multiple editor buffers
@@ -445,12 +482,20 @@ class PGCell {
         //this.cproc.comint = this.toplevel; // (re)attach to this pg comint // TODO: remove this line if everything is OK
       }
     } else {
-      await process_code(this);
+      let code = pers_get_code();
+      await this.set_code_and_process(code.file_ext,code.code); 
     }
   }
 
-  async set_code_and_process(code) {
-    pers_set_code(code);
+  // Set code and process
+  async set_code_and_process(file_ext,code) {
+    pers_set_code({code:code,file_ext:file_ext});
+    this.file_ext = file_ext;       
+    if ( file_ext == '.md' || file_ext == '.lpdoc' ) {
+      this.set_auto_action('doc');
+    } else {
+      this.set_auto_action('load');
+    };
     this.set_editor_value(code);
     this.#cancel_autosave();
     if (!this.is_R) { // TODO: treat is_R == true case
@@ -458,6 +503,7 @@ class PGCell {
     }
   }
 
+  // Set/get auto action 
   set_auto_action(action) {
     // TODO: set a field in the PGCell instead
     playgroundCfg.auto_action = action;
@@ -468,7 +514,7 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Setup layout */
+  /* Set up layout */
 
   async setup(base_el, cell_data, pgset) {
     this.pgset = pgset;
@@ -507,18 +553,23 @@ class PGCell {
       this.#setup_menu(base_el);
     }
     // Editor
+    let initial_file_ext = null;
     let initial_code = null;
     if (this.is_R) {
       if (this.cell_data.kind == 'exercise') {
         initial_code = this.cell_data['hint'];
+        initial_file_ext = '.pl';
       } else if (this.cell_data.kind == 'code' || this.cell_data.kind == 'exfilter' || this.cell_data.kind == 'exfilterex') {
         initial_code = this.cell_data['focus'];
+        initial_file_ext = '.pl';
       }
     } else {
       initial_code = this.cell_data['focus'];
+      initial_file_ext = this.cell_data['file_ext']; // MH: Same as this.cell_data.file_ext
     }
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
+      this.file_ext = initial_file_ext;
     } else {
       this.editor_el = null;
     }
@@ -526,7 +577,7 @@ class PGCell {
     this.#setup_toplevel();
     // Preview
     this.#setup_preview();
-    // Setup window layout
+    // Set up window layout
     this.#setup_layout(base_el);
     // Start cell (if needed)
     if (this.is_R) {
@@ -561,7 +612,28 @@ class PGCell {
     //
     if (playgroundCfg.has_layout_button) this.#setup_layout_button(menu_el);
     // (file options)
-    if (playgroundCfg.has_new_button) this.#setup_new_button(menu_el);
+    // Made New into a pull-down menu instead
+    // if (playgroundCfg.has_new_button) this.#setup_new_button(menu_el);
+    if (playgroundCfg.has_new_button) {
+      const new_list = [];
+      new_list.push({ k:'new_pl', n:'New code' });
+      new_list.push({ k:'new_doc', n:'New document' });
+      let do_action = {};
+      do_action['new_pl'] = new_code;
+      do_action['new_doc'] = new_document;
+      const new_new_button =
+            new DropdownButton(menu_el,
+                               "New",
+                               elem_from_str("<span>New</span>"),
+                               new_list,
+                               value => {
+                                 (async() => {
+                                   await do_action[value](this);
+                                 })();
+                               });
+      new_new_button.btn_el.classList.add('menu-button');
+      new_new_button.btn_el.style.height = '100%';
+    };
     if (playgroundCfg.has_open_button) this.#setup_open_button(menu_el);
     if (playgroundCfg.has_save_button) this.#setup_save_button(menu_el);
     if (playgroundCfg.has_examples_button) this.#setup_examples_button(menu_el);
@@ -676,7 +748,7 @@ class PGCell {
     }
   }
 
-  /* Comint */
+  /* Comint (toplevel) */
   #setup_toplevel() {
     if (this.is_R) {
       this.toplevel_el = elem_cn('div', 'lpdoc-runnable-comint');
@@ -700,7 +772,7 @@ class PGCell {
     const el = btn('lpdoc-runnable-help', "Copy the solution", "&#9733; Show solution", () => {
       let sol = this.cell_data['solution'];
       (async() => {
-        await this.set_code_and_process(sol);
+        await this.set_code_and_process('.pl',sol);
       })();
     });
     this.help_el = el;
@@ -1132,7 +1204,7 @@ class PGCell {
     }
   }
   curr_mod_name_ext() { // name and extension
-    return this.curr_mod_name()+'.pl';
+    return this.curr_mod_name()+this.file_ext;
   }
   curr_mod_base() { // full path without extension
     return '/'+this.curr_mod_name();
@@ -1142,7 +1214,6 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-
   /* Save current code into the worker file system (possibly "amending it") */
   async upload_code_to_worker() {
     if (!this.cproc.check_not_running()) return;
@@ -1178,18 +1249,19 @@ class PGCell {
     this.update_layout_sel_button_marks();
   }
 
-  #setup_new_button(menu_el) {
-    // new file (reset)
-    const el = btn('menu-button', "New code", "New", () => {
-      new_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
-    });
-    menu_el.appendChild(el);
-  }
+  // // Using a menu now but left this in for now.
+  // #setup_new_button(menu_el) { 
+  //     // new file (reset)
+  //  const el = btn('menu-button', "New code", "New", () => {
+  //     new_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
+  //   });
+  //   menu_el.appendChild(el);
+  // }
 
   #setup_open_button(menu_el) { // open file (upload)
     // (implicit label association)
     const label_el = document.createElement('label');
-    const file_el = elem_from_str(`<input type="file" accept=".pl" class="file-upload">`);
+    const file_el = elem_from_str(`<input type="file" accept=".pl,.md,.lpdoc" class="file-upload">`);
     label_el.appendChild(file_el);
     label_el.appendChild(document.createTextNode("Open"));
     menu_el.appendChild(label_el);
@@ -1247,8 +1319,8 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
+  // Execute command on response view
 
-  // execute command on response view
   async with_response(f) { /* pre: this.is_R */
     if (!this.cproc.check_not_running()) return;
     await this.enable_response({noprompt: true, autoresize:true, noshrink: true});
@@ -1263,14 +1335,13 @@ class PGCell {
   }
 
   /* ---------------------------------------------------------------------- */
-
-  // redirect to playground
+  // Redirect to playground (open playground in new tab from URL)
   load_in_playground() { /* pre: this.is_R */
     let code = this.complete_code();
     window.open(urlPREFIX + '/playground/index.html' + '?code=' + encodeURIComponent(code)); // open playground in new tab
   }
 
-  // Setup cell with dynamic preview (TODO: experimental)
+  // Set up cell with dynamic preview (TODO: experimental)
   async setup_dynpreview(opts) { /* pre: this.is_R */
     let render_pred = opts.render_pred;
     // extend dependencies and init queries (before start)
@@ -1314,17 +1385,26 @@ class PGCell {
   }
 }
 
+/* Get extension from file name */
+
+function getFileExtension(filename) {
+  return filename.match(/\.[0-9a-z]+$/i)[0]; 
+}
+
+/* Handle file upload */
+
 function handle_file_upload(event, file_el, pg) {
-  let allowedExtensions = /(\.pl)$/i;
+  let allowedExtensions = /(\.pl|\.md|\.lpdoc)$/i;
   if (!allowedExtensions.exec(file_el.value)) {
-    alert('Invalid file type (.pl expected).');
-    file_el.value = '';
+    alert('Invalid file type (.pl, .md, or .lpdoc expected).');
+    file_el.value = ''; 
     return false;
   } else {
     const reader = new FileReader();
     reader.onload = (event) => {
       (async() => {
-        await pg.set_code_and_process(event.target.result);
+        let file_ext = getFileExtension(file_el.value);
+        await pg.set_code_and_process(file_ext, event.target.result);
       })();
     };
     reader.readAsText(event.target.files[0]);
@@ -1342,10 +1422,15 @@ function setup_mini_pg(el) {
   el.style.flexFlow='column';
 }
 
+// Open example
+
 async function open_example(pg, path) {
   var str = await pg.cproc.w.readFile(path);
-  await pg.set_code_and_process(str);
+  let file_ext = getFileExtension(path);
+  await pg.set_code_and_process(file_ext,str);
 }  
+
+// Handle share
 
 function handle_share(btn_el, msg_el, pg) {
   let value = pg.get_editor_value();
@@ -1368,12 +1453,13 @@ const github_hash = '#https://github.com/';
 async function initial_editor_value() {
   // Try from github
   if (document.location.hash.startsWith(github_hash)) {
-    return await fetch_from_github();
+    let code = await fetch_from_github();
+    return {code:code,file_ext:'.pl'};
   }
   // Extract from URL
   {
-    let code = code_from_URL();
-    if (code !== null) return code;
+    let code = code_from_URL();  // TODO: extract extension also from url
+    if (code !== null) return {code:code,file_ext:'.pl'};
   }
   // Try from persistent store
   {
@@ -1381,7 +1467,7 @@ async function initial_editor_value() {
     if (code !== null) return code;
   }
   // Just show splash code
-  return playgroundCfg.splash_code;
+  return {code:playgroundCfg.splash_code, file_ext:'.pl'};
 }
 
 async function fetch_from_github() {
@@ -1446,14 +1532,23 @@ function update_editor_theme() {
 };
 
 // ---------------------------------------------------------------------------
-// Playground actions on code
+// Playground actions on code  - new, process, actions (load, gen_doc, exfilter, ...)
 
 /* New code (reset editor contents) */
 async function new_code(pg) {
+  let text = "Discard the current editor contents?";
+  // TODO: use custom dialog, make default to cancel
+  if (confirm(text) == true) {
+    await pg.set_code_and_process('.pl', playgroundCfg.splash_code); 
+  }  
+}
+
+/* New document (reset editor contents) */
+async function new_document(pg) {
   let text = "Discard the current code?";
   // TODO: use custom dialog, make default to cancel
   if (confirm(text) == true) {
-    await pg.set_code_and_process(playgroundCfg.splash_code);
+    await pg.set_code_and_process('.md', playgroundCfg.splash_doc); 
   }  
 }
 
@@ -1614,10 +1709,16 @@ async function debug(pg) {
 /* Generate documentation */
 /* (requires 'lpdoc' bundle) */
 async function gen_doc(pg) {
-  const modbase = pg.curr_mod_base();
+  const filename = pg.curr_mod_name_ext();
   // await pg.cproc.muted_query_dumpout("clean_mods(['"+modbase+"'])"); // (timestamps do not have the right resolution)
-  await pg.toplevel.do_query("doc_cmd('"+modbase+"', [], clean(intermediate))", {}); // (clean mod above is not enough)
-  await pg.toplevel.do_query("doc_cmd('"+modbase+"', [], gen(html))", {msg:'Generating documentation'});
+  await pg.toplevel.do_query("doc_cmd('"+filename+"', [], clean(intermediate))", {}); // (clean mod above is not enough)
+  if ( pg.file_ext === '.md'|| pg.file_ext === '.lpdoc') { 
+    plfile = pg.curr_mod_name()+'.pl';
+    // Deleting file.pl in case there is file.pl and file.md TODO: fix bug in LPdoc ***
+    await pg.toplevel.do_query("use_module(library(system_extra))", {}); 
+    await pg.toplevel.do_query("del_file_nofail('"+plfile+"')", {}); // continuation of above
+  };
+  await pg.toplevel.do_query("doc_cmd('"+filename+"', [], gen(html))", {msg:'Generating documentation'});
   pg.set_auto_action('doc');
 }
 
@@ -1755,6 +1856,7 @@ async function show_text_highlight(pg, d, kind) {
 }
 
 // ---------------------------------------------------------------------------
+// Guess module name
 
 /**
  * Guess the module name from the code (no extension, no path). It
@@ -1774,6 +1876,7 @@ function guess_mod_name(code) {
 }
 
 // ---------------------------------------------------------------------------
+// Encode/decode code as URL
 
 /**
  * Encode the code given in value as a playground URL
@@ -1805,7 +1908,7 @@ function code_from_URL() {
 }
 
 // =========================================================================== 
-// Monaco Editor configuration for a Emacs mode
+// Monaco Editor configuration for an Emacs mode
 
 /* Adds some Emacs edition key bindings */
 function add_emacs_bindings(editor) {
@@ -2710,7 +2813,10 @@ function pers_get_code() {
   const k = playgroundCfg.storage_key;
   if (k === null) return null;
   try {
-    return window.localStorage.getItem(k);
+    let code = window.localStorage.getItem(k+".code");
+    let file_ext = window.localStorage.getItem(k+".file_ext");
+    if (code === null) return null;
+    return {code:code, file_ext:file_ext};
   } catch (e) {
     // Swallow up any security exceptions...
     return null;
@@ -2724,11 +2830,13 @@ function pers_get_code() {
  * @returns {boolean} - True if it was stored correctly or false if there was an 
  * error.
  */
-function pers_set_code(value) {
+
+  function pers_set_code(value) {
   const k = playgroundCfg.storage_key;
   if (k === null) return true;
   try {
-    window.localStorage.setItem(k, value);
+    window.localStorage.setItem(k+".code", value.code);
+    window.localStorage.setItem(k+".file_ext", value.file_ext);
     return true;
   } catch (e) {
     // Swallow up any security exceptions...
@@ -2745,7 +2853,8 @@ function pers_remove_code() {
   const k = playgroundCfg.storage_key;
   if (k === null) return true;
   try {
-    window.localStorage.removeItem(k);
+    window.localStorage.removeItem(k+".code");
+    window.localStorage.removeItem(k+".file_ext");
     return true;
   } catch (e) {
     // Swallow up any security exceptions...
@@ -2762,15 +2871,15 @@ class PGSet {
     this.cproc = new ToplevelProc(urlPREFIX+'/ciao/'); // (shared)
   }
 
-  async setup(base_el, text) { // standalone playground
+  async setup(base_el, code) { // standalone playground
     // Show splash screen? As heuristic, we do this only if editor
     // value is the same as the splash_code. Otherwise we assume
-    // that the user is already programming and do not need it.
-    if (text === playgroundCfg.splash_code) {
+    // that the user is already editing and does not need it.
+    if (code.code === playgroundCfg.splash_code) {
       show_splash(base_el);
     }
     let i = 0;
-    let cell_data = { kind:'full', focus:text };
+    let cell_data = { kind:'full', focus: code.code, file_ext: code.file_ext };
     this.cells[i] = new PGCell(this.cproc);
     await this.cells[i].setup(base_el, cell_data, this);
   }
@@ -2906,7 +3015,7 @@ function scan_runnable(text) {
 }
 
 // ===========================================================================
-// Setup mathjax (dynamically)
+// Set up mathjax (dynamically)
 
 // TODO: integrate or move closer to lpdoc.js?
 
@@ -3090,8 +3199,8 @@ window.onload = function () {
         await pgset.setup_runnable();
       } else { // Full playground
         const base_el = document.body;
-        const text = await initial_editor_value();
-        await pgset.setup(base_el, text);
+        const code = await initial_editor_value();
+        await pgset.setup(base_el, code);
       }
       update_dimensions();
     })();
