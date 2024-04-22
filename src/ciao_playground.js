@@ -115,7 +115,7 @@ Check out much more in the LPdoc manual!
   // Amend code (add module, etc.)
   amend_on_save: true,
   // Auto-* actions (on start and restart)
-  auto_action: null,
+  auto_action: null, // This set later depending on whether .md, .pl, etc.
   // Do auto-* actions on the fly (as document changes)
   on_the_fly: false,
   // Keep worker alive (only when lpdocPG=='runnable' at this moment)
@@ -482,8 +482,7 @@ class PGCell {
         //this.cproc.comint = this.toplevel; // (re)attach to this pg comint // TODO: remove this line if everything is OK
       }
     } else {
-      let code = pers_get_code();
-      await this.set_code_and_process(code.file_ext,code.code); 
+      await process_code(this); 
     }
   }
 
@@ -570,6 +569,11 @@ class PGCell {
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
       this.file_ext = initial_file_ext;
+      if ( initial_file_ext == '.md' || initial_file_ext == '.lpdoc' ) {
+        this.set_auto_action('doc');
+      } else {
+        this.set_auto_action('load');
+      }
     } else {
       this.editor_el = null;
     }
@@ -972,8 +976,7 @@ class PGCell {
       history.replaceState(undefined, undefined, url);
     }
     // update local storage
-    let prevcode = this.pers_get_code();
-    pers_set_code({code:this.get_editor_value(),file_ext:prevcode.file_ext});
+    pers_set_code({code:this.get_editor_value(),file_ext:this.file_ext});
     // process if on-the-fly is set
     if (playgroundCfg.on_the_fly) {
       if (this.cproc.state !== QueryState.READY) {
@@ -1177,11 +1180,14 @@ class PGCell {
               this.cell_data['postamble'] + "\n");
     } else {
       if (playgroundCfg.amend_on_save) {
-        /* TODO: horrible hack: add module if none if found, works better than 'user' modules */
-        let matches = code.match(/:-\s*module\(/g); // (do not wait for '.')
-        if (matches === null) {
-          // code = ":- module(_,_,[assertions]). " + code; // assertions needed for acheck, etc.
-          code = ":- module(_,_). " + code;
+        // Do not insert module for non .pl files
+        if(this.file_ext == '.pl') { 
+          /* TODO: horrible hack: add module if none if found, works better than 'user' modules */
+          let matches = code.match(/:-\s*module\(/g); // (do not wait for '.')
+          if (matches === null) {
+            // code = ":- module(_,_,[assertions]). " + code; // assertions needed for acheck, etc.
+            code = ":- module(_,_). " + code;
+          }
         }
       }
     }
@@ -1337,9 +1343,9 @@ class PGCell {
 
   /* ---------------------------------------------------------------------- */
 // ** Redirect to playground (open playground in new tab from URL)
-  load_in_playground() { /* pre: this.is_R */
+  load_in_playground() { /* pre: this.is_R */ // TODO: treat .md case (and do not complete code? introduces :- module)
     let code = this.complete_code();
-    window.open(urlPREFIX + '/playground/index.html' + '?code=' + encodeURIComponent(code)); // open playground in new tab
+    window.open(urlPREFIX + '/playground/index.html' + '?code=' + encodeURIComponent(code)) + '&file_ext=.pl'; // open playground in new tab
   }
 
 // ** Set up cell with dynamic preview (TODO: experimental)
@@ -1436,7 +1442,8 @@ async function open_example(pg, path) {
 
 function handle_share(btn_el, msg_el, pg) {
   let value = pg.get_editor_value();
-  navigator.clipboard.writeText(code_to_URL(value)).then(() => { // success
+  let file_ext = pg.file_ext;
+  navigator.clipboard.writeText(code_to_URL(file_ext,value)).then(() => { // success
     let prev = msg_el.textContent;
     msg_el.textContent = 'Copied!';
     btn_el.style.color = 'var(--face-checked-assrt)';
@@ -1461,8 +1468,8 @@ async function initial_editor_value() {
   }
   // Extract from URL
   {
-    let code = code_from_URL();  // TODO: extract extension also from url
-    if (code !== null) return {code:code,file_ext:'.pl'};
+    let code = code_from_URL();
+    if (code !== null) return code;
   }
   // Try from persistent store
   {
@@ -1548,7 +1555,7 @@ async function new_code(pg) {
 
 // ** New document (reset editor contents)
 async function new_document(pg) {
-  let text = "Discard the current code?";
+  let text = "Discard the current editor contents?";
   // TODO: use custom dialog, make default to cancel
   if (confirm(text) == true) {
     await pg.set_code_and_process('.md', playgroundCfg.splash_doc); 
@@ -1717,7 +1724,7 @@ async function gen_doc(pg) {
   await pg.toplevel.do_query("doc_cmd('"+filename+"', [], clean(intermediate))", {}); // (clean mod above is not enough)
   if ( pg.file_ext === '.md'|| pg.file_ext === '.lpdoc') { 
     plfile = pg.curr_mod_name()+'.pl';
-    // Deleting file.pl in case there is file.pl and file.md TODO: fix bug in LPdoc ***
+    // Deleting file.pl in case there is file.pl and file.md // TODO: fix bug in LPdoc
     await pg.toplevel.do_query("use_module(library(system_extra))", {}); 
     await pg.toplevel.do_query("del_file_nofail('"+plfile+"')", {}); // continuation of above
   };
@@ -1882,16 +1889,18 @@ function guess_mod_name(code) {
 // * Encode/decode code as URL
 
 /**
- * Encode the code given in value as a playground URL
- * @returns {string} Shareable link including the code in the editor.
+ * Encode the code and extension given as a playground URL
+ * @returns {string} Shareable link including the code in the editor
+ * and the extension. 
  */
-function code_to_URL(value) {
+// TODO: Encode also the window layout?
+function code_to_URL(file_ext,value) {
   let url = document.URL;
   if (url.includes('#') || url.includes('?code=')) {
     // url = url.slice(0, url.indexOf('#'));
     return url; // content hasn't changed
   }
-  return url + '?code=' + encodeURIComponent(value);
+  return url + '?code=' + encodeURIComponent(value) + '&file_ext=' + file_ext;
 }
 
 /**
@@ -1902,10 +1911,18 @@ function code_from_URL() {
   if (document.URL.includes('#')) {
     return decodeURI(document.location.hash.substring(1)); // (decode, without #)
   }
-  // Code in ?code= param
-  const params = new URLSearchParams(document.location.search);
-  let code = params.get("code");
-  if (code !== null) return code;
+  // Code in ?code= param and ?file_ext params
+  let doc_url = document.location.search; 
+  const params = new URLSearchParams(doc_url);
+  let txt = params.get("code");
+  if (txt !== null) {
+    let ext = params.get("file_ext");
+    if( ext === null ) { 
+      return {code:txt,file_ext:'.pl'};
+    } else {
+      return {code:txt,file_ext:ext};
+    };
+  };
   // Code not in URL
   return null;
 }
