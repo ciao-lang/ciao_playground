@@ -23,7 +23,7 @@ The script above performs several steps:
    [NPM](https://www.npmjs.com/)).
  - Prepare and pack bundles at the `build/site/` area (using `ciao
    install --grade=wasm BUNDLE` for the `ciaowasm`, `core`, `builder`,
-   `ciaodbg`, and other bundles).
+   and other bundles).
  - Install the `ciao_playground` bundle (using `ciao install ciao_playground`).
  - Finish the distribution at `build/site/` (using `ciao custom_run ciao_playground dist`).
  - Prepare and install all the bundles that contain a `playground/`

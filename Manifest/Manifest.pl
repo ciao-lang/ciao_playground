@@ -4,7 +4,7 @@ depends([
     ciaowasm,
     % (needed for install -x)
     builder,
-    ciaodbg
+    ciaodbg_extra
 ]).
 alias_paths([]).
 manual('ciao_playground', [main='doc/reference/SETTINGS.pl']).
