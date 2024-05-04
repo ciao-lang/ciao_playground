@@ -10,7 +10,6 @@
 # ciao install --grade=wasm ciaowasm # (if not done before)
 # ciao install --grade=wasm core
 # ciao install --grade=wasm builder
-# ciao install --grade=wasm ciaodbg_extra
 # # (build and install ciao_playground, including docs)
 # ciao build --bin ciao_playground
 ciao build --docs ciao_playground

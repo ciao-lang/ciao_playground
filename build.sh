@@ -97,11 +97,6 @@ build_bundles() {
     # ciao install --grade=wasm core # (done with ciaowasm installation)
     ciao install --grade=wasm builder
 
-    # [[unit tests]] # TODO: unittest is now in core, remove dep?
-    if has_bundle ciaodbg_extra; then
-        ciao install --grade=wasm ciaodbg_extra
-    fi
-
     # [[website]]
     # rm -rf ../../build/site/index.cachedoc; ciao custom_run website dist
     if has_bundle website; then
