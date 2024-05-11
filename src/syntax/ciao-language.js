@@ -307,9 +307,12 @@ const lang = {
 };
 
 // add new custom language (ciao prolog)
-monaco.languages.register({ id: 'ciao-prolog' });
-monaco.languages.setLanguageConfiguration('ciao-prolog', conf);
-monaco.languages.setMonarchTokensProvider('ciao-prolog', lang);
+// (add aliases for markdown highlight)
+for (let i of ['ciao-prolog', 'ciao', 'ciao_runnable']) {
+  monaco.languages.register({ id: i });
+  monaco.languages.setLanguageConfiguration(i, conf);
+  monaco.languages.setMonarchTokensProvider(i, lang);
+}
 
 monaco.editor.defineTheme('ciao-light', {
   base: 'vs', // can also be vs-dark or hc-black
