@@ -14,32 +14,7 @@
 /* --------------------------------------------------------------------------- */
 // * Playground defaults
 
-const playgroundCfg_defaults = {
-  title: "Prolog playground",
-  with_header: true,
-  with_github_stars: true,
-  has_new_button: true,
-  has_open_button: true,
-  has_save_button: true,
-  //
-  has_load_button: true,
-  has_toggle_on_the_fly_button: true,
-  has_run_tests_button: true,
-  has_debug_button: true,
-  has_doc_button: true,
-  has_acheck_button: true,
-  has_spec_button: true,
-  //
-  has_share_button: true,
-  //
-  has_layout_button: true,
-  has_examples_button: true,
-  window_layout: ['E','T'],
-  //
-  storage_key: 'code', // key for local storage of draft program
-  //
-  splash_dialog: true,
-  splash_code: `\
+const splash_code_pl = `\
 % Write your Prolog code here, e.g.:
 
 app([],X,X).
@@ -54,8 +29,9 @@ app([X|L1],L2,[X|L3]) :-
 
 % Or choose 'New'->'New document' to start
 % a new Active Logic Document.
-`, // TODO: Better splash doc
-  splash_doc: `\
+`;
+// TODO: Better splash doc
+const splash_code_md = `\
 \\title A simple Active Logic Document (ALD)
 
 This is a sample document. In it you can use:
@@ -87,7 +63,39 @@ You can save the document source with the 'Save'
 button above and upload it at any other time.
 
 Check out much more in the LPdoc manual!
-`, 
+`;
+
+const playgroundCfg_defaults = {
+  title: "Prolog playground",
+  with_header: true,
+  with_github_stars: true,
+  has_new_button: true,
+  has_open_button: true,
+  has_save_button: true,
+  //
+  has_load_button: true,
+  has_toggle_on_the_fly_button: true,
+  has_run_tests_button: true,
+  has_debug_button: true,
+  has_doc_button: true,
+  has_acheck_button: true,
+  has_spec_button: true,
+  //
+  has_share_button: true,
+  //
+  has_layout_button: true,
+  has_examples_button: true,
+  window_layout: ['E','T'],
+  //
+  storage_key: 'code', // key for local storage of draft program
+  //
+  splash_dialog: true,
+  // a dictionary for each accepted file ext, or just a string (legacy)
+  // Note: we use those keys to enable/disable each particular new button
+  splash_code: {
+    '.pl': splash_code_pl, 
+    '.md': splash_code_md
+  }, 
   example_list: [
     // TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
     { k:'core/examples/general/bignums.pl', n:'bignums.pl' },
@@ -144,6 +152,50 @@ var miniPlaygroundCfg = {
 
 if (typeof playgroundCfg === 'undefined') { var playgroundCfg = {}; }
 playgroundCfg = Object.assign({...playgroundCfg_defaults}, playgroundCfg);
+
+/* --------------------------------------------------------------------------- */
+// * File extensions 
+
+// Definition of file extensions
+var file_ext_def = {};
+file_ext_def['.pl'] = { desc:'code', action:'load', kind:'prolog' };
+file_ext_def['.md'] = { desc:'document', action:'doc', kind:'markdown' };
+file_ext_def['.lpdoc'] = { desc:'document', action:'doc', kind:'markdown', hide:true }; // Do not include in menu
+
+/* Get an array of active file extensions in this playground */
+function get_allowed_file_exts() {
+  if (typeof playgroundCfg.splash_code === 'string') { // legacy
+    return ['.pl'];
+  } else { // get extensions from splash code
+    return Object.keys(playgroundCfg.splash_code);
+  }
+}
+
+/* Get splash code for the given extension */
+function get_splash_code_for_ext(ext) {
+  let str;
+  if (typeof playgroundCfg.splash_code === 'string') { // legacy
+    str = playgroundCfg.splash_code;
+  } else {
+    str = playgroundCfg.splash_code[ext];
+  }
+  return {str:str, ext:ext};
+}
+
+/* Default file extension for splash code */
+function splash_default_ext() {
+  return get_allowed_file_exts()[0];
+}
+
+function editor_kind_to_lang(kind) {
+  if (kind == 'markdown') {
+    return 'markdown';
+  } else if (kind == 'prolog') {
+    return 'ciao-prolog';
+  } else {
+    throw new Error("unknown editor kind");
+  }
+}
 
 /* --------------------------------------------------------------------------- */
 
@@ -210,6 +262,22 @@ function modal_alloc(w) {
   dpc.style.display = "none";
   dp.appendChild(dpc);
   w.appendChild(dp);
+}
+
+// ---------------------------------------------------------------------------
+// * UI - Helper for dropdowns
+
+// Dropdown button with pg actions in the item list
+// TODO: move to lpdoc.js?
+function btn_dropdown_act(pg, menu, title, btn_text_el, items) {
+  let do_action = {};
+  for (let x of items) { do_action[x.k] = x.a; }
+  return new DropdownButton(menu, title, btn_text_el, items,
+                            value => {
+                              (async() => {
+                                await do_action[value](pg);
+                              })();
+                            });
 }
 
 // ---------------------------------------------------------------------------
@@ -366,8 +434,9 @@ function create_pg_editor(container, text, kind, opts) {
     });
     maxh = 160;
   } else {
+    var lang = editor_kind_to_lang(kind);
     Object.assign(ops, {
-      language: 'ciao-prolog',
+      language: lang,
       lineNumbersMinChars: 3
     });
   }
@@ -458,7 +527,7 @@ const editor_theme = {
 /** A playground cell with an IDE layout */
 class PGCell {
   constructor(cproc) {
-    this.file_ext = null;
+    this.code_ext = null;
     this.editor = null;
     this.toplevel = null;
     this.previewEd = null; // TODO: extend to multiple editor buffers
@@ -487,15 +556,10 @@ class PGCell {
   }
 
   /** Set code and process */
-  async set_code_and_process(file_ext,code) {
-    pers_set_code({code:code,file_ext:file_ext});
-    this.file_ext = file_ext;       
-    if ( file_ext == '.md' || file_ext == '.lpdoc' ) {
-      this.set_auto_action('doc');
-    } else {
-      this.set_auto_action('load');
-    };
-    this.set_editor_value(code);
+  async set_code_and_process(code) {
+    pers_set_code(code);
+    this.set_auto_action(file_ext_def[code.ext].action);
+    this.set_editor_code(code);
     this.#cancel_autosave();
     if (!this.is_R) { // TODO: treat is_R == true case
       await process_code(this);
@@ -551,28 +615,20 @@ class PGCell {
       this.#setup_menu(base_el);
     }
     // Editor
-    let initial_file_ext = null;
     let initial_code = null;
     if (this.is_R) {
       if (this.cell_data.kind == 'exercise') {
-        initial_code = this.cell_data['hint'];
-        initial_file_ext = '.pl';
+        initial_code = {str:this.cell_data['hint'], ext:'.pl'};
       } else if (this.cell_data.kind == 'code' || this.cell_data.kind == 'exfilter' || this.cell_data.kind == 'exfilterex') {
-        initial_code = this.cell_data['focus'];
-        initial_file_ext = '.pl';
+        initial_code = {str:this.cell_data['focus'], ext:'.pl'};
       }
     } else {
-      initial_code = this.cell_data['focus'];
-      initial_file_ext = this.cell_data['file_ext']; // MH: Same as this.cell_data.file_ext
+      // MH: Same as this.cell_data.ext
+      initial_code = {str:this.cell_data['focus'], ext:this.cell_data['ext']};
     }
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
-      this.file_ext = initial_file_ext;
-      if ( initial_file_ext == '.md' || initial_file_ext == '.lpdoc' ) {
-        this.set_auto_action('doc');
-      } else {
-        this.set_auto_action('load');
-      }
+      this.set_auto_action(file_ext_def[this.code_ext].action);
     } else {
       this.editor_el = null;
     }
@@ -615,64 +671,14 @@ class PGCell {
     //
     if (playgroundCfg.has_layout_button) this.#setup_layout_button(menu_el);
     // (file options)
-    // Made New into a pull-down menu instead
-    // if (playgroundCfg.has_new_button) this.#setup_new_button(menu_el);
-    if (playgroundCfg.has_new_button) {
-      const new_list = [];
-      new_list.push({ k:'new_pl', n:'New code' });
-      new_list.push({ k:'new_doc', n:'New document' });
-      let do_action = {};
-      do_action['new_pl'] = new_code;
-      do_action['new_doc'] = new_document;
-      const new_new_button =
-            new DropdownButton(menu_el,
-                               "New",
-                               elem_from_str("<span>New</span>"),
-                               new_list,
-                               value => {
-                                 (async() => {
-                                   await do_action[value](this);
-                                 })();
-                               });
-      new_new_button.btn_el.classList.add('menu-button');
-      new_new_button.btn_el.style.height = '100%';
-    };
+    if (playgroundCfg.has_new_button) this.#setup_new_button(menu_el);
     if (playgroundCfg.has_open_button) this.#setup_open_button(menu_el);
     if (playgroundCfg.has_save_button) this.#setup_save_button(menu_el);
     if (playgroundCfg.has_examples_button) this.#setup_examples_button(menu_el);
     // (actions)
     if (playgroundCfg.has_load_button) this.#setup_load_button(menu_el);
     // (advanced actions)
-    const adv_list = [];
-    if (playgroundCfg.has_toggle_on_the_fly_button) adv_list.push({ k:'toggle_on_the_fly', n:'Toogle on-the-fly' });
-    if (playgroundCfg.has_run_tests_button) adv_list.push({ k:'test', n:'Run tests (C-c u)' });
-    if (playgroundCfg.has_debug_button) adv_list.push({ k:'debug', n:'Debug (C-c d)' });
-    if (playgroundCfg.has_doc_button) adv_list.push({ k:'doc', n:'Preview documentation (C-c D)' });
-    if (playgroundCfg.has_acheck_button) adv_list.push({ k:'acheck', n:'Analyze and check assertions (C-c V)' });
-    if (playgroundCfg.has_acheck_button) adv_list.push({ k:'acheck_output', n:'Analyze and check assertions (w/ output)' });
-    if (playgroundCfg.has_spec_button) adv_list.push({ k:'spec', n:'Specialize code (C-c O)' });
-    if (adv_list.length > 0) {
-      let do_action = {};
-      do_action['toggle_on_the_fly'] = toggle_on_the_fly;
-      do_action['test'] = run_tests;
-      do_action['debug'] = debug;
-      do_action['doc'] = gen_doc_preview;
-      do_action['acheck'] = acheck;
-      do_action['acheck_output'] = acheck_output;
-      do_action['spec'] = spec_preview;
-      const adv_button =
-            new DropdownButton(menu_el,
-                               "Advanced actions",
-                               elem_from_str("<span>More...</span>"),
-                               adv_list,
-                               value => {
-                                 (async() => {
-                                   await do_action[value](this);
-                                 })();
-                               });
-      adv_button.btn_el.classList.add('menu-button');
-      adv_button.btn_el.style.height = '100%';
-    }
+    this.#setup_advanced_buttons(menu_el);
 
     // (right menu part)
     const right_menu_el = elem_cn('div', 'right-menu');
@@ -730,17 +736,19 @@ class PGCell {
   }
 
   /** The code editor (creates editor_el and editor) */
-  #setup_editor(text) {
+  #setup_editor(code) {
+    this.code_ext = code.ext;
+    let kind = file_ext_def[code.ext].kind;
     if (this.is_R) {
       this.editor_el = elem_cn('div', 'lpdoc-runnable-editor-container');
-      this.editor = create_pg_editor(this.editor_el, text, 'editor', {autoresize: true});
+      this.editor = create_pg_editor(this.editor_el, code.str, kind, {autoresize: true});
       this.editor.getModel().onDidChangeContent(e => {
         this.set_code_status('unknown');
       });
       this.set_code_status('unknown'); // set code status (if applicable)
     } else {
       this.editor_el = elem_cn('div', 'editor-container');
-      this.editor = create_pg_editor(this.editor_el, text, 'editor', {});
+      this.editor = create_pg_editor(this.editor_el, code.str, kind, {});
       add_emacs_bindings(this.editor);
       add_playground_bindings(this.editor, this);
       // Save to local storage when content changes (with a delay)
@@ -775,7 +783,7 @@ class PGCell {
     const el = btn('lpdoc-runnable-help', "Copy the solution", "&#9733; Show solution", () => {
       let sol = this.cell_data['solution'];
       (async() => {
-        await this.set_code_and_process('.pl',sol);
+        await this.set_code_and_process({str:sol,ext:'.pl'});
       })();
     });
     this.help_el = el;
@@ -975,7 +983,7 @@ class PGCell {
       history.replaceState(undefined, undefined, url);
     }
     // update local storage
-    pers_set_code({code:this.get_editor_value(),file_ext:this.file_ext});
+    pers_set_code({str:this.get_editor_value(),ext:this.code_ext});
     // process if on-the-fly is set
     if (playgroundCfg.on_the_fly) {
       if (this.cproc.state !== QueryState.READY) {
@@ -1164,9 +1172,19 @@ class PGCell {
   get_editor_value() {
     return this.editor.getModel().getValue();
   }
-  /* Set editor value (text) */
-  set_editor_value(text) {
-    this.editor.getModel().setValue(text);
+  /* Set editor value (text) and file extension */
+  set_editor_code(code) {
+    if (this.code_ext !== code.ext) {
+      this.code_ext = code.ext;
+      let kind = file_ext_def[code.ext].kind;
+      let lang = editor_kind_to_lang(kind);
+      this.editor.getModel().setValue(code.str);
+      monaco.editor.setModelLanguage(this.editor.getModel(), lang);
+    } else {
+      this.code_ext = code.ext;
+      this.editor.getModel().setValue(code.str);
+      // this.editor.setModelLanguage(this.editor.getModel(), ...language...);
+    }
   }
 
   /* return completed code */
@@ -1179,7 +1197,7 @@ class PGCell {
     } else {
       if (playgroundCfg.amend_on_save) {
         // Do not insert module for non .pl files
-        if(this.file_ext == '.pl') { 
+        if (this.code_ext == '.pl') { 
           /* TODO: horrible hack: add module if none if found, works better than 'user' modules */
           let matches = code.match(/:-\s*module\(/g); // (do not wait for '.')
           if (matches === null) {
@@ -1209,7 +1227,7 @@ class PGCell {
     }
   }
   curr_mod_name_ext() { // name and extension
-    return this.curr_mod_name()+this.file_ext;
+    return this.curr_mod_name()+this.code_ext;
   }
   curr_mod_base() { // full path without extension
     return '/'+this.curr_mod_name();
@@ -1255,19 +1273,37 @@ class PGCell {
     this.update_layout_sel_button_marks();
   }
 
-  // // Using a menu now but left this in for now.
-  // #setup_new_button(menu_el) { 
-  //     // new file (reset)
-  //  const el = btn('menu-button', "New code", "New", () => {
-  //     new_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
-  //   });
-  //   menu_el.appendChild(el);
-  // }
+  #setup_new_button(menu_el) { 
+    const new_list = [];
+    for (let ext of get_allowed_file_exts()) {
+      if (file_ext_def[ext].hide === true) continue;
+      new_list.push({ k:'new'+ext,
+                      n:'New '+file_ext_def[ext].desc,
+                      a:(async(pg) => { return await new_code(pg, ext); })});
+    }
+    if (new_list.length > 0) {
+      if (new_list.length == 1) { // No dropdown, just one button
+        const el = btn('menu-button', new_list[0].n, "New", () => {
+          new_list[0].a(this).then(() => {}); // TODO: use "async () => { ... }" instead?
+        });
+        menu_el.appendChild(el);
+      } else { // Dropdown
+        const new_button =
+              btn_dropdown_act(this, menu_el,
+                               "New",
+                               elem_from_str("<span>New</span>"),
+                               new_list);
+        new_button.btn_el.classList.add('menu-button');
+        new_button.btn_el.style.height = '100%';
+      }
+    }
+  };
 
   #setup_open_button(menu_el) { // open file (upload)
     // (implicit label association)
     const label_el = document.createElement('label');
-    const file_el = elem_from_str(`<input type="file" accept=".pl,.md,.lpdoc" class="file-upload">`);
+    let allowed_exts = get_allowed_file_exts();
+    const file_el = elem_from_str('<input type="file" accept="'+allowed_exts.join(',')+'" class="file-upload">');
     label_el.appendChild(file_el);
     label_el.appendChild(document.createTextNode("Open"));
     menu_el.appendChild(label_el);
@@ -1314,6 +1350,40 @@ class PGCell {
     menu_el.appendChild(el);
   }
 
+  #setup_advanced_buttons(menu_el) {
+    const adv_list = [];
+    if (playgroundCfg.has_toggle_on_the_fly_button) {
+      adv_list.push({ k:'toggle_on_the_fly', n:'Toogle on-the-fly', a:toggle_on_the_fly });
+    }
+    if (playgroundCfg.has_run_tests_button) {
+      adv_list.push({ k:'test', n:'Run tests (C-c u)', a:run_tests });
+    }
+    if (playgroundCfg.has_debug_button) {
+      adv_list.push({ k:'debug', n:'Debug (C-c d)', a:debug });
+    }
+    if (playgroundCfg.has_doc_button) {
+      adv_list.push({ k:'doc', n:'Preview documentation (C-c D)', a:gen_doc_preview });
+    }
+    if (playgroundCfg.has_acheck_button) {
+      adv_list.push({ k:'acheck', n:'Analyze and check assertions (C-c V)', a:acheck });
+    }
+    if (playgroundCfg.has_acheck_button) {
+      adv_list.push({ k:'acheck_output', n:'Analyze and check assertions (w/ output)', a:acheck_output });
+    }
+    if (playgroundCfg.has_spec_button) {
+      adv_list.push({ k:'spec', n:'Specialize code (C-c O)', a:spec_preview });
+    }
+    if (adv_list.length > 0) {
+      const adv_button =
+            btn_dropdown_act(this, menu_el,
+                             "Advanced actions",
+                             elem_from_str("<span>More...</span>"),
+                             adv_list);
+      adv_button.btn_el.classList.add('menu-button');
+      adv_button.btn_el.style.height = '100%';
+    }
+  }
+
   #setup_share_button(menu_el) {
     const el = elem_cn('button', 'menu-button');
     el.title = 'Copy a link to this code';
@@ -1345,7 +1415,7 @@ class PGCell {
   /** Redirect to playground (open playground in new tab from URL) */
   load_in_playground() { /* pre: this.is_R */ // TODO: treat .md case (and do not complete code? introduces :- module)
     let code = this.complete_code();
-    window.open(urlPREFIX + '/playground/index.html' + '?code=' + encodeURIComponent(code)) + '&file_ext=.pl'; // open playground in new tab
+    window.open(playground_URL(code, '.pl')); // open playground in new tab
   }
 
   /** Set up cell with dynamic preview (TODO: experimental) */
@@ -1392,22 +1462,22 @@ class PGCell {
   }
 }
 
-function getFileExtension(filename) {
+function get_file_extension(filename) {
   return filename.match(/\.[0-9a-z]+$/i)[0]; 
 }
 
 function handle_file_upload(event, file_el, pg) {
-  let allowedExtensions = /(\.pl|\.md|\.lpdoc)$/i;
-  if (!allowedExtensions.exec(file_el.value)) {
-    alert('Invalid file type (.pl, .md, or .lpdoc expected).');
+  let ext = get_file_extension(file_el.value);
+  let allowed_exts = get_allowed_file_exts();
+  if (!allowed_exts.includes(ext)) { // none of the accepted extensions
+    alert('Invalid file type (expected: '+allowed_exts.join(', ')+').');
     file_el.value = ''; 
     return false;
   } else {
     const reader = new FileReader();
     reader.onload = (event) => {
       (async() => {
-        let file_ext = getFileExtension(file_el.value);
-        await pg.set_code_and_process(file_ext, event.target.result);
+        await pg.set_code_and_process({str:event.target.result, ext:ext});
       })();
     };
     reader.readAsText(event.target.files[0]);
@@ -1428,15 +1498,15 @@ function setup_mini_pg(el) {
 /** Open example */
 async function open_example(pg, path) {
   var str = await pg.cproc.w.readFile(path);
-  let file_ext = getFileExtension(path);
-  await pg.set_code_and_process(file_ext,str);
+  let ext = get_file_extension(path);
+  await pg.set_code_and_process({str:str, ext:ext});
 }  
 
-/** Handle share */
+/* Handle share */
 function handle_share(btn_el, msg_el, pg) {
   let value = pg.get_editor_value();
-  let file_ext = pg.file_ext;
-  navigator.clipboard.writeText(code_to_URL(file_ext,value)).then(() => { // success
+  let ext = pg.code_ext;
+  navigator.clipboard.writeText(code_to_URL(value,ext)).then(() => { // success
     let prev = msg_el.textContent;
     msg_el.textContent = 'Copied!';
     btn_el.style.color = 'var(--face-checked-assrt)';
@@ -1449,56 +1519,20 @@ function handle_share(btn_el, msg_el, pg) {
   });
 }
 
-/** Initial editor value (splash, URI encoded, URL from a CDN, from storage, etc.) */
-
-const github_hash = '#https://github.com/';
-
-async function initial_editor_value() {
-  // Try from github
-  if (document.location.hash.startsWith(github_hash)) {
-    let code = await fetch_from_github();
-    return {code:code,file_ext:'.pl'};
-  }
+/* Initial editor code (splash, URI encoded, URL from a CDN, from storage, etc.) */
+async function initial_editor_code() {
+  let code;
+  // Extract from URL link
+  code = await code_from_URL_link();
+  if (code !== null) return code;
   // Extract from URL
-  {
-    let code = code_from_URL();
-    if (code !== null) return code;
-  }
+  code = code_from_URL();
+  if (code !== null) return code;
   // Try from persistent store
-  {
-    let code = pers_get_code();
-    if (code !== null) return code;
-  }
+  code = pers_get_code();
+  if (code !== null) return code;
   // Just show splash code
-  return {code:playgroundCfg.splash_code, file_ext:'.pl'};
-}
-
-async function fetch_from_github() {
-  /* Use https://cdn.jsdelivr.net CDN to fetch the file */
-  //let url = 'https://github.com/USER/REPO/blob/BRANCH/RELPATH';
-  let p = document.location.hash.substring(github_hash.length);
-  let gh_user = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
-  let gh_repo = p.substring(0, p.indexOf('/blob/')); p = p.substring(p.indexOf('/blob/')+'/blob/'.length);
-  let gh_branch = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
-  let gh_relpath = p;
-  let url = `https://cdn.jsdelivr.net/gh/${gh_user}/${gh_repo}@${gh_branch}/${gh_relpath}`;
-  let res = await fetch(url);
-  let txt = await res.text();
-  return txt;
-}
-
-async function fetch_from_worker() {
-  /* Use https://cdn.jsdelivr.net CDN to fetch the file */
-  //let url = 'https://github.com/USER/REPO/blob/BRANCH/RELPATH';
-  let p = document.location.hash.substring(github_hash.length);
-  let gh_user = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
-  let gh_repo = p.substring(0, p.indexOf('/blob/')); p = p.substring(p.indexOf('/blob/')+'/blob/'.length);
-  let gh_branch = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
-  let gh_relpath = p;
-  let url = `https://cdn.jsdelivr.net/gh/${gh_user}/${gh_repo}@${gh_branch}/${gh_relpath}`;
-  let res = await fetch(url);
-  let txt = await res.text();
-  return txt;
+  return get_splash_code_for_ext(splash_default_ext());
 }
 
 // (for dynpreview)
@@ -1538,21 +1572,13 @@ function update_editor_theme() {
 // ---------------------------------------------------------------------------
 // * Playground actions on code  - new, process, actions (load, gen_doc, exfilter, ...)
 
-/** New code (reset editor contents) */
-async function new_code(pg) {
+/** New code for the given extension (reset editor contents) */
+async function new_code(pg, ext) {
   let text = "Discard the current editor contents?";
   // TODO: use custom dialog, make default to cancel
   if (confirm(text) == true) {
-    await pg.set_code_and_process('.pl', playgroundCfg.splash_code); 
-  }  
-}
-
-/** New document (reset editor contents) */
-async function new_document(pg) {
-  let text = "Discard the current editor contents?";
-  // TODO: use custom dialog, make default to cancel
-  if (confirm(text) == true) {
-    await pg.set_code_and_process('.md', playgroundCfg.splash_doc); 
+    let code = get_splash_code_for_ext(ext);
+    await pg.set_code_and_process(code); 
   }  
 }
 
@@ -1599,12 +1625,12 @@ async function run_exfilter(pg) {
   const opts = pg.options_exfilter().split(",");
   if (opts.includes("V") === true) {
     if (opts.includes("output=on") === true) {
-      var kind = 'editor';
+      var kind = file_ext_def['.pl'].kind;
     } else {
       var kind = 'toplevel';
     }
   } else {
-    var kind = 'editor';
+    var kind = file_ext_def['.pl'].kind;
   }
   await pg.toplevel.do_query("filter_analyze(\"" + mod + "\",\"" + opts +"\")", {msg:'Analyzing'});
   var str = await pg.cproc.w.readFile(modbase+'.txt');
@@ -1624,7 +1650,7 @@ async function run_exfilter_exercise(pg) {
   if (opts.includes("solution=errors") === true) {
     var kind = 'toplevel';
   } else {
-    var kind = 'editor';
+    var kind = file_ext_def['.pl'].kind;
   }
   const sol = pg.solution_exercise();
   await pg.toplevel.do_query("filter_analyze_exercise_mode(\"" + mod + "\",\"" + sol + "\",\""+ opts + "\")", {msg:'Analyzing answer'});
@@ -1716,12 +1742,12 @@ async function gen_doc(pg) {
   const filename = pg.curr_mod_name_ext();
   // await pg.cproc.muted_query_dumpout("clean_mods(['"+modbase+"'])"); // (timestamps do not have the right resolution)
   await pg.toplevel.do_query("doc_cmd('"+filename+"', [], clean(intermediate))", {}); // (clean mod above is not enough)
-  if ( pg.file_ext === '.md'|| pg.file_ext === '.lpdoc') { 
-    plfile = pg.curr_mod_name()+'.pl';
+  if (pg.code_ext === '.md'|| pg.code_ext === '.lpdoc') { 
+    let plfile = pg.curr_mod_name()+'.pl';
     // Deleting file.pl in case there is file.pl and file.md // TODO: fix bug in LPdoc
     await pg.toplevel.do_query("use_module(library(system_extra))", {}); 
     await pg.toplevel.do_query("del_file_nofail('"+plfile+"')", {}); // continuation of above
-  };
+  }
   await pg.toplevel.do_query("doc_cmd('"+filename+"', [], gen(html))", {msg:'Generating documentation'});
   pg.set_auto_action('doc');
 }
@@ -1793,10 +1819,12 @@ async function show_lpdoc_html(pg, d) {
 
 /** Preview _co.pl contents for the current module */
 async function preview_co(pg) {
+  // TODO: only if code_ext==='.pl'
   const modbase = pg.curr_mod_base();
   var str = await pg.cproc.w.readFile(modbase+'_co.pl');
   if (str !== null) {
-    await show_text_preview(pg, str);
+    let kind = file_ext_def['.pl'].kind;
+    await show_text_preview(pg, str, kind);
   }
 }
 
@@ -1828,14 +1856,14 @@ async function discard_preview(pg) {
 }
 
 /** Show highlighted text in a read-only editor view (playground) */
-async function show_text_preview(pg, d) {
+async function show_text_preview(pg, d, kind) {
   pg.show_preview('tall'); 
   var preview = pg.preview_el; 
   preview.replaceChildren();
   var el = elem_cn('div', 'editor-container'); //document.createElement('pre');
   el.style.height = '100%'; // (Needed because this is inside another div) TODO: better way?
   preview.appendChild(el);
-  pg.previewEd = create_pg_editor(el, d, 'editor',  {});
+  pg.previewEd = create_pg_editor(el, d, kind,  {});
   add_emacs_bindings(pg.previewEd);
   pg.previewEd.updateOptions({ readOnly: true, lineNumbers: 'off' });
   pg.update_inner_layout();
@@ -1880,7 +1908,15 @@ function guess_mod_name(code) {
 }
 
 // ---------------------------------------------------------------------------
-// * Encode/decode code as URL
+// * Encode/decode code as URL, fetch from CDN
+
+/**
+ * New URL for opening the playground with some code
+ */
+function playground_URL(code,ext) {
+  let url = urlPREFIX + '/playground/index.html';
+  return url + '?code=' + encodeURIComponent(code) + '&ext=' + ext;
+}
 
 /**
  * Encode the code and extension given as a playground URL
@@ -1888,13 +1924,13 @@ function guess_mod_name(code) {
  * and the extension. 
  */
 // TODO: Encode also the window layout?
-function code_to_URL(file_ext,value) {
+function code_to_URL(value,ext) {
   let url = document.URL;
   if (url.includes('#') || url.includes('?code=')) {
     // url = url.slice(0, url.indexOf('#'));
     return url; // content hasn't changed
   }
-  return url + '?code=' + encodeURIComponent(value) + '&file_ext=' + file_ext;
+  return url + '?code=' + encodeURIComponent(value) + '&ext=' + ext;
 }
 
 /**
@@ -1905,20 +1941,47 @@ function code_from_URL() {
   if (document.URL.includes('#')) {
     return decodeURI(document.location.hash.substring(1)); // (decode, without #)
   }
-  // Code in ?code= param and ?file_ext params
+  // Code in 'code' param and 'ext' params
   let doc_url = document.location.search; 
   const params = new URLSearchParams(doc_url);
-  let txt = params.get("code");
-  if (txt !== null) {
-    let ext = params.get("file_ext");
-    if( ext === null ) { 
-      return {code:txt,file_ext:'.pl'};
-    } else {
-      return {code:txt,file_ext:ext};
-    };
-  };
-  // Code not in URL
-  return null;
+  let str = params.get("code");
+  if (str === null) return null; // Code not in URL
+  let ext = params.get("ext");
+  if (ext === null) ext = '.pl'; // default .pl
+  return {str:str,ext:ext};
+}
+
+/**
+ * Extract code from URL link
+ */
+  
+const github_hash = '#https://github.com/';
+
+async function code_from_URL_link() {
+  // Try from github
+  // Example:
+  //   https://ciao-lang.org/playground/#https://github.com/ciao-lang/ciaopp/blob/master/examples/verifly/ann.pl
+  if (document.location.hash.startsWith(github_hash)) {
+    let str = await fetch_from_github();
+    let ext = get_file_extension(document.location.hash); // (this should end with the extension)
+    return {str:str,ext:ext};
+  } else {
+    return null;
+  }
+}
+
+async function fetch_from_github() {
+  /* Use https://cdn.jsdelivr.net CDN to fetch the file */
+  //let url = 'https://github.com/USER/REPO/blob/BRANCH/RELPATH';
+  let p = document.location.hash.substring(github_hash.length);
+  let gh_user = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
+  let gh_repo = p.substring(0, p.indexOf('/blob/')); p = p.substring(p.indexOf('/blob/')+'/blob/'.length);
+  let gh_branch = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
+  let gh_relpath = p;
+  let url = `https://cdn.jsdelivr.net/gh/${gh_user}/${gh_repo}@${gh_branch}/${gh_relpath}`;
+  let res = await fetch(url);
+  let txt = await res.text();
+  return txt;
 }
 
 // =========================================================================== 
@@ -2827,10 +2890,10 @@ function pers_get_code() {
   const k = playgroundCfg.storage_key;
   if (k === null) return null;
   try {
-    let code = window.localStorage.getItem(k+".code");
-    let file_ext = window.localStorage.getItem(k+".file_ext");
-    if (code === null) return null;
-    return {code:code, file_ext:file_ext};
+    let str = window.localStorage.getItem(k+".str");
+    let ext = window.localStorage.getItem(k+".ext");
+    if (str === null) return null;
+    return {str:str, ext:ext};
   } catch (e) {
     // Swallow up any security exceptions...
     return null;
@@ -2844,12 +2907,12 @@ function pers_get_code() {
  * @returns {boolean} - True if it was stored correctly or false if there was an 
  * error.
  */
-function pers_set_code(value) {
+function pers_set_code(code) {
   const k = playgroundCfg.storage_key;
   if (k === null) return true;
   try {
-    window.localStorage.setItem(k+".code", value.code);
-    window.localStorage.setItem(k+".file_ext", value.file_ext);
+    window.localStorage.setItem(k+".str", code.str);
+    window.localStorage.setItem(k+".ext", code.ext);
     return true;
   } catch (e) {
     // Swallow up any security exceptions...
@@ -2866,8 +2929,8 @@ function pers_remove_code() {
   const k = playgroundCfg.storage_key;
   if (k === null) return true;
   try {
-    window.localStorage.removeItem(k+".code");
-    window.localStorage.removeItem(k+".file_ext");
+    window.localStorage.removeItem(k+".str");
+    window.localStorage.removeItem(k+".ext");
     return true;
   } catch (e) {
     // Swallow up any security exceptions...
@@ -2886,13 +2949,13 @@ class PGSet {
 
   async setup(base_el, code) { // standalone playground
     // Show splash screen? As heuristic, we do this only if editor
-    // value is the same as the splash_code. Otherwise we assume
+    // value is the same as the splash. Otherwise we assume
     // that the user is already editing and does not need it.
-    if (code.code === playgroundCfg.splash_code) {
+    if (get_splash_code_for_ext(code.ext).str == code.str) {
       show_splash(base_el);
     }
     let i = 0;
-    let cell_data = { kind:'full', focus: code.code, file_ext: code.file_ext };
+    let cell_data = { kind:'full', focus: code.str, ext: code.ext };
     this.cells[i] = new PGCell(this.cproc);
     await this.cells[i].setup(base_el, cell_data, this);
   }
@@ -3213,7 +3276,7 @@ window.onload = function () {
         await pgset.setup_runnable();
       } else { // Full playground
         const base_el = document.body;
-        const code = await initial_editor_value();
+        const code = await initial_editor_code();
         await pgset.setup(base_el, code);
       }
       update_dimensions();
