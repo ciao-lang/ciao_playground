@@ -3125,7 +3125,7 @@ function setup_mathjax() {
   
   (function() {
     let script = document.createElement('script');
-    script.src = res_URL('/node_modules/mathjax/es5/tex-svg.js');
+    script.src = urlPREFIX+'/node_modules/mathjax/es5/tex-svg.js';
     script.async = true;
     document.head.appendChild(script);
   })();
