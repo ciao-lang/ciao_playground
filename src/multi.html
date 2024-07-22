@@ -58,7 +58,7 @@
       pg_wrapper_el.appendChild(pg_el);
       playgroundCfg.with_header = false;
       playgroundCfg.has_share_button = false;
-      const cproc = new ToplevelProc(urlPREFIX+'/ciao/'); 
+      const cproc = new ToplevelProc(urlPREFIX+'/ciao/', urlVERS); 
       var pg = new PGCell(cproc);
       (async() => {
         let cell_data = { kind:'full', focus:"" };

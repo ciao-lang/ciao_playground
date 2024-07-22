@@ -217,6 +217,7 @@ if (typeof urlPREFIX === 'undefined') {
 // TODO: this one is not very fast but it seems to be robust enough;
 //   better ways?
 
+/* NOTE: Do not use res_URL for third parties, only urlPREFIX */
 var require = { paths: { vs: urlPREFIX+'/node_modules/monaco-editor/min/vs' } };
 (function() {
   //importCSS('/playground/css/ciao_playground.css'); // (better from main html)
@@ -231,7 +232,7 @@ var require = { paths: { vs: urlPREFIX+'/node_modules/monaco-editor/min/vs' } };
   importScript(urlPREFIX+'/playground/js/syntax/ciao-language.js');
   importScript(urlPREFIX+'/playground/js/syntax/ciao-toplevel-language.js');
   // Ciao engine and interface (ciaowasm)
-  importScript(urlPREFIX+'/js/ciao-prolog.js');
+  importScript(res_URL('/js/ciao-prolog.js'));
 })();
 
 // ---------------------------------------------------------------------------
@@ -1914,7 +1915,7 @@ function guess_mod_name(code) {
  * New URL for opening the playground with some code
  */
 function playground_URL(code,ext) {
-  let url = urlPREFIX + '/playground/index.html';
+  let url = urlPREFIX+'/playground/index.html'; /* no vers */
   return url + '?code=' + encodeURIComponent(code) + '&ext=' + ext;
 }
 
@@ -2944,7 +2945,7 @@ function pers_remove_code() {
 class PGSet {
   constructor() {
     this.cells = [];
-    this.cproc = new ToplevelProc(urlPREFIX+'/ciao/'); // (shared)
+    this.cproc = new ToplevelProc(urlPREFIX+'/ciao/', urlVERS); // (shared)
   }
 
   async setup(base_el, code) { // standalone playground
@@ -3124,7 +3125,7 @@ function setup_mathjax() {
   
   (function() {
     let script = document.createElement('script');
-    script.src = urlPREFIX+'/node_modules/mathjax/es5/tex-svg.js';
+    script.src = res_URL('/node_modules/mathjax/es5/tex-svg.js');
     script.async = true;
     document.head.appendChild(script);
   })();
