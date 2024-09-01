@@ -1344,8 +1344,11 @@ class PGCell {
     examples_button.btn_el.style.height = '100%';
   }
 
-  #setup_load_button(menu_el) { // load into toplevel
-    const el = btn('menu-button', "Press C-c l to load into top level", "Load &nbsp;&#9654", () => {
+  #setup_load_button(menu_el) { // load into toplevel or generate ALD
+    const el = btn('menu-button',
+                   // "Press C-c l to load into top level",
+                   "Press C-c l to load",
+                   "Load &nbsp;&#9654", () => {
       load_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
     menu_el.appendChild(el);
@@ -1603,19 +1606,28 @@ async function process_code(pg) {
 /** Load code */
 async function load_code(pg) {
   let q;
-  if (!pg.cproc.muted) {
-    pg.show_toplevel(true);
-    pg.update_inner_layout();
+  if (pg.code_ext === '.md'|| pg.code_ext === '.lpdoc')
+  {
+    // .md/.lpdoc are not loaded into top level:
+    // instead generate doc and preview
+    gen_doc_preview(pg);
   }
-  const mod = pg.curr_mod_path();
-  if (toplevelCfg.statistics) console.log(`{loading '${mod}'}`);
-  if (toplevelCfg.custom_load_query !== undefined) {
-    q = toplevelCfg.custom_load_query(mod);
-  } else {
-    q = "use_module('" + mod + "')";
+  else
+  {
+    if (!pg.cproc.muted) {
+      pg.show_toplevel(true);
+      pg.update_inner_layout();
+    }
+    const mod = pg.curr_mod_path();
+    if (toplevelCfg.statistics) console.log(`{loading '${mod}'}`);
+    if (toplevelCfg.custom_load_query !== undefined) {
+      q = toplevelCfg.custom_load_query(mod);
+    } else {
+      q = "use_module('" + mod + "')";
+    }
+    await pg.toplevel.do_query(q, {msg:'Loading'}); // TODO: this last 'await' here should not be needed but it does not work otherwise... WHY? A problem with CiaoPromiseProxy? (JFMC)
+    pg.set_auto_action('load');
   }
-  await pg.toplevel.do_query(q, {msg:'Loading'}); // TODO: this last 'await' here should not be needed but it does not work otherwise... WHY? A problem with CiaoPromiseProxy? (JFMC)
-  pg.set_auto_action('load');
 }
 
 /** Exfilter */
