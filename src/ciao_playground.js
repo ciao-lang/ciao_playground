@@ -616,17 +616,7 @@ class PGCell {
       this.#setup_menu(base_el);
     }
     // Editor
-    let initial_code = null;
-    if (this.is_R) {
-      if (this.cell_data.kind == 'exercise') {
-        initial_code = {str:this.cell_data['hint'], ext:'.pl'};
-      } else if (this.cell_data.kind == 'code' || this.cell_data.kind == 'exfilter' || this.cell_data.kind == 'exfilterex') {
-        initial_code = {str:this.cell_data['focus'], ext:'.pl'};
-      }
-    } else {
-      // MH: Same as this.cell_data.ext
-      initial_code = {str:this.cell_data['focus'], ext:this.cell_data['ext']};
-    }
+    let initial_code = cell_data_get_initial_code(this.cell_data);
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
       this.set_auto_action(file_ext_def[this.code_ext].action);
@@ -3031,6 +3021,7 @@ function scan_runnable(text) {
   match = re_hs.exec(text);
   if (match !== null) {
     cell_data.kind = 'exercise';
+    cell_data['ext'] = '.pl';
     cell_data['preamble'] = match[1].trim();
     cell_data['hint'] = match[2].trim();
     cell_data['solution'] = match[3].trim();
@@ -3040,6 +3031,7 @@ function scan_runnable(text) {
   match = re_f.exec(text);
   if (match !== null) {
     cell_data.kind = 'code';
+    cell_data['ext'] = '.pl';
     cell_data['preamble'] = match[1].trim();
     cell_data['focus'] = match[2].trim();
     cell_data['postamble'] = match[3].trim();
@@ -3048,6 +3040,7 @@ function scan_runnable(text) {
   match = re_exfilter_ex.exec(text);
   if (match !== null) {
     cell_data.kind = 'exfilterex';
+    cell_data['ext'] = '.pl';
     cell_data['preamble'] = match[1].trim(); 
     cell_data['focus'] = match[2].trim();
     cell_data['opts'] = match[3].trim();
@@ -3058,6 +3051,7 @@ function scan_runnable(text) {
   match = re_exfilter.exec(text);
   if (match !== null) {
     cell_data.kind = 'exfilter';
+    cell_data['ext'] = '.pl';
     cell_data['preamble'] = match[1].trim(); 
     cell_data['focus'] = match[2].trim();
     cell_data['opts'] = match[3].trim();
@@ -3067,6 +3061,7 @@ function scan_runnable(text) {
   match = re_mp.exec(text);
   if (match !== null) {
     cell_data.kind = 'miniplayground';
+    cell_data['ext'] = '.pl';
     cell_data['preamble'] = match[1].trim();
     cell_data['focus'] = match[2].trim();
     cell_data['postamble'] = match[3].trim();
@@ -3097,10 +3092,26 @@ function scan_runnable(text) {
   }
   // Assume all is the hint
   cell_data.kind = 'code';
+  cell_data['ext'] = '.pl';
   cell_data['preamble'] = '';
   cell_data['focus'] = text;
   cell_data['postamble'] = '';
   return cell_data;
+}
+
+// Initial editable code for this cell
+function cell_data_get_initial_code(cell_data) {
+  let str = null;
+  switch(cell_data.kind) {
+  case 'exercise': str = cell_data['hint']; break;
+  case 'code': str = cell_data['focus']; break;
+  case 'exfilter': str = cell_data['focus']; break;
+  case 'exfilterex': str = cell_data['focus']; break;
+  case 'miniplayground': str = cell_data['focus']; break;
+  case 'full': str = cell_data['focus']; break;
+  default: return null; /* no editable code */
+  }
+  return {str:str, ext:cell_data['ext']};
 }
 
 // ===========================================================================
