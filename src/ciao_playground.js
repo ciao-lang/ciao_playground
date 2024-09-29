@@ -74,6 +74,7 @@ const playgroundCfg_defaults = {
   has_save_button: true,
   //
   has_load_button: true,
+  has_toggle_presentation_button: true,
   has_toggle_on_the_fly_button: true,
   has_run_tests_button: true,
   has_debug_button: true,
@@ -138,6 +139,7 @@ var miniPlaygroundCfg = {
   has_open_button: false,
   has_save_button: false,
   has_load_button: false,
+  has_toggle_presentation_button: false,
   has_toggle_on_the_fly_button: false,
   has_run_tests_button: false,
   has_debug_button: false,
@@ -179,7 +181,7 @@ function get_splash_code_for_ext(ext) {
   } else {
     str = playgroundCfg.splash_code[ext];
   }
-  return {str:str, ext:ext};
+  return {str:str, ext:ext, origin:'splash'};
 }
 
 /* Default file extension for splash code */
@@ -195,6 +197,11 @@ function editor_kind_to_lang(kind) {
   } else {
     throw new Error("unknown editor kind");
   }
+}
+
+/* The file extension indicates a documentation file (.md, .lpdoc) */
+function file_ext_is_doc(ext) {
+  return file_ext_def[ext].action == 'doc';
 }
 
 /* --------------------------------------------------------------------------- */
@@ -369,6 +376,7 @@ class Layout {
 // ---------------------------------------------------------------------------
 // * SVGs (Note: clone with .cloneNode(true) if needed)
 
+// TODO: customize svg class
 const help_svg = elem_from_str(`<svg class="header-icon-img" version="1.1" viewBox="0 0 34 34" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g>
 <path d="M17.123,9.2c-1.44,0-2.642,0.503-3.604,1.32S11.994,12,11.832,14h2.937c0.064-1,0.303-1.231,0.716-1.611 s0.926-0.618,1.541-0.618c0.615,0,1.116,0.174,1.504,0.571c0.389,0.396,0.583,0.882,0.583,1.48s-0.187,1.094-0.558,1.499 l-1.772,1.769c-0.518,0.518-0.626,0.934-0.78,1.249C15.849,18.654,16,19.133,16,19.78V21h2v-0.832c0-0.646,0.289-1.148,0.581-1.504 c0.112-0.129,0.333-0.287,0.521-0.473c0.186-0.187,0.448-0.405,0.715-0.656c0.267-0.25,0.5-0.457,0.662-0.619 c0.161-0.161,0.404-0.437,0.712-0.825c0.533-0.647,0.805-1.456,0.805-2.427c0-1.408-0.45-2.503-1.356-3.289 C19.732,9.592,18.563,9.2,17.123,9.2z" fill="currentColor"/>
 <path d="M16.94,22.145c-0.51,0-0.946,0.179-1.311,0.534c-0.364,0.356-0.546,0.78-0.546,1.274 c0,0.493,0.186,0.914,0.558,1.262c0.372,0.348,0.813,0.521,1.322,0.521c0.51,0,0.947-0.178,1.311-0.533 c0.363-0.356,0.546-0.781,0.546-1.274s-0.187-0.914-0.559-1.263C17.891,22.318,17.45,22.145,16.94,22.145z" fill="currentColor"/>
@@ -392,7 +400,8 @@ fill="currentColor" fill-rule="evenodd"/>
 const share_svg = elem_from_str(`<svg class="header-icon-img" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
 <path d="m8.5 4c.27614 0 .5.22386.5.5 0 .24545778-.17687704.4496079-.41012499.49194425l-.08987501.00805575h-3c-.77969882 0-1.420449.59488554-1.49313345 1.35553954l-.00686655.14446046v8c0 .7796706.59488554 1.4204457 1.35553954 1.4931332l.14446046.0068668h8c.7796706 0 1.4204457-.5949121 1.4931332-1.3555442l.0068668-.1444558v-1c0-.2761.2239-.5.5-.5.2454222 0 .4496.1769086.4919429.4101355l.0080571.0898645v1c0 1.325472-1.0315469 2.4100378-2.3356256 2.4946823l-.1643744.0053177h-8c-1.3254816 0-2.41003853-1.0315469-2.49468231-2.3356256l-.00531769-.1643744v-8c0-1.3254816 1.03153766-2.41003853 2.33562452-2.49468231l.16437548-.00531769zm4.768-.89136.0617.05301 4.4971 4.42118c.2099.20633.229.53775.0573.76685l-.0572.06544-4.4971 4.42258c-.3378.3322-.8869.1189-.9469-.3338l-.0053-.0823v-2.0955l-.2577.0232c-1.8003.1924-3.52574 1.0235-5.18729 2.5071-.38943.3478-.99194.019-.92789-.5063.49872-4.09021 2.58567-6.34463 6.14828-6.62742l.2246-.01511v-2.12975c0-.47977.5302-.73818.8904-.46918z" fill="currentColor"/>
 </svg>`);
-
+const edit_svg = elem_from_str(`<svg class="header-icon-img" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 348.882 348.882" xml:space="preserve"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g> <g> <path d="M333.988,11.758l-0.42-0.383C325.538,4.04,315.129,0,304.258,0c-12.187,0-23.888,5.159-32.104,14.153L116.803,184.231 c-1.416,1.55-2.49,3.379-3.154,5.37l-18.267,54.762c-2.112,6.331-1.052,13.333,2.835,18.729c3.918,5.438,10.23,8.685,16.886,8.685 c0,0,0.001,0,0.001,0c2.879,0,5.693-0.592,8.362-1.76l52.89-23.138c1.923-0.841,3.648-2.076,5.063-3.626L336.771,73.176 C352.937,55.479,351.69,27.929,333.988,11.758z M130.381,234.247l10.719-32.134l0.904-0.99l20.316,18.556l-0.904,0.99 L130.381,234.247z M314.621,52.943L182.553,197.53l-20.316-18.556L294.305,34.386c2.583-2.828,6.118-4.386,9.954-4.386 c3.365,0,6.588,1.252,9.082,3.53l0.419,0.383C319.244,38.922,319.63,47.459,314.621,52.943z" fill="currentColor"></path> <path d="M303.85,138.388c-8.284,0-15,6.716-15,15v127.347c0,21.034-17.113,38.147-38.147,38.147H68.904 c-21.035,0-38.147-17.113-38.147-38.147V100.413c0-21.034,17.113-38.147,38.147-38.147h131.587c8.284,0,15-6.716,15-15 s-6.716-15-15-15H68.904c-37.577,0-68.147,30.571-68.147,68.147v180.321c0,37.576,30.571,68.147,68.147,68.147h181.798 c37.576,0,68.147-30.571,68.147-68.147V153.388C318.85,145.104,312.134,138.388,303.85,138.388z" fill="currentColor"></path> </g> </g></svg>`);
+      
 // ---------------------------------------------------------------------------
 // * Create Monaco editor component (both for code and toplevel)
 
@@ -488,6 +497,8 @@ function create_pg_editor(container, text, kind, opts) {
 // ---------------------------------------------------------------------------
 // * Visibility state
 
+/** Use this class to keep track a set of attributes and their values,
+  and trigger actions when these attributes changes. */
 class Vis {
   #ref;
   #curr;
@@ -606,10 +617,13 @@ class PGCell {
       this.vis.set('layout', Layout.create(playgroundCfg.window_layout));
     }
     // Header
-    if (!this.is_R) {
-      if (playgroundCfg.with_header) setup_header(base_el);
+    this.header_el = null;
+    if (!this.is_R && playgroundCfg.with_header) {
+      this.header_el = create_header();
+      base_el.appendChild(this.header_el);
     }
     // Menu
+    this.menu_el = null;
     if (this.is_R) {
       this.#setup_menu_R(base_el);
     } else {
@@ -622,6 +636,16 @@ class PGCell {
       this.set_auto_action(file_ext_def[this.code_ext].action);
     } else {
       this.editor_el = null;
+    }
+    if (!this.is_R) {
+      // Turn presentation mode on for docs fetched from URL
+      if (playgroundCfg.has_toggle_presentation_button &&
+          file_ext_is_doc(this.code_ext) &&
+          (this.cell_data.origin === 'URL' || this.cell_data.origin === 'URL_link')) {
+        this.vis.set('presentation', true); // TODO: only when loading from URL?
+      } else {
+        this.vis.set('presentation', false);
+      }
     }
     // Toplevel
     this.#setup_toplevel();
@@ -678,6 +702,7 @@ class PGCell {
     if (playgroundCfg.has_share_button) this.#setup_share_button(right_menu_el);
 
     //
+    this.menu_el = menu_el;
     base_el.appendChild(menu_el);
   }
 
@@ -723,6 +748,7 @@ class PGCell {
       })));
     }
     //
+    // this.menu_el = menu_el; // TODO: not needed
     base_el.appendChild(menu_el);
   }
 
@@ -808,19 +834,42 @@ class PGCell {
   update_inner_layout() {
     if (this.is_R) return;
     let update_dim = false;
-    // (Re)create layout if narrow changes
+    // Handle 'narrow' updates
     this.vis.inc_update('narrow', (st) => {
-      this.vis.force_update('layout');
+      this.vis.force_update('layout'); // Force layout update
+    });
+    // Handle 'presentation' updates
+    this.vis.inc_update('presentation', (st) => {
+      // TODO: less ad-hoc way?
+      if (st) {
+        document.body.style.padding = '0px';
+        this.preview_el.style.border = '0px';
+        if (this.header_el != null) this.header_el.style.display = "none";
+        if (this.menu_el != null) this.menu_el.style.display = "none";
+      } else {
+        document.body.style.padding = '8px';
+        this.preview_el.style.border = '1px solid var(--codeblock-border)';
+        if (this.header_el != null) this.header_el.style.display = "block";
+        if (this.menu_el != null) this.menu_el.style.display = "flex";
+      }
+      this.vis.force_update('layout'); // Force layout update
     });
     // (Re)create window layout if needed
     this.vis.inc_update('layout', (layout) => {
       this.#destroy_splits(); // remove split views before wiping out layout_el
       //
-      let narrow = this.vis.get('narrow');
-      let el = this.#gen_layout(layout.get_ls(narrow));
-      el.style.height = '100%'; // TODO: better way?
+      let ls;
+      let presentation_mode = this.vis.get('presentation');
+      if (presentation_mode) {
+        ls = 'P'; // only preview
+      } else {
+        ls = layout.get_ls(this.vis.get('narrow'));
+      }
       //
       this.layout_el.replaceChildren();
+      if (presentation_mode) this.layout_el.appendChild(this.edit_mode_el);
+      let el = this.#gen_layout(ls);
+      el.style.height = '100%'; // TODO: better way?
       this.layout_el.appendChild(el);
       //
       update_dim = true;
@@ -1346,6 +1395,19 @@ class PGCell {
 
   #setup_advanced_buttons(menu_el) {
     const adv_list = [];
+    // TODO: replace this by a new preview layout mode?
+    if (playgroundCfg.has_toggle_presentation_button) {
+      adv_list.push({ k:'toggle_presentation', n:'Toogle presentation mode', a:toggle_presentation });
+      // (button to enable edit mode)
+      this.edit_mode_el = elem_cn('div', 'lpdoc-runnable-buttons');
+      this.edit_mode_el.style.marginTop = '5px'; // TODO: use other class?
+      let btn_el = btn('lpdoc-runnable-button', "Edit mode", '', (() => {
+        toggle_presentation(this);
+      }));
+      btn_el.appendChild(edit_svg.cloneNode(true));
+      btn_el.classList.add("opacity-transition");
+      this.edit_mode_el.appendChild(btn_el);
+    }
     if (playgroundCfg.has_toggle_on_the_fly_button) {
       adv_list.push({ k:'toggle_on_the_fly', n:'Toogle on-the-fly', a:toggle_on_the_fly });
     }
@@ -1596,14 +1658,11 @@ async function process_code(pg) {
 /** Load code */
 async function load_code(pg) {
   let q;
-  if (pg.code_ext === '.md'|| pg.code_ext === '.lpdoc')
-  {
+  if (file_ext_is_doc(pg.code_ext)) {
     // .md/.lpdoc are not loaded into top level:
     // instead generate doc and preview
     gen_doc_preview(pg);
-  }
-  else
-  {
+  } else {
     if (!pg.cproc.muted) {
       pg.show_toplevel(true);
       pg.update_inner_layout();
@@ -1695,6 +1754,13 @@ async function spec_preview(pg) {
   pg.set_auto_action('spec');
 }
 
+/** Toggle presentation mode */
+async function toggle_presentation(pg) {
+  if (pg.is_R) return; /* (do nothing) */
+  pg.vis.set('presentation', !pg.vis.get('presentation'));
+  pg.update_inner_layout();
+}
+
 /** Toggle on-the-fly mode */
 async function toggle_on_the_fly(pg) {
   // TODO: show status
@@ -1745,9 +1811,10 @@ async function gen_doc(pg) {
   const filename = pg.curr_mod_name_ext();
   // await pg.cproc.muted_query_dumpout("clean_mods(['"+modbase+"'])"); // (timestamps do not have the right resolution)
   await pg.toplevel.do_query("doc_cmd('"+filename+"', [], clean(intermediate))", {}); // (clean mod above is not enough)
-  if (pg.code_ext === '.md'|| pg.code_ext === '.lpdoc') { 
+  if (file_ext_is_doc(pg.code_ext)) { 
+    // TODO: fix bug in LPdoc!
+    // Deleting file.pl in case there is file.pl and file.md
     let plfile = pg.curr_mod_name()+'.pl';
-    // Deleting file.pl in case there is file.pl and file.md // TODO: fix bug in LPdoc
     await pg.toplevel.do_query("use_module(library(system_extra))", {}); 
     await pg.toplevel.do_query("del_file_nofail('"+plfile+"')", {}); // continuation of above
   }
@@ -1813,7 +1880,7 @@ async function show_lpdoc_html(pg, d) {
   /* enable code runnable */ // TODO: experimental!
   if (preview_pgset == null) preview_pgset = new PGSet();
   await preview_pgset.setup_runnable();
-  update_dimensions();
+  update_dimensions(); // TODO: explain why we need a global update here
   if (preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
     await preview_pgset.load_all_code();
   }
@@ -1951,7 +2018,7 @@ function code_from_URL() {
   if (str === null) return null; // Code not in URL
   let ext = params.get("ext");
   if (ext === null) ext = '.pl'; // default .pl
-  return {str:str,ext:ext};
+  return {str:str,ext:ext,origin:'URL'};
 }
 
 /**
@@ -1964,10 +2031,11 @@ async function code_from_URL_link() {
   // Try from github
   // Example:
   //   https://ciao-lang.org/playground/#https://github.com/ciao-lang/ciaopp/blob/master/examples/verifly/ann.pl
+  //   https://ciao-lang.org/playground/#https://github.com/ciao-lang/lpdoc/blob/master/examples/factorial_peano_iso.md
   if (document.location.hash.startsWith(github_hash)) {
     let str = await fetch_from_github();
     let ext = get_file_extension(document.location.hash); // (this should end with the extension)
-    return {str:str,ext:ext};
+    return {str:str,ext:ext,origin:'URL_link'};
   } else {
     return null;
   }
@@ -2896,7 +2964,7 @@ function pers_get_code() {
     let str = window.localStorage.getItem(k+".str");
     let ext = window.localStorage.getItem(k+".ext");
     if (str === null) return null;
-    return {str:str, ext:ext};
+    return {str:str, ext:ext, origin:'storage'};
   } catch (e) {
     // Swallow up any security exceptions...
     return null;
@@ -2951,14 +3019,13 @@ class PGSet {
   }
 
   async setup(base_el, code) { // standalone playground
-    // Show splash screen? As heuristic, we do this only if editor
-    // value is the same as the splash. Otherwise we assume
-    // that the user is already editing and does not need it.
-    if (get_splash_code_for_ext(code.ext).str == code.str) {
+    // Show splash screen based on code origin annotation
+    // TODO: show splash with '?' button, add link to help there
+    if (code.origin === 'splash') {
       show_splash(base_el);
     }
     let i = 0;
-    let cell_data = { kind:'full', focus: code.str, ext: code.ext };
+    let cell_data = { kind:'full', focus: code.str, ext: code.ext, origin: code.origin };
     this.cells[i] = new PGCell(this.cproc);
     await this.cells[i].setup(base_el, cell_data, this);
   }
@@ -3023,7 +3090,7 @@ function scan_runnable(text) {
     cell_data.kind = 'exercise';
     cell_data['ext'] = '.pl';
     cell_data['preamble'] = match[1].trim();
-    cell_data['hint'] = match[2].trim();
+    cell_data['hint'] = match[2].trim(); // TODO: rename to 'focus'
     cell_data['solution'] = match[3].trim();
     cell_data['postamble'] = match[4].trim();
     return cell_data;
@@ -3235,7 +3302,7 @@ consider <a href="/install.html">native installation</a> if needed.
 // * UI - Playground header
 
 /* Header (with top-right menu) */
-function setup_header(base_el) {
+function create_header() {
   let header_el = elem_cn('div', 'header');
   let right_header_el = elem_cn('ul', 'right-header');
   header_el.appendChild(right_header_el);
@@ -3247,7 +3314,6 @@ function setup_header(base_el) {
       </a>
       <h1>${playgroundCfg.title}</h1>
     </div>`));
-  base_el.appendChild(header_el);
 
   const theme_button = new_theme_button(right_header_el);
   theme_button.highlight(theme_get_value());
@@ -3269,6 +3335,7 @@ function setup_header(base_el) {
   } else {
     right_header_el.appendChild(a("https://github.com/ciao-lang/ciao", github_svg.cloneNode(true)));
   }
+  return header_el;
 }
 
 // ===========================================================================

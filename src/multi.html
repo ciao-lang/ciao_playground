@@ -61,7 +61,7 @@
       const cproc = new ToplevelProc(urlPREFIX+'/ciao/', urlVERS); 
       var pg = new PGCell(cproc);
       (async() => {
-        let cell_data = { kind:'full', focus:"" };
+        let cell_data = { kind:'full', focus:"", ext:'.pl' };
         await pg.setup(pg_el, cell_data, null); // TODO: use pgset?
       })();
       //
