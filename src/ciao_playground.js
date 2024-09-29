@@ -793,6 +793,7 @@ class PGCell {
     } else {
       this.preview_el = elem_cn('div', 'preview-container');
     }
+    this.preview_pgset = null; // nested pgset (if needed)
   }
 
   /** Help footer */
@@ -931,9 +932,25 @@ class PGCell {
   show_version(str) {
     let info_match = str.match(/.*^(Ciao.*$).*/m);
     if (info_match != null && info_match.length == 2) {
-      [...document.getElementsByClassName("lpdoc-footer")].forEach(node => {
-        node.innerHTML = "Generated with LPdoc | <span style='color:var(--face-checked-assrt)'>RUNNING</span> " + info_match[1];
-      });
+      if (this.toplevel_el !== null && this.toplevel_el !== undefined) {
+        let base;
+        let footerElems = null;
+        /* Try to find a footer elem under the closest lpdoc-main ancestor */
+        base = this.toplevel_el.closest(".lpdoc-main"); // preview
+        if (base !== null) {
+          footerElems = base.getElementsByClassName("lpdoc-footer");
+          if (footerElems.length == 0) footerElems = null;
+        }
+        /* Otherwise, look under the whole document */ // TODO: needed for website, better way?
+        if (footerElems === null) {
+          footerElems = document.getElementsByClassName("lpdoc-footer");
+          if (footerElems.length == 0) footerElems = null;
+        }
+        /* Patch footer with version */
+        if (footerElems !== null) {
+          footerElems[0].innerHTML = "Generated with LPdoc | <span style='color:var(--face-checked-assrt)'>RUNNING</span> " + info_match[1];
+        }
+      }
     }
     if (toplevelCfg.statistics) console.log(str);
   }
@@ -982,6 +999,7 @@ class PGCell {
     if (this.editor !== null) this.editor.layout();
     if (this.toplevel !== null) this.toplevel.update_dimensions();
     if (this.previewEd !== null) this.previewEd.layout();
+    if (this.preview_pgset !== null) this.preview_pgset.update_dimensions();
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1877,12 +1895,11 @@ async function show_lpdoc_html(pg, d) {
   preview.style.fontFamily = null;
   preview.style.overflow = 'auto';
   preview.appendChild(d);
-  /* enable code runnable */ // TODO: experimental!
-  if (preview_pgset == null) preview_pgset = new PGSet();
-  await preview_pgset.setup_runnable();
-  update_dimensions(); // TODO: explain why we need a global update here
-  if (preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
-    await preview_pgset.load_all_code();
+  /* enable code runnable in the lpdoc output */
+  if (pg.preview_pgset == null) pg.preview_pgset = new PGSet();
+  await pg.preview_pgset.setup_runnable(preview);
+  if (pg.preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
+    await pg.preview_pgset.load_all_code();
   }
   pg.update_inner_layout();
 }
@@ -3030,9 +3047,9 @@ class PGSet {
     await this.cells[i].setup(base_el, cell_data, this);
   }
 
-  async setup_runnable() { // playground cells for an LPdoc document
+  async setup_runnable(base_el) { // playground cells for an LPdoc document
     let i = 0;
-    for (let node of [...document.getElementsByClassName("lpdoc-codeblock-runnable")]) {
+    for (let node of [...base_el.getElementsByClassName("lpdoc-codeblock-runnable")]) {
       let txt = node.innerText;
       // TODO: we need to ammend wrong double quotes generated from LPdoc code code blocks (fix in lpdoc!)
       txt = txt.replace(/\u201D/g, "''"); // &rdquo;
@@ -3341,16 +3358,6 @@ function create_header() {
 // ===========================================================================
 // * Startup code
 
-var pgset = null; // (collection of playgrounds for this document)
-var preview_pgset = null; // (experimental for lpdoc preview)
-
-// Update editor dimensions (do not use monaco automaticLayout!)
-function update_dimensions() {
-  if (preview_pgset !== null) preview_pgset.update_dimensions();
-  if (pgset !== null) pgset.update_dimensions();
-}
-window.addEventListener("resize", update_dimensions);
-
 if (lpdocPG === 'runnable') setup_mathjax();
 if (lpdocPG === 'playground') show_cover();
 
@@ -3361,12 +3368,20 @@ window.onload = function () {
   update_theme_hook();
 
   if (lpdocPG !== 'raw') {
-    pgset = new PGSet();
+    // (collection of playgrounds for this document)
+    var pgset = new PGSet();
+
+    // Update editor dimensions (do not use monaco automaticLayout!)
+    function update_dimensions() {
+      if (pgset !== null) pgset.update_dimensions();
+    }
+    window.addEventListener("resize", update_dimensions);
+
     (async() => {
+      const base_el = document.body;
       if (lpdocPG === 'runnable') { // LPdoc with runnable code
-        await pgset.setup_runnable();
+        await pgset.setup_runnable(base_el);
       } else { // Full playground
-        const base_el = document.body;
         const code = await initial_editor_code();
         await pgset.setup(base_el, code);
       }
