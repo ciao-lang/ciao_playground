@@ -3107,7 +3107,7 @@ function scan_runnable(text) {
     cell_data.kind = 'exercise';
     cell_data['ext'] = '.pl';
     cell_data['preamble'] = match[1].trim();
-    cell_data['hint'] = match[2].trim(); // TODO: rename to 'focus'
+    cell_data['focus'] = match[2].trim();
     cell_data['solution'] = match[3].trim();
     cell_data['postamble'] = match[4].trim();
     return cell_data;
@@ -3174,7 +3174,7 @@ function scan_runnable(text) {
     cell_data['query'] = match[1].trim();
     return cell_data;
   }
-  // Assume all is the hint
+  // Assume all is the 'focus'
   cell_data.kind = 'code';
   cell_data['ext'] = '.pl';
   cell_data['preamble'] = '';
@@ -3185,17 +3185,16 @@ function scan_runnable(text) {
 
 // Initial editable code for this cell
 function cell_data_get_initial_code(cell_data) {
-  let str = null;
   switch(cell_data.kind) {
-  case 'exercise': str = cell_data['hint']; break;
-  case 'code': str = cell_data['focus']; break;
-  case 'exfilter': str = cell_data['focus']; break;
-  case 'exfilterex': str = cell_data['focus']; break;
-  case 'miniplayground': str = cell_data['focus']; break;
-  case 'full': str = cell_data['focus']; break;
+  case 'exercise': break;
+  case 'code': break;
+  case 'exfilter': break;
+  case 'exfilterex': break;
+  case 'miniplayground': break;
+  case 'full': break;
   default: return null; /* no editable code */
   }
-  return {str:str, ext:cell_data['ext']};
+  return {str:cell_data['focus'], ext:cell_data['ext'], origin:'runnable'};
 }
 
 // ===========================================================================
