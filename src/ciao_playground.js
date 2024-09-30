@@ -569,7 +569,9 @@ class PGCell {
 
   /** Set code and process */
   async set_code_and_process(code) {
-    pers_set_code(code);
+    if (!this.is_R) { // Save if we are not in a runnable
+      pers_set_code(code);
+    }
     this.set_auto_action(file_ext_def[code.ext].action);
     this.set_editor_code(code);
     this.#cancel_autosave();
