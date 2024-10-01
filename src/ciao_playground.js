@@ -1893,7 +1893,6 @@ async function show_ciaopp_menu(pg, m) {
   preview.style.fontFamily = null;
   preview.style.overflow = 'auto';
   preview.appendChild(m);
-  update_dimensions();
   pg.update_inner_layout();
 }
 
