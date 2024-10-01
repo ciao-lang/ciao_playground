@@ -37,6 +37,8 @@ site_copy_files :-
     site_glob_cp(ciao_playground, 'src/css', '*.css', '/playground/css'),
     site_glob_cp(ciao_playground, 'src/images', '*.png', '/playground/images'),
     site_glob_cp(ciao_playground, 'src/images', '*.svg', '/playground/images'),
+    site_glob_cp(core, 'library/menu/etc', '*.js', '/playground/js'), % (for ciao_menu_html.js)
+    site_glob_cp(core, 'library/menu/etc', '*.css', '/playground/css'), % (for ciao_menu_html.css)
     % (part of the manual)
     site_glob_cp(ciao_playground, 'examples', '*.tex', '/playground/examples'),
     site_glob_cp(ciao_playground, 'examples', '*.pdf', '/playground/examples'),

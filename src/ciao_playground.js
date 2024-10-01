@@ -81,6 +81,7 @@ const playgroundCfg_defaults = {
   has_doc_button: true,
   has_acheck_button: true,
   has_spec_button: true,
+  has_browse_analysis_opts_button: true,
   //
   has_share_button: true,
   //
@@ -146,6 +147,7 @@ var miniPlaygroundCfg = {
   has_doc_button: false,
   has_acheck_button: false,
   has_spec_button: false,
+  has_browse_analysis_opts_button: false,
   has_layout_button: false,
   has_share_button: false,
   on_the_fly: true,
@@ -231,6 +233,8 @@ var require = { paths: { vs: urlPREFIX+'/node_modules/monaco-editor/min/vs' } };
   importCSS(urlPREFIX+'/node_modules/monaco-editor/min/vs/editor/editor.main.css');
   // aux for UI
   importScript(urlPREFIX+'/playground/js/split.min.js'); // old split.js
+  // Ciao menu html library
+  importScript(urlPREFIX+'/playground/js/ciao_menu_html.js');
   // monaco
   importScript(urlPREFIX+'/node_modules/monaco-editor/min/vs/loader.js');
   importScript(urlPREFIX+'/node_modules/monaco-editor/min/vs/editor/editor.main.js');
@@ -1449,6 +1453,9 @@ class PGCell {
     if (playgroundCfg.has_spec_button) {
       adv_list.push({ k:'spec', n:'Specialize code (C-c O)', a:spec_preview });
     }
+    if (playgroundCfg.has_browse_analysis_opts_button) {
+      adv_list.push({ k:'browse_analysis_opts', n:'Browse analysis/checking/optimizing options', a:browse_analysis_opts });
+    }
     if (adv_list.length > 0) {
       const adv_button =
             btn_dropdown_act(this, menu_el,
@@ -1861,6 +1868,33 @@ async function acheck_output(pg) { // (shows output, which can be slower)
   await pg.toplevel.do_query("auto_check_assert('"+modbase+"')", {msg:'Checking assertions'});
   await preview_co(pg);
   pg.set_auto_action('acheck_output');
+}
+
+/** Show the CiaoPP flags interactive menu */
+/* (requires 'ciaopp' bundle) */
+async function browse_analysis_opts(pg) {
+  // Translate the query so the special query table is checked
+  // in this cases (needed for loading ciaopp bundle and importing it).
+  // TODO: Better way?
+  const tr = await pg.cproc.trans_query('write_ciaopp_menu_json');
+  const menudef = await pg.cproc.muted_query_getout(tr.q);
+  const menu = new Menu('Preprocessor Option Browser', JSON.parse(menudef), () => {
+    pg.cproc.muted_query_dumpout(menu.get_query_for_loading_menu());
+  });
+
+  show_ciaopp_menu(pg, menu.elem);
+}
+
+/** Show CiaoPP generated menu HTML in preview */
+async function show_ciaopp_menu(pg, m) {
+  pg.show_preview('tall');
+  var preview = pg.preview_el;
+  preview.replaceChildren();
+  preview.style.fontFamily = null;
+  preview.style.overflow = 'auto';
+  preview.appendChild(m);
+  update_dimensions();
+  pg.update_inner_layout();
 }
 
 /** Optimize (spec) module */
