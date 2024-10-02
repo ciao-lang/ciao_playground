@@ -1000,6 +1000,16 @@ class PGCell {
 
   /* ---------------------------------------------------------------------- */
 
+  /** Any of the editors have focus */
+  has_focus() {
+    return ((this.editor !== null && this.editor.hasWidgetFocus()) ||
+            (this.toplevel !== null && this.toplevel.has_focus()) ||
+            (this.previewEd !== null && this.previewEd.hasWidgetFocus()) ||
+            (this.preview_pgset !== null && this.preview_pgset.has_focus()));
+  }
+
+  /* ---------------------------------------------------------------------- */
+
   /** Update layout of editors (after redimensioning) */
   update_dimensions() {
     if (this.editor !== null) this.editor.layout();
@@ -2444,6 +2454,13 @@ class Comint {
 
   /* ---------------------------------------------------------------------- */
 
+  /* Check if the editor component is focused */
+  has_focus() {
+    return this.editor.hasWidgetFocus();
+  }
+
+  /* ---------------------------------------------------------------------- */
+
   /* Update layout of editors */
   update_dimensions() {
     this.editor.layout();
@@ -2982,6 +2999,8 @@ class ConsoleComint {
     console.log('[LOG: '+str+']');
   }
   //
+  has_focus() { return false; }
+  //
   update_dimensions() {}
   update_inner_layout() {}
   //
@@ -3097,6 +3116,14 @@ class PGSet {
       await this.cells[i].setup(el, cell_data, this);
       i += 1;
     }
+  }
+
+  // Any of the cells has focus
+  has_focus() {
+    for (const x of this.cells) {
+      if (x.has_focus()) return true;
+    }
+    return false;
   }
 
   // Update layout of editors
