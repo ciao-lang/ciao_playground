@@ -149,9 +149,9 @@ body {
 }
 
 /* --------------------------------------------------------------------------- */
-/* Modal screen */
+/* Modal dialog */
 
-#modal-screen {
+.modal-screen {
     background-color: rgba(0,0,0,0.5);
     position: fixed;
     z-index: 9001;
@@ -162,7 +162,7 @@ body {
     padding-top: 96px;
 }
 
-#modal-content {
+.modal-content {
     margin: auto;
     padding: 8px;
     width: 80%;

@@ -249,31 +249,82 @@ var require = { paths: { vs: urlPREFIX+'/node_modules/monaco-editor/min/vs' } };
 // ---------------------------------------------------------------------------
 // * UI - Modal dialog windows
 
-function modal_elm() {
-  return document.getElementById('modal-content');
-}
-
-/* (un)set visibility */
-function modal_visible(visibility) {
-  function set_visible(elm, visible) {
-    let d = visible ? 'block' : 'none';
-    if (elm.style.display !== d) {
-      elm.style.display = d;
-    }
+class Modal {
+  constructor() {
+    this.screen_el = null;
+    this.content_el = null;
+    this.key_handler = null;
   }
-  set_visible(document.getElementById('modal-screen'), visibility);
-  set_visible(document.getElementById('modal-content'), visibility);
-}
 
-function modal_alloc(w) {
-  let dp = document.createElement('div');
-  dp.id = "modal-screen";
-  dp.style.display = "none";
-  let dpc = document.createElement('div');
-  dpc.id = "modal-content";
-  dpc.style.display = "none";
-  dp.appendChild(dpc);
-  w.appendChild(dp);
+  get_elm() {
+    return this.content_el;
+  }
+
+  // TODO: improve...
+  /* force wide dialog */
+  set_wide() {
+    let m = this.content_el;
+    m.style.maxWidth = "calc(100% - 64px)";
+    m.style.width = "calc(100% - 64px)";
+    m.style.maxHeight = "calc(100% - 32px - 96px)";
+    m.style.height = "calc(100% - 32px - 96px)";
+    m.style.padding = "0px";
+  }
+
+  /* (un)set visibility */
+  set_visible(visibility) {
+    function set_visible(elm, visible) {
+      let d = visible ? 'block' : 'none';
+      if (elm.style.display !== d) {
+        elm.style.display = d;
+      }
+    }
+    set_visible(this.screen_el, visibility);
+    set_visible(this.content_el, visibility);
+  }
+
+  alloc(base_el) {
+    let dp = elem_cn('div', 'modal-screen');
+    dp.style.display = "none";
+    this.screen_el = dp;
+    let dpc = elem_cn('div', 'modal-content');
+    dpc.style.display = "none";
+    this.content_el = dpc;
+    dp.appendChild(dpc);
+    base_el.appendChild(dp);
+  }
+
+  remove() {
+    if (!this.screen_el) return;
+    this.content_el.remove();
+    this.screen_el.remove();
+    this.content_el = null;
+    this.screen_el = null;
+  }
+
+  // Set visible, set key listener
+  open() {
+    this.set_visible(true);
+    const key_handler = (e) => {
+      if (e.keyCode == 27 || e.keyCode == 32 || e.keyCode == 13 || e.keyCode == 81) {
+        this.close();
+      }
+    };
+    this.key_handler = key_handler;
+    const close_modal = () => {
+      this.set_visible(false);
+      this.remove();
+      window.removeEventListener('keydown', this.key_handler);
+    };
+    window.addEventListener('keydown', this.key_handler);
+  }
+
+  // Set unvisible and remove
+  close() {
+    this.set_visible(false);
+    this.remove();
+    window.removeEventListener('keydown', this.key_handler);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1896,14 +1947,33 @@ async function browse_analysis_opts(pg) {
 }
 
 /** Show CiaoPP generated menu HTML in preview */
-async function show_ciaopp_menu(pg, m) {
-  pg.show_preview('tall');
-  var preview = pg.preview_el;
-  preview.replaceChildren();
-  preview.style.fontFamily = null;
-  preview.style.overflow = 'auto';
-  preview.appendChild(m);
-  pg.update_inner_layout();
+// // (Version using preview_el)
+// async function show_ciaopp_menu(pg, m) {
+//   pg.show_preview('tall');
+//   var preview = pg.preview_el;
+//   preview.replaceChildren();
+//   preview.style.fontFamily = null;
+//   preview.style.overflow = 'auto';
+//   preview.appendChild(m);
+//   pg.update_inner_layout();
+// }
+async function show_ciaopp_menu(pg, menu_el) {
+  let base_el = pg.pgset.base_el;
+  let modal = new Modal();
+  modal.alloc(base_el);
+  modal.set_wide();
+  const m = modal.get_elm();
+  m.replaceChildren();
+  // Big close button
+  const el = btn('menu-button', "Close", "Close", () => {
+    modal.close();
+  });
+  const btn_w = elem_cn('div', 'big-button-wrapper');
+  btn_w.appendChild(el);
+  menu_el.appendChild(btn_w);
+  //
+  m.appendChild(menu_el);
+  modal.set_visible(true);
 }
 
 /** Optimize (spec) module */
@@ -3090,6 +3160,7 @@ class PGSet {
   }
 
   async setup(base_el, code) { // standalone playground
+    this.base_el = base_el;
     // Show splash screen based on code origin annotation
     // TODO: show splash with '?' button, add link to help there
     if (code.origin === 'splash') {
@@ -3325,20 +3396,10 @@ function hide_cover() {
 // * UI - splash modal dialog
 
 function show_splash(base_el) {
-  modal_alloc(base_el);
-  const m = modal_elm();
+  let modal = new Modal();
+  modal.alloc(base_el);
+  const m = modal.get_elm();
   m.replaceChildren();
-  const key_handler = (e) => {
-    if (e.keyCode == 27 || e.keyCode == 32 || e.keyCode == 13 || e.keyCode == 81) {
-      close_modal();
-    }
-  };
-  const close_modal = () => {
-    modal_visible(false);
-    m.replaceChildren();
-    window.removeEventListener('keydown', key_handler);
-  };
-  window.addEventListener('keydown', key_handler);
   //
   const splash = elem_from_str(`
 <div style='padding: 24px;'>
@@ -3359,7 +3420,7 @@ is running fully locally inside your browser!</p>
 `);
   // Big close button
   const el = btn('big-button', "Start Coding", "Start Coding", () => {
-    close_modal();
+    modal.close();
   });
   const btn_w = elem_cn('div', 'big-button-wrapper');
   btn_w.appendChild(el);
@@ -3373,7 +3434,7 @@ consider <a href="/install.html">native installation</a> if needed.
   splash.appendChild(disclaimer);
   //
   m.appendChild(splash);
-  modal_visible(true);
+  modal.open();
 }
 
 // ===========================================================================
