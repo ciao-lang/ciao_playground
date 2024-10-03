@@ -234,7 +234,7 @@ var require = { paths: { vs: urlPREFIX+'/node_modules/monaco-editor/min/vs' } };
   // aux for UI
   importScript(urlPREFIX+'/playground/js/split.min.js'); // old split.js
   // Ciao menu html library
-  importScript(urlPREFIX+'/playground/js/ciao_menu_html.js');
+  importScript(urlPREFIX+'/playground/js/ciao_menu.js');
   // monaco
   importScript(urlPREFIX+'/node_modules/monaco-editor/min/vs/loader.js');
   importScript(urlPREFIX+'/node_modules/monaco-editor/min/vs/editor/editor.main.js');
