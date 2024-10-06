@@ -850,7 +850,7 @@ class PGCell {
     } else {
       this.preview_el = elem_cn('div', 'preview-container');
     }
-    this.preview_pgset = null; // nested pgset (if needed)
+    this.preview_doc = null; // nested doc/view (if needed)
   }
 
   /** Help footer */
@@ -906,7 +906,7 @@ class PGCell {
         if (this.menu_el != null) this.menu_el.style.display = "none";
       } else {
         document.body.style.padding = '8px';
-        this.preview_el.style.border = '1px solid var(--codeblock-border)';
+        this.preview_el.style.border = '1px solid var(--border)';
         if (this.header_el != null) this.header_el.style.display = "block";
         if (this.menu_el != null) this.menu_el.style.display = "flex";
       }
@@ -925,9 +925,22 @@ class PGCell {
       }
       //
       this.layout_el.replaceChildren();
-      if (presentation_mode) this.layout_el.appendChild(this.edit_mode_el);
+      if (presentation_mode) {
+        // (button to go back from presentation mode)
+        let el = elem_cn('div', 'lpdoc-runnable-buttons');
+        el.style.marginTop = '5px'; // TODO: use other class?
+        let btn_el = btn('lpdoc-runnable-button', "Edit mode", '', (() => {
+          toggle_presentation(this);
+        }));
+        btn_el.appendChild(edit_svg.cloneNode(true));
+        btn_el.classList.add("opacity-transition");
+        el.appendChild(btn_el);
+        this.layout_el.appendChild(el);
+      }
       let el = this.#gen_layout(ls);
-      el.style.height = '100%'; // TODO: better way?
+      if (!el.classList.contains('preview-container')) {
+        el.style.height = '100%'; // TODO: why? better way?
+      }
       this.layout_el.appendChild(el);
       //
       update_dim = true;
@@ -1034,7 +1047,7 @@ class PGCell {
       }
     } else {
       // TODO: mode is not preserved when going from false to true
-      if (m === true && this.vis.get('layout').p !== false) return; // keep previous mode
+      if (m !== false && this.vis.get('layout').p !== false) return; // keep previous mode
       this.vis.get('layout').p = m;
       this.update_layout_sel_button_marks();
     }
@@ -1056,7 +1069,7 @@ class PGCell {
     return ((this.editor !== null && this.editor.hasWidgetFocus()) ||
             (this.toplevel !== null && this.toplevel.has_focus()) ||
             (this.previewEd !== null && this.previewEd.hasWidgetFocus()) ||
-            (this.preview_pgset !== null && this.preview_pgset.has_focus()));
+            (this.preview_doc !== null && this.preview_doc.has_focus()));
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1066,7 +1079,7 @@ class PGCell {
     if (this.editor !== null) this.editor.layout();
     if (this.toplevel !== null) this.toplevel.update_dimensions();
     if (this.previewEd !== null) this.previewEd.layout();
-    if (this.preview_pgset !== null) this.preview_pgset.update_dimensions();
+    if (this.preview_doc !== null) this.preview_doc.update_dimensions();
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1480,18 +1493,8 @@ class PGCell {
 
   #setup_advanced_buttons(menu_el) {
     const adv_list = [];
-    // TODO: replace this by a new preview layout mode?
     if (playgroundCfg.has_toggle_presentation_button) {
       adv_list.push({ k:'toggle_presentation', n:'Toogle presentation mode', a:toggle_presentation });
-      // (button to enable edit mode)
-      this.edit_mode_el = elem_cn('div', 'lpdoc-runnable-buttons');
-      this.edit_mode_el.style.marginTop = '5px'; // TODO: use other class?
-      let btn_el = btn('lpdoc-runnable-button', "Edit mode", '', (() => {
-        toggle_presentation(this);
-      }));
-      btn_el.appendChild(edit_svg.cloneNode(true));
-      btn_el.classList.add("opacity-transition");
-      this.edit_mode_el.appendChild(btn_el);
     }
     if (playgroundCfg.has_toggle_on_the_fly_button) {
       adv_list.push({ k:'toggle_on_the_fly', n:'Toogle on-the-fly', a:toggle_on_the_fly });
@@ -1831,7 +1834,7 @@ async function run_exfilter_exercise(pg) {
 /** Gen doc and preview */
 async function gen_doc_preview(pg) {
   await gen_doc(pg);
-  await preview_doc(pg);
+  await doc_preview(pg);
   pg.set_auto_action('doc');
 }
 
@@ -1985,7 +1988,7 @@ async function opt_mod(pg) {
 }
 
 /** Preview the documentation generated for the current module */
-async function preview_doc(pg) {
+async function doc_preview(pg) {
   const modbase = pg.curr_mod_base();
   var str = await pg.cproc.w.readFile(modbase+'.html/index.html');
   if (str !== null) {
@@ -1998,6 +2001,13 @@ function extract_lpdoc_main_el(str) {
   let d = document.createElement('template');
   d.innerHTML = str;
   d = d.content.querySelector('.lpdoc-main');
+  if (d === null) return d; // (no output)
+  // Add a special lpdoc-nav (for preview_doc.prepare)
+  let nav_el = elem_cn('div', 'lpdoc-nav');
+  nav_el.classList.add('lpdoc-sidebar');
+  nav_el.style.cssFloat = 'right';
+  nav_el.style.padding = '8px 0px 0px 0px';
+  d.prepend(nav_el);
   return d;
 }
 // Show LPdoc generated element d in preview (experimental: update lpdoc runnable code)
@@ -2008,13 +2018,29 @@ async function show_lpdoc_html(pg, d) {
   //preview.className = 'preview-container-lpdoc';
   preview.replaceChildren();
   preview.style.fontFamily = null;
-  preview.style.overflow = 'auto';
-  preview.appendChild(d);
-  /* enable code runnable in the lpdoc output */
-  if (pg.preview_pgset == null) pg.preview_pgset = new PGSet();
-  await pg.preview_pgset.setup_runnable(preview);
-  if (pg.preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
-    await pg.preview_pgset.load_all_code();
+  preview.style.overflowX = 'auto';
+  preview.style.overflowY = 'auto';
+  preview.style.outline = 'none'; // no focus outline
+  preview.setAttribute('tabindex', '-1'); // make it focusable (for key input)
+  //
+  if (d === null) return; // (wrong output!)
+  //
+  preview.appendChild(d); // lpdoc-main div
+  // save preview_doc position/mode
+  let prev_pos = null;
+  if (pg.preview_doc) prev_pos = pg.preview_doc.get_pos();
+  /* prepare preview doc, enable code runnable in the lpdoc output if needed */
+  let preview_pgset = new PGSet();
+  let preview_doc = new SlideShow(); // TODO: make SlideShow view optional
+  pg.preview_doc = preview_doc;
+  preview_doc.prepare(preview);
+  if (prev_pos) preview_doc.restore_pos(prev_pos);
+  preview_doc.set_slide_mode(preview_doc.enabled); // (changes it if needed)
+  preview_doc.update_dimensions_hook = () => { preview_pgset.update_dimensions(); };
+  preview_doc.has_focus_hook = () => { return preview_pgset.has_focus(); };
+  await preview_pgset.setup_runnable(preview);
+  if (preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
+    await preview_pgset.load_all_code();
   }
   pg.update_inner_layout();
 }
@@ -3492,22 +3518,18 @@ window.onload = function () {
   if (lpdocPG !== 'raw') {
     // (collection of playgrounds for this document)
     var pgset = new PGSet();
-
-    // Update editor dimensions (do not use monaco automaticLayout!)
-    function update_dimensions() {
-      if (pgset !== null) pgset.update_dimensions();
-    }
-    window.addEventListener("resize", update_dimensions);
-
+    // add hooks to main_doc
+    main_doc.update_dimensions_hook = () => { pgset.update_dimensions(); };
+    main_doc.has_focus_hook = () => { return pgset.has_focus(); };
+    const base_el = document.body;
     (async() => {
-      const base_el = document.body;
       if (lpdocPG === 'runnable') { // LPdoc with runnable code
         await pgset.setup_runnable(base_el);
       } else { // Full playground
         const code = await initial_editor_code();
         await pgset.setup(base_el, code);
       }
-      update_dimensions();
+      main_doc.update_dimensions();
     })();
   }
 };
