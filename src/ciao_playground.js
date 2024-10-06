@@ -948,6 +948,7 @@ class PGCell {
     this.toplevel.update_inner_layout();
     if (update_dim) {
       this.update_dimensions();
+      if (this.vis.get('presentation')) this.preview_el.focus(); // set focus
     }
   }
 
@@ -2036,6 +2037,8 @@ async function show_lpdoc_html(pg, d) {
   preview_doc.prepare(preview);
   if (prev_pos) preview_doc.restore_pos(prev_pos);
   preview_doc.set_slide_mode(preview_doc.enabled); // (changes it if needed)
+  preview_doc.pgset = preview_pgset; // (associated PGSet)
+  preview_pgset.main_doc = preview_doc; // TODO: pass doc to jscode instead?
   preview_doc.update_dimensions_hook = () => { preview_pgset.update_dimensions(); };
   preview_doc.has_focus_hook = () => { return preview_pgset.has_focus(); };
   await preview_pgset.setup_runnable(preview);
@@ -3519,6 +3522,8 @@ window.onload = function () {
     // (collection of playgrounds for this document)
     var pgset = new PGSet();
     // add hooks to main_doc
+    main_doc.pgset = pgset; // (associated PGSet)
+    pgset.main_doc = main_doc; // TODO: pass doc to jscode instead?
     main_doc.update_dimensions_hook = () => { pgset.update_dimensions(); };
     main_doc.has_focus_hook = () => { return pgset.has_focus(); };
     const base_el = document.body;
