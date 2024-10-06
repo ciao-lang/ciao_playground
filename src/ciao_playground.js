@@ -938,9 +938,9 @@ class PGCell {
         this.layout_el.appendChild(el);
       }
       let el = this.#gen_layout(ls);
-      if (!el.classList.contains('preview-container')) {
+//      if (!el.classList.contains('preview-container')) {
         el.style.height = '100%'; // TODO: why? better way?
-      }
+//      }
       this.layout_el.appendChild(el);
       //
       update_dim = true;
