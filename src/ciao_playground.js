@@ -1568,6 +1568,7 @@ class PGCell {
 
   /** Set up cell with dynamic preview (TODO: experimental) */
   async setup_dynpreview(opts) { /* pre: this.is_R */
+    let pgset = this.pgset;
     let render_pred = opts.render_pred;
     // extend dependencies and init queries (before start)
     if (opts.depends !== undefined) this.cproc.push_depends(opts.depends);
