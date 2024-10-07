@@ -1327,12 +1327,27 @@ class PGCell {
   }
 
   /* return completed code */
-  complete_code() {
+  complete_code(prettify) {
     let code = this.get_editor_value();
     if (this.is_R) {
-      code = (this.cell_data['preamble'] + " " +  // TODO: if preamble has only one line, this fixes line problems
-              code + '\n' +
-              this.cell_data['postamble'] + "\n");
+      if (prettify) {
+        let code0 = code;
+        code = '';
+        if (this.cell_data['preamble'] !== '') {
+          code += (this.cell_data['preamble'] + "\n" +
+                   "\n% << end of preamble, next is focused code >>\n\n");
+        }
+        code += code0 + "\n";
+        if (this.cell_data['postamble'] !== '') {
+          code += ("\n% << end of focused code, next is postamble >>\n\n" +
+                   this.cell_data['postamble'] + "\n");
+        }
+      } else {
+        // TODO: add directive to fix line numbers; this hack only works if preamble has one line
+        code = (this.cell_data['preamble'] + " " +
+                code + "\n" +
+                this.cell_data['postamble'] + "\n");
+      }
     } else {
       if (playgroundCfg.amend_on_save) {
         // Do not insert module for non .pl files
@@ -1380,7 +1395,7 @@ class PGCell {
   /** Save current code into the worker file system (possibly "amending it") */
   async upload_code_to_worker() {
     if (!this.cproc.check_not_running()) return;
-    let code = this.complete_code();
+    let code = this.complete_code(false);
     let file = this.curr_mod_path();
     await this.cproc.w.writeFile(file, code);
   }
@@ -1562,7 +1577,7 @@ class PGCell {
 
   /** Redirect to playground (open playground in new tab from URL) */
   load_in_playground() { /* pre: this.is_R */ // TODO: treat .md case (and do not complete code? introduces :- module)
-    let code = this.complete_code();
+    let code = this.complete_code(true);
     window.open(playground_URL(code, '.pl')); // open playground in new tab
   }
 
