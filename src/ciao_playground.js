@@ -687,7 +687,7 @@ class PGCell {
       this.#setup_menu(base_el);
     }
     // Editor
-    let initial_code = cell_data_get_initial_code(this.cell_data);
+    let initial_code = initial_code_from_cell_data(this.cell_data);
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
       this.set_auto_action(file_ext_def[this.code_ext].action);
@@ -2047,16 +2047,13 @@ async function show_lpdoc_html(pg, d) {
   let prev_pos = null;
   if (pg.preview_doc) prev_pos = pg.preview_doc.get_pos();
   /* prepare preview doc, enable code runnable in the lpdoc output if needed */
-  let preview_pgset = new PGSet();
   let preview_doc = new SlideShow(); // TODO: make SlideShow view optional
   pg.preview_doc = preview_doc;
   preview_doc.prepare(preview);
   if (prev_pos) preview_doc.restore_pos(prev_pos);
   preview_doc.set_slide_mode(preview_doc.enabled); // (changes it if needed)
-  preview_doc.pgset = preview_pgset; // (associated PGSet)
-  preview_pgset.main_doc = preview_doc; // TODO: pass doc to jscode instead?
-  preview_doc.update_dimensions_hook = () => { preview_pgset.update_dimensions(); };
-  preview_doc.has_focus_hook = () => { return preview_pgset.has_focus(); };
+  let preview_pgset = new PGSet();
+  preview_pgset.attach_main_doc(preview_doc);
   await preview_pgset.setup_runnable(preview);
   if (preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
     await preview_pgset.load_all_code();
@@ -3204,7 +3201,15 @@ class PGSet {
     this.cproc = new ToplevelProc(urlPREFIX+'/ciao/', urlVERS); // (shared)
   }
 
+  attach_main_doc(main_doc) {
+    main_doc.pgset = this; // (associated PGSet)
+    this.main_doc = main_doc; // TODO: pass doc to jscode instead?
+    main_doc.update_dimensions_hook = () => { this.update_dimensions(); };
+    main_doc.has_focus_hook = () => { return this.has_focus(); };
+  }  
+
   async setup(base_el, code) { // standalone playground
+    this.main_doc.runnables = [];
     this.base_el = base_el;
     // Show splash screen based on code origin annotation
     // TODO: show splash with '?' button, add link to help there
@@ -3213,21 +3218,24 @@ class PGSet {
     }
     let i = 0;
     let cell_data = { kind:'full', focus: code.str, ext: code.ext, origin: code.origin };
+    this.main_doc.runnables[i] = cell_data;
     this.cells[i] = new PGCell(this.cproc);
     await this.cells[i].setup(base_el, cell_data, this);
   }
 
   async setup_runnable(base_el) { // playground cells for an LPdoc document
+    this.main_doc.runnables = [];
     let i = 0;
     for (let node of [...base_el.getElementsByClassName("lpdoc-codeblock-runnable")]) {
       let txt = node.innerText;
-      // TODO: we need to ammend wrong double quotes generated from LPdoc code code blocks (fix in lpdoc!)
+      // TODO: we need to amend wrong double quotes generated from LPdoc code code blocks (fix in lpdoc!)
       txt = txt.replace(/\u201D/g, "''"); // &rdquo;
       //
       const cell_data = scan_runnable(txt);
       cell_data.modname = "code_"+i;
       const el = document.createElement('div');
       node.replaceWith(el);
+      this.main_doc.runnables[i] = cell_data;
       this.cells[i] = new PGCell(this.cproc);
       await this.cells[i].setup(el, cell_data, this);
       i += 1;
@@ -3361,8 +3369,8 @@ function scan_runnable(text) {
   return cell_data;
 }
 
-// Initial editable code for this cell
-function cell_data_get_initial_code(cell_data) {
+// Initial editable code from cell data
+function initial_code_from_cell_data(cell_data) {
   switch(cell_data.kind) {
   case 'exercise': break;
   case 'code': break;
@@ -3537,11 +3545,7 @@ window.onload = function () {
   if (lpdocPG !== 'raw') {
     // (collection of playgrounds for this document)
     var pgset = new PGSet();
-    // add hooks to main_doc
-    main_doc.pgset = pgset; // (associated PGSet)
-    pgset.main_doc = main_doc; // TODO: pass doc to jscode instead?
-    main_doc.update_dimensions_hook = () => { pgset.update_dimensions(); };
-    main_doc.has_focus_hook = () => { return pgset.has_focus(); };
+    pgset.attach_main_doc(main_doc);
     const base_el = document.body;
     (async() => {
       if (lpdocPG === 'runnable') { // LPdoc with runnable code
