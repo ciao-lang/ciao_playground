@@ -614,7 +614,7 @@ class PGCell {
     this.#cancel_autosave();
     if (this.is_R) {
       if (this.get_auto_action() === 'load') {
-        if (this.pgset !== null) await this.pgset.load_all_code();
+        if (this.pgset !== null) await this.pgset.reset_all_code();
         //this.cproc.comint = this.toplevel; // (re)attach to this pg comint // TODO: remove this line if everything is OK
       }
     } else {
@@ -2056,7 +2056,7 @@ async function show_lpdoc_html(pg, d) {
   preview_pgset.attach_main_doc(preview_doc);
   await preview_pgset.setup_runnable(preview);
   if (preview_pgset.cproc.state === QueryState.READY) { // TODO: schedule run?
-    await preview_pgset.load_all_code();
+    await preview_pgset.reset_all_code();
   }
   pg.update_inner_layout();
 }
@@ -3274,10 +3274,12 @@ class PGSet {
     }
   }
 
-  async load_all_code() {
+  async reset_all_code() {
     for (const x of this.cells) {
       if (x.cell_data !== undefined && x.cell_data.kind == 'code') {
-        await x.with_response(load_code);
+        x.set_code_status('unknown');
+        // // Load all cells // TODO: make it configurable (add to jseval_trick.md)
+        // await x.with_response(load_code);
       }
     }
   }
