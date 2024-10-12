@@ -2198,32 +2198,49 @@ function code_from_URL() {
 /**
  * Extract code from URL link
  */
-  
+
+// TODO: add load from gitlab
 const github_hash = '#https://github.com/';
+const local_hash = '#/';
 
 async function code_from_URL_link() {
-  // Try from github
-  // Example:
-  //   https://ciao-lang.org/playground/#https://github.com/ciao-lang/ciaopp/blob/master/examples/verifly/ann.pl
-  //   https://ciao-lang.org/playground/#https://github.com/ciao-lang/lpdoc/blob/master/examples/factorial_peano_iso.md
-  if (document.location.hash.startsWith(github_hash)) {
-    let str = await fetch_from_github();
-    let ext = get_file_extension(document.location.hash); // (this should end with the extension)
+  let hash = document.location.hash;
+  if (hash.startsWith(github_hash)) {
+    // Load from github
+    // Example:
+    //   https://ciao-lang.org/playground/#https://github.com/ciao-lang/ciaopp/blob/master/examples/verifly/ann.pl
+    //   https://ciao-lang.org/playground/#https://github.com/ciao-lang/lpdoc/blob/master/examples/factorial_peano_iso.md
+    let p = hash.substring(github_hash.length);
+    let str = await fetch_from_github(p);
+    let ext = get_file_extension(hash); // (this should end with the extension)
+    return {str:str,ext:ext,origin:'URL_link'};
+  } else if (hash.startsWith(local_hash)) {
+    // Load from a URI local to the playground server
+    //   https://ciao-lang.org/playground/#/tmp/foo.md
+    let p = hash.substring(local_hash.length);
+    let str = await fetch_from_local(p);
+    let ext = get_file_extension(hash); // (this should end with the extension)
     return {str:str,ext:ext,origin:'URL_link'};
   } else {
     return null;
   }
 }
 
-async function fetch_from_github() {
+async function fetch_from_github(p) {
   /* Use https://cdn.jsdelivr.net CDN to fetch the file */
   //let url = 'https://github.com/USER/REPO/blob/BRANCH/RELPATH';
-  let p = document.location.hash.substring(github_hash.length);
   let gh_user = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
   let gh_repo = p.substring(0, p.indexOf('/blob/')); p = p.substring(p.indexOf('/blob/')+'/blob/'.length);
   let gh_branch = p.substring(0, p.indexOf('/')); p = p.substring(p.indexOf('/')+1);
   let gh_relpath = p;
   let url = `https://cdn.jsdelivr.net/gh/${gh_user}/${gh_repo}@${gh_branch}/${gh_relpath}`;
+  let res = await fetch(url);
+  let txt = await res.text();
+  return txt;
+}
+
+async function fetch_from_local(p) {
+  let url = `/${p}`;
   let res = await fetch(url);
   let txt = await res.text();
   return txt;
