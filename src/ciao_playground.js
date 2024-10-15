@@ -2078,6 +2078,8 @@ async function show_text(pg, d) {
   var preview = pg.preview_el; // TODO: do not change style dynamically for this preview_el
   //preview.className = 'preview-container-lpdoc';
   preview.replaceChildren();
+  preview.style.overflowX = 'hidden';
+  preview.style.overflowY = 'hidden';
   var el = document.createElement('pre');
   el.innerText = d;
   // TODO: use read-only editor container (with syntax highligh)
@@ -2104,6 +2106,8 @@ async function show_text_preview(pg, d, kind) {
   pg.show_preview('tall'); 
   var preview = pg.preview_el; 
   preview.replaceChildren();
+  preview.style.overflowX = 'hidden';
+  preview.style.overflowY = 'hidden';
   var el = elem_cn('div', 'editor-container'); //document.createElement('pre');
   el.style.height = '100%'; // (Needed because this is inside another div) TODO: better way?
   preview.appendChild(el);
@@ -2118,6 +2122,8 @@ async function show_text_highlight(pg, d, kind) {
   pg.show_preview('tall'); // use tall preview
   var preview = pg.preview_el; 
   preview.replaceChildren();
+  preview.style.overflowX = 'hidden';
+  preview.style.overflowY = 'hidden';
   var el = elem_cn('pre', 'lpdoc-codeblock');
   el.style.height = '100%';
   el.style.marginTop = '5px';
