@@ -1489,8 +1489,7 @@ class PGCell {
                              playgroundCfg.example_list,
                              value => {
                                (async() => {
-                                 let dir = await this.cproc.w.get_ciao_root();
-                                 await open_example(this, dir + '/' + value);
+                                 await open_example(this, value);
                                })();
                              });
     examples_button.btn_el.classList.add('menu-button');
@@ -1661,6 +1660,11 @@ function setup_mini_pg(el) {
 
 /** Open example */
 async function open_example(pg, path) {
+  var pathsplit = path.split('/');
+  var b = pathsplit[0]; // assume first component is bundle
+  //
+  let dir = await pg.cproc.w.get_bundle_wksp(b);
+  path = dir + '/' + path;
   var str = await pg.cproc.w.readFile(path);
   let ext = get_file_extension(path);
   await pg.set_code_and_process({str:str, ext:ext});
