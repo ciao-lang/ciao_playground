@@ -145,6 +145,7 @@ build_extra_bundles() {
     check_bundle ciao_playground
     check_emcc
     for b in `ciao custom_run ciao_playground list_playgrounds`; do
+        ciao build --bin "$b"
         ciao install --grade=wasm "$b"
         # TODO: better way? this installs html files into the playground/ directory
         # TODO: both in builder/etc/publish-bundle.sh and bndls/ciao_playground/build.sh
