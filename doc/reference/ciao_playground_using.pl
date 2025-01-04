@@ -9,55 +9,88 @@
 @cindex{playground, using}
 @cindex{playground, key bindings}
 
-The [Ciao Prolog Playground](/playground) includes two main areas,
-which are both editable (note that the arrangement of the areas is
+The [Ciao Prolog Playground](/playground) includes a number of areas,
+most of which are editable (note that the arrangement of the areas is
 configurable):
 
 @begin{itemize}
 
-@item The left area (or top area, if the window is narrow) is an
-  editor for the program. Users can add their code into this editor
-  and modify it there. The program can then be loaded into the
-  system's top level, in the right area, where it can be run by
-  entering queries at the prompt.
+@item The @bf{editor area} @cindex{editor area}
+  (left area, or top if the window is narrow)
+  is an editor for the @bf{program} or @bf{notebook-style document}. Users can
+  add their code into this editor and modify it there. Programs can be
+  loaded into the system's top level (see below), where they can be
+  run by entering queries at the prompt. Documents are processed in
+  the top level and rendered in the preview area (see below). If the
+  document contains runnable examples these can be executed there.
 
-@item The right area (or bottom area, if the window is narrow) hosts
-  the top-level, where most communication with the system takes
-  place. The top-level first shows @tt{Loading Ciao...}  while the
+@item The @bf{top-level area} @cindex{top-level area}
+  (on the right, or bottom if the window is
+  narrow) is where most communication with the system takes
+  place en. The top-level first shows @tt{Loading Ciao...}  while the
   system is loading its dependencies.  When the top-level is
   completely ready to use, it will show the prompt @tt{?- }. Now
   programs can be loaded and queries issued.
 
-@end{itemize}
+@item The @bf{preview area} @cindex{preview area}
+  is where documents or program
+  documentation is rendered. This preview area (and other areas) can
+  be also used for other graphical program output.
 
-There is also a preview area for graphical program output. 
+@end{itemize}
 
 @section{Buttons}
 
 @begin{description}
 
-@item{@key{New}} Erases all previous content from the editor.
+@item{@key{Area selector}} Allows selecting which areas are visible.
 
-@item{@key{Open}} Lets you upload your own Prolog code from your local
-  filesytem. This action also erases all previous content present in
-  the editor.
+@item{@key{New}} Erases all previous content from the editor. It
+ allows selecting whether the new content of the editor will be a
+ program (@tt{.pl}) or a document (@tt{.md}).
 
-@item{@key{Save}} Allows downloading the code written in the
-  playground directly to your filesystem.
+@item{@key{Open}} Lets you upload your own Prolog code (@tt{.pl} file)
+  or document (@tt{.md} or @tt{.lpdoc} file) from your local
+  file system. This action also erases all previous content present in
+  the editor. The playground will switch to program mode or document
+  mode depending on the type of file uploaded.
 
-@item{@key{Load}} Loads the code in the editor into the top-level. It
-  compiles it and, in case there are any errors, they are printed in
-  the right (bottom) editor and highlighted in the left (top)
-  one. Once you click this button, you can ask queries about your code
-  in the top-level.
+@item{@key{Save} (@key{Ctrl}-@key{x} + @key{Ctrl}-@key{s})} Allows
+  downloading the code or document written in the playground directly
+  to your file system.  @cindex{saving}
 
-@item{@key{Run tests}} Loads the unit test library (@lib{unittest})
-  into the top-level and runs any unit tests (test assertions) that
-  may appear in the code.
+@item{@key{Examples}} Allows loading some simple examples of programs
+  and active logic documents to get started.
+  @cindex{examples}
 
-@item{@key{Share!}} Is an alternative form of save: it copies into the
-  clipboard a link that allows opening the playground with the current
-  state of the program loaded in the editor area.
+@item{@key{Load} (@key{Ctrl}-@key{c} + @key{l})} Processes the content
+  of the editor area: 
+  @cindex{loading programs}
+  @cindex{rendering documents}
+
+@begin{itemize}
+
+  @item If the editor contains a program, it loads the code into the
+  top-level. It compiles it and, in case there are any errors, they
+  are printed in the right (bottom) editor and highlighted in the left
+  (top) one. Once you click this button, you can ask queries about
+  your code in the top-level.
+
+  @item If the editor contains a document source, it processes it in
+  the top level and renders it in the preview area. If the document
+  contains runnable examples these can be executed there.
+
+@end{itemize}
+
+@item{@key{Share!}} Is an alternative form of save, very useful for
+  sharing!: it copies into the clipboard a link that will open the
+  playground with the current state of the program loaded in the
+  editor area. In the case of documents this link will open directly
+  the rendered document, and it can also be edited. These links can be
+  sent by email, embedded in other documents, etc. (see
+  [Adding runnable examples to arbitrary documents](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.pl)).
+  @cindex{sharing programs}
+  @cindex{sharing documents}
 
 @comment{ % begin comment
 @begin{alert} 
@@ -75,6 +108,8 @@ adding a @tt{timeout(0)} global property, e.g.:
 @item{@key{Abort query}} This button will appear below the top-level
   when running a query that is taking too long. It terminates the
   query currently running.
+  @cindex{aborting}
+
 
 @begin{alert} 
 This button fully terminates the Ciao worker executing the Ciao
@@ -83,16 +118,57 @@ aborting. The code in the editor area will be reloaded into the
 top-level.
 @end{alert}
 
-@item{@key{Debug}} Debug (or stop debugging) source and enable tracing
-  the control flow of the program for the next queries (see debugger
-  documentation for more information).
+@end{description}
 
-@item{@key{Preview documentation}} Generate and preview the
-  documentation for the current module (using LPdoc).
+In addition, in the @key{More...} pull-down the following can be
+selected:
 
-@item{@key{Analyze and check assertions}} Analyze the program and
-  perform compile-time checking of the assertions (types, modes,
-  determinacy, ...) in the current module (using CiaoPP).
+@begin{description}
+
+@item{@key{Toggle presentation mode}} Switches to full window view of
+  the document or any other content of the preview area. In this view,
+  the @key{pencil} icon allows returning to the editor mode. The
+  @key{square} icon switches to @em{slides presentation mode}, where
+  each document section is presented as a separate slide.
+  @cindex{presentation mode}
+  @cindex{full-screen mode}
+  @cindex{slides}
+
+@item{@key{Toggle on-the-fly}} If turned on, the program is loaded or
+ the document rendered continuously. This allows showing program errors
+ on the code as it is being modified, or seeing interactively the
+ results of editing the document source.
+
+@item{@key{Run tests} (@key{Ctrl}-@key{c} + @key{u})} Loads the unit test library
+  (@lib{unittest}) into the top-level and runs any unit tests (test
+  assertions) that may appear in the code.  @cindex{running tests}
+
+@item{@key{Debug} (@key{Ctrl}-@key{c} + @key{d})} Debug (or stop debugging)
+  source and enable tracing the control flow of the program for the
+  next queries (see debugger documentation for more information).
+  @cindex{program debugging}
+
+@item{@key{Preview documentation} (@key{Ctrl}-@key{c} + @key{D})} In code mode, generate and
+  preview the documentation  (using LPdoc) for the code in the editor area.
+  @cindex{documenting programs}
+
+@item{@key{Analyze and check assertions} (@key{Ctrl}-@key{c} + @key{V})} Analyze
+  the program and perform compile-time checking of the assertions
+  (types, modes, determinacy, ...) in the current module (using
+  CiaoPP).
+  @cindex{checking assertions}
+  @cindex{program verification}
+
+@item{@key{Analyze and check assertions (w/output)}} Same as above, but
+ also show in a separate area the results of analysis, i.e., the
+ program annotated with the analysis results.
+
+@item{@key{Specialize code} (@key{Ctrl}-@key{c} + @key{O})} Run the CiaoPP
+ specializer on the code in the editor area.
+
+@item{@key{Browse analysis/checking/optimizing options}} Open the
+ CiaoPP graphical menu to select different options for analysis,
+ assertion checking, and optimization.
 
 @end{description}
 
@@ -108,33 +184,33 @@ These commands are useful to edit and move around the editor areas:
 
 @begin{itemize}
 
-@item @key{Ctrl}-@key{A} - move cursor to the beginning of the line.
-@item @key{Ctrl}-@key{E} - move cursor the end of the line.
-@item @key{Ctrl}-@key{F} - move cursor forward.
-@item @key{Ctrl}-@key{B} - move cursor backward.
-@item @key{Ctrl}-@key{P} - previous line.
-@item @key{Ctrl}-@key{N} - next line.
-@item @key{Ctrl}-@key{S} - search forward in the editor.
-@item @key{Ctrl}-@key{R} - search backward in the editor.
-@item @key{Ctrl}-@key{D} - delete character to the right.
-@item @key{Ctrl}-@key{H} - delete character to the left.
-@item @key{Ctrl}-@key{K} - kill the line after the cursor.
-@item @key{Ctrl}-@key{M} - insert line below.
-@item @key{Ctrl}-@key{O} - insert line after the current position.
-@item @key{Ctrl}-@key{Z} - undo.
-@item @key{Ctrl}-@key{G} - go to line.
-@item @key{Ctrl}-@key{X} + @key{U} - undo.
-@item @key{Ctrl}-@key{X} + @key{O} - select the other editor.
-@item @key{Ctrl}-@key{V} - go to the end of the editor.
-@item @key{Ctrl}-@key{X} + @key{Ctrl}-@key{P} - select all.
-@item @key{Ctrl}-@key{X} + @key{Ctrl}-@key{U} - transform selected
+@item @key{Ctrl}-@key{a} - move cursor to the beginning of the line.
+@item @key{Ctrl}-@key{e} - move cursor the end of the line.
+@item @key{Ctrl}-@key{f} - move cursor forward.
+@item @key{Ctrl}-@key{b} - move cursor backward.
+@item @key{Ctrl}-@key{p} - previous line.
+@item @key{Ctrl}-@key{n} - next line.
+@item @key{Ctrl}-@key{s} - search forward in the editor.
+@item @key{Ctrl}-@key{r} - search backward in the editor.
+@item @key{Ctrl}-@key{d} - delete character to the right.
+@item @key{Ctrl}-@key{h} - delete character to the left.
+@item @key{Ctrl}-@key{k} - kill the line after the cursor.
+@item @key{Ctrl}-@key{m} - insert line below.
+@item @key{Ctrl}-@key{o} - insert line after the current position.
+@item @key{Ctrl}-@key{z} - undo.
+@item @key{Ctrl}-@key{g} - go to line.
+@item @key{Ctrl}-@key{x} + @key{u} - undo.
+@item @key{Ctrl}-@key{X} + @key{o} - move to another playground area.
+@item @key{Ctrl}-@key{v} - go to the end of the editor.
+@item @key{Ctrl}-@key{x} + @key{Ctrl}-@key{p} - select all.
+@item @key{Ctrl}-@key{x} + @key{Ctrl}-@key{u} - transform selected
 text to upper case.
-@item @key{Ctrl}-@key{X} + @key{Ctrl}-@key{L} -  transform selected
+@item @key{Ctrl}-@key{x} + @key{Ctrl}-@key{l} -  transform selected
 text to lower case.
-@item @key{Esc} + @key{D} - delete the next word.
-@item @key{Esc} + @key{V} - move cursor to the beginning.
-@item @key{Esc} + @key{Backspace} - delete left word.
-@item @key{Esc} + @key{;} - comment/uncomment current line.
+@item @key{Esc} + @key{d} - delete the next word.
+@item @key{Esc} + @key{v} - move cursor to the beginning.
+@item @key{Esc} + @key{Backspace} - delete word to the left.
+@item @key{Esc} + @key{;} - comment/uncomment current line or selected lines.
 
 @end{itemize}
 
@@ -144,9 +220,9 @@ These commands perform Ciao or filesystem-related actions:
 
 @begin{itemize}
 
-@item @key{Ctrl}-@key{X} + @key{Ctrl}-@key{S} - save file (same as button).
-@item @key{Ctrl}-@key{C} + @key{L} - load code into top-level (same as button).
-@item @key{Ctrl}-@key{C} + @key{U} - run tests in current module (same as button).
+@item @key{Ctrl}-@key{x} + @key{Ctrl}-@key{s} - save file (same as button).
+@item @key{Ctrl}-@key{c} + @key{l} - load code into top-level (same as button).
+@item @key{Ctrl}-@key{c} + @key{u} - run tests in current module (same as button).
 
 @end{itemize}
 
@@ -157,15 +233,15 @@ The top-level area includes some key bindings of its own:
 @begin{itemize}
 @item @tt{Up arrow} - previous query in history.
 @item @tt{Down arrow} - next query in history.
-@item @key{Ctrl}-@key{P} - previous query in history.
-@item @key{Ctrl}-@key{N} - next query in history.
-@item @key{Ctrl}-@key{C} - abort current query, if there is any
+@item @key{Ctrl}-@key{p} - previous query in history.
+@item @key{Ctrl}-@key{n} - next query in history.
+@item @key{Ctrl}-@key{c} - abort current query, if there is any
 running.
 @end{itemize}
 
 @begin{alert} 
 
-@key{Ctrl}-@key{C} fully terminates the Ciao worker executing the Ciao
+@key{Ctrl}-@key{c} fully terminates the Ciao worker executing the Ciao
 process in the browser, so it may take some time to reload
 dependencies after aborting. The code present in the left (or top)
 window will be reloaded to the top-level.
@@ -197,6 +273,10 @@ respect to a full, native installation:
 @item Reading input from standard input (@tt{read/1}) is currently not
   directly supported, due to WebAssembly limitations. We plan also to
   fix this soon.
+
+@item Only a subset of analyses (abstract domains) and capabilities of
+  CiaoPP are available for program verification (assertion checking,
+  etc.) in the playground.
 
 @end{itemize}
 

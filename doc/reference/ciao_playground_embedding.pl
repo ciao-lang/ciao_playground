@@ -4,32 +4,77 @@
 
 :- doc(title, "Creating Documents with Editable and Runnable Examples").
 
-:- doc(module,"
-The [Ciao Prolog Playground](/playground) provides an @em{easy way to
-embed editable and runnable short code snippets} in manuals,
-tutorials, slides, exercises, etc., and in general any kind of
-document. The following sections show how to embed @em{runnable and
-editable} snippets in @apl{LPdoc} documentation, Google Docs, Jupyter
-notebooks, Word, Powerpoint, LaTeX, Pages, Keynote, Org mode, web site
-generators, etc., etc.
+:- doc(module,"The [Ciao Prolog Playground](/playground) provides
+several easy ways for @em{creating documents with editable and
+runnable examples}. This includes:
+
+@begin{itemize}
+
+@item Creating @bf{Active Logic Documents}: notebooks containing
+  @em{embedded runnable Prolog code examples}, that can be edited,
+  queried, etc.
+
+@item Embedding links to runnable examples in arbitrary documents.
+
+@end{itemize}
 
 @cindex{playground, direct access}
 @cindex{playground, runnable examples}
 @cindex{runnable examples}
 
-@section{Editable and runnable examples using LPdoc}
+@section{Creating notebooks: Active Logic Documents (ALDs)}
 
-@apl{LPdoc} offers seamless integration with the playground, allowing
-runnable and editable code blocks in @apl{LPdoc} generated
-documentation. You can consult [Editable and Runnable
-Examples](/ciao/build/doc/lpdoc.html/Runnables.html) in the LPdoc
-manual for more information and examples.
+The playground allows easily generating Active Logic Documents (ALDs):
+@bf{notebooks} containing @bf{embedded runnable Prolog code examples},
+that can be edited, queried, etc.
+
+@begin{note} This is an example of a simple exercise:
+
+@begin{enumerate} @item Click on
+@href{/playground/#/playground/examples/factorial_peano_iso.md}{this
+  link} to open it.
+
+@item Click on the pencil button on the top right to edit the document
+  in the playground.
+
+@item See [the playground usage
+  page](/ciao/build/doc/ciao_playground.html/ciao_playground_using.html)
+  for other functionality available.
+
+@item In particular, clicking the @key{Share!} button will @bf{copy
+  into the clipboard} a link that can be used to open the
+  document. This link can be sent by email, embedded in notes, etc.
+
+@end{enumerate}
+@end{note}
+
+
+ALD notebooks are very useful for developing @bf{tutorials, exercises,
+slides, manuals, etc.} and in general any kind of document with
+runnable Prolog examples. The source for these documents is in (LPdoc)
+markdown and they can be easily shared, as shown in the example
+above. The documents and the embedded code run locally on the user's
+browser, without the need for a server. This provides many advantages
+such as @em{scalability to any number of users, privacy, efficiency,}
+etc.
+
+This functionality is provided by an integration of @apl{LPdoc} with
+the playground. The [**Editable and runnable
+examples**](/ciao/build/doc/lpdoc.html/Runnables.html) and
+[**Documentation markdown language**](/ciao/build/doc/lpdoc.html/Markdown.html) chapters of the
+LPdoc manual provides a description of the markdown syntax and other
+commands that can be used in ALDs.
+
+@comment{allowing runnable and editable code blocks
+in @apl{LPdoc} generated program documentation.}
+
+
 
 @section{Adding runnable examples to arbitrary documents} 
 
 Links to the playground that auto-upload examples can be easily
-included in any document (slides, manual, book, web site, tutorial,
-article, spreadsheet, etc.) provided the tool used for editing allows
+included in any document (slides, manuals, books, web sites, tutorials,
+articles, spreadsheets, class exercises, etc.) provided the tool used for editing allows
 including links to URLs. This includes Google Docs, Jupyter notebooks,
 Word, Powerpoint, LaTeX, Pages, Keynote, HTML, Org mode, web site
 generators, etc., etc.

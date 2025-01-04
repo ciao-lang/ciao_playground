@@ -20,12 +20,12 @@ plus(0,Y,Y) :- nat_num(Y).
 plus(s(X),Y,s(Z)) :- plus(X,Y,Z).
 ```
 
-Some facts to note about this version:
+Load the program (click on **?**) and note some facts about this version:
   - It is fully reversible!
 ```ciao_runnable
 ?- factorial(X,s(s(s(s(s(s(0))))))).
 ```
-  - But also inefficient...
+  - But also inefficient (try progressively increasing the input below): 
 ```ciao_runnable
 ?- factorial(s(s(s(s(0)))),Y).
 ```
@@ -40,7 +40,8 @@ in one direction, i.e., `X` and `Y` must be bound to arithmetic terms.
 But it provides a (large!) performance gain.  Also, meta-logical 
 tests (see later) allow using it in more modes.
 
-Try to encode the factorial program using `is/2`:
+Try in the following window to encode the factorial program using
+`is/2`, following the instructions: 
 ```ciao_runnable
 :- module(_, _, [assertions]).
 
@@ -61,8 +62,8 @@ factorial(M,F) :-     % TODO: Make sure that M > 0
     M = s(N),         % TODO: Compute N from M using is/2 (note that N is 
     factorial(N,F1),  %       unbound, so you need to compute N from M!)
     times(M,F1,F).    % TODO: Replace times/3 by a call to is/2 (using *)
-% When you are done, press the circle ("Run tests") or the arrow 
-% ("Load into playground").
+% When you are done, press the face ("Run tests") to check you program.
+% You can also use the arrow to "Load into playground".
 %! \end{hint}
 %! \begin{solution}
 factorial(0,1). 
@@ -74,8 +75,10 @@ factorial(N,F) :-
 %! \end{solution}
 ```
 
+You can also click on **Show solution** to load the solution in the
+edit area. 
+
 Note that wrong goal order can raise an error (e.g., moving the last
 call to `is/2` before the call to factorial).
 
 **Next:** Let's try using constraints instead!
-
