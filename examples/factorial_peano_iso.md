@@ -1,8 +1,10 @@
-\title Exercise: factorial using ISO-Prolog arithmetic 
+\title An example of an exercise
+
+# Exercise: code factorial using ISO-Prolog arithmetic 
 
 Consider again the factorial example, using Peano arithmetic:
 ```ciao_runnable
-:- module(_, _, [assertions,sr/bfall]).
+:- module(_, _, [sr/bfall]).
 %! \begin{focus}
 factorial(0,s(0)).
 factorial(s(N),F) :-
@@ -30,15 +32,10 @@ Load the program (click on **?**) and note some facts about this version:
 ?- factorial(s(s(s(s(0)))),Y).
 ```
 
-We can also code it using ISO-Prolog arithmetic, i.e., `is/2`:
+An alternative is to code it using ISO-Prolog arithmetic, i.e., `is/2`:
 ```ciao
  ... Z is X * Y ... 
 ```
-Note that this type of arithmetic has limitations: it only works
-in one direction, i.e., `X` and `Y` must be bound to arithmetic terms.
-
-But it provides a (large!) performance gain.  Also, meta-logical 
-tests (see later) allow using it in more modes.
 
 Try in the following window to encode the factorial program using
 `is/2`, following the instructions: 
@@ -78,7 +75,11 @@ factorial(N,F) :-
 You can also click on **Show solution** to load the solution in the
 edit area. 
 
-Note that wrong goal order can raise an error (e.g., moving the last
-call to `is/2` before the call to factorial).
+Note that this type of arithmetic provides a (large!) performance
+gain. But it also has limitations: it only works in one direction,
+i.e., the second argument of `is/2` must be bound to an arithmetic
+term. Thus, wrong goal order in your solution above can raise an error
+(e.g., moving the last call to `is/2` before the call to factorial).
 
-**Next:** Let's try using constraints instead!
+Meta-logical tests (see later) can be used to improve this, but we
+will see later a more elegant solution: using constraints!

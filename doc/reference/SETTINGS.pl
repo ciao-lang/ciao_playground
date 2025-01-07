@@ -6,9 +6,9 @@ output_name := ciao_playground.
 doc_structure := ciao_playground_manual-[
     ciao_playground_using,
     ciao_playground_embedding-[
-        % TODO: duplicated in LPdoc; kept here for paper links, fix?
-        factorial_peano_iso_source,
-        factorial_peano_iso
+        % TODO: duplicated in LPdoc; kept here for paper links
+        factorial_peano_iso,
+        factorial_peano_iso_source
     ],
     exfilter_documents-[ 
         append_verification_source,

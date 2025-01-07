@@ -14,12 +14,14 @@ runnable examples}. This includes:
   @em{embedded runnable Prolog code examples}, that can be edited,
   queried, etc.
 
-@item Embedding links to runnable examples in arbitrary documents.
+@item Embedding links to runnable examples and notebooks in arbitrary
+ documents.
 
 @end{itemize}
 
 @cindex{playground, direct access}
 @cindex{playground, runnable examples}
+@cindex{playground, links to notebooks}
 @cindex{runnable examples}
 
 @section{Creating notebooks: Active Logic Documents (ALDs)}
@@ -70,9 +72,9 @@ in @apl{LPdoc} generated program documentation.}
 
 
 
-@section{Adding runnable examples to arbitrary documents} 
+@section{Adding links to runnable examples and notebooks to arbitrary documents} 
 
-Links to the playground that auto-upload examples can be easily
+Links to the playground that auto-upload examples or notebooks can be easily
 included in any document (slides, manuals, books, web sites, tutorials,
 articles, spreadsheets, class exercises, etc.) provided the tool used for editing allows
 including links to URLs. This includes Google Docs, Jupyter notebooks,
@@ -94,14 +96,6 @@ document as a URL.
 The examples are stored in the documents themselves (URI-encoded) and
 do not need to be uploaded to (or edited in) any server.
 
-@begin{alert} @bf{Caveats:} Be aware that large code snippets may
-exceed the default maximum sizes for URI length (e.g., configure a
-larger size like @tt{LimitRequestLine 100000} in @tt{httpd.conf}). For
-arbitrary size links you can also embed the GitHub link to the full
-source code @tt{https://ciao-lang.org/playground/#GITHUBURL}, e.g.,
-@href{https://ciao-lang.org/playground/#https://github.com/ciao-lang/ciao/blob/master/core/examples/general/tak.pl}{this link}.
-@end{alert}
-
 Now, if one clicks on this link, the playground will be opened with
 the example program loaded.
 
@@ -118,6 +112,37 @@ is_in_list(X,[_|T]) :-
       is_in_list(X,T).
 @end{verbatim}
 
+And, @href{http://localhost:8001/playground/?code=%5Ctitle%20A%20member%20look-alike%0A%0A%60%60%60ciao_runnable%0A%3A-%20module(_%2C_).%0A%0Ais_in_list(X%2C%5BX%7C_%5D).%0Ais_in_list(X%2C%5B_%7CT%5D)%20%3A-%0A%20%20%20%20%20%20is_in_list(X%2CT).%0A%60%60%60%0ALoad%20(press%20**%3F**)%20and%20try%20for%20example%3A%0A%0A%60%60%60ciao_runnable%0A%3F-%20is_in_list(X%2C%5B1%2C2%2C3%5D).%0A%60%60%60%0A&ext=.md}{this link} (@em{also obtained as described above}) opens
+the following notebook:
+
+@begin{verbatim}
+\\title A member look-alike
+
+```ciao_runnable
+:- module(_,_).
+
+is_in_list(X,[X|_]).
+is_in_list(X,[_|T]) :-
+      is_in_list(X,T).
+```
+Load (press **?**) and try for example:
+
+```prolog_runnable
+?- is_in_list(X,[1,2,3]).
+```
+@end{verbatim}
+
+
+@begin{alert} @bf{Caveats:} Be aware that large code snippets may
+exceed the default maximum sizes for URI length (e.g., configure a
+larger size like @tt{LimitRequestLine 100000} in @tt{httpd.conf}).
+
+For links to arbitrary size files you can also embed a link to the full
+source code using @tt{#} as follows: @tt{https://ciao-lang.org/playground/#<URL>}. 
+E.g., for GitHub, @tt{https://ciao-lang.org/playground/#<GITHUBURL>}, such as in 
+@href{https://ciao-lang.org/playground/#https://github.com/ciao-lang/ciao/blob/master/core/examples/general/tak.pl}{this link}.
+@end{alert}
+
 We show below some examples of this embedding for different source formats.
 
 @subsection{LaTeX}
@@ -128,7 +153,9 @@ This is a simple example in LaTeX:
 
 and this [the pdf output generated](/playground/examples/append_latex_simple.pdf).
 
-These are a few more examples in LaTeX:
+These are a few more examples in LaTeX. In this case we use the
+[prologrun.sty](/playground/examples/prologrun.sty) style
+file provided in the playground [@tt{examples}](/playground/examples) directory:
 
 @includecode{append_latex_nicer.tex}
 
@@ -136,7 +163,7 @@ and this [the pdf output generated](/playground/examples/append_latex_nicer.pdf)
 
 @subsection{Word}
 
-And this is a simple example in Word (note: image below not clickable):
+And this is a simple example in Word (note: image below not clickable, open the pdf below instead):
 
 @image{append_word_simple_cropped}
 

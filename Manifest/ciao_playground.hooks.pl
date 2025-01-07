@@ -41,8 +41,12 @@ site_copy_files :-
     site_glob_cp(core, 'library/menu/etc', '*.css', '/playground/css'), % (for ciao_menu.css)
     % (part of the manual)
     site_glob_cp(ciao_playground, 'examples', '*.tex', '/playground/examples'),
+    site_glob_cp(ciao_playground, 'examples', '*.sty', '/playground/examples'),
+    site_glob_cp(ciao_playground, 'examples', '*.png', '/playground/examples'),
     site_glob_cp(ciao_playground, 'examples', '*.pdf', '/playground/examples'),
-    site_glob_cp(ciao_playground, 'examples', '*.docx', '/playground/examples').
+    site_glob_cp(ciao_playground, 'examples', '*.docx', '/playground/examples'),
+    site_glob_cp(ciao_playground, 'examples', '*.md', '/playground/examples'),
+    site_glob_cp(ciao_playground, 'examples', '*.lpdoc', '/playground/examples').
 
 % ---------------------------------------------------------------------------
 % (helper for other playgrounds)

@@ -15,7 +15,6 @@ LaTeX document including a link for loading and running the
 example on the \href{https://ciao-lang.org/playground}{Ciao
   playground}. The link is obtained by pasting the program into the
 Ciao playground and using the
-% \mbox{} \hfill
 \includegraphics[scale=.4,trim=0 12 0 0]{ShareLight.png} button to
 create the link (containing the program) and copy it into the
 clipboard, from which it can be pasted into the LaTeX
@@ -81,24 +80,6 @@ append([X|Y],Z,[X|W]) :-
 \end{prologrun}
 \end{lstlisting}
 
-% \ \\
-
-% \item This is with a more bespoke macro (\texttt{prologrunalt}), with
-%   extra argument to pass the URL, but the URL needs to be escaped:
-
-% \begin{prologrunalt}[] % The [] is needed!
-%     {https://ciao-lang.org/playground/?code=app(%5B%5D%2CX%2CX).%0Aapp(%5BX%7CY%5D%2CZ%2C%5BX%7CW%5D)%20%3A-%0A%20%20%20%20%20app(Y%2CZ%2CW).%0A}
-% append([],X,X).
-% append([X|Y],Z,[X|W]) :-
-%      append(Y,Z,W).
-% \end{prologrunalt}
-
 \end{enumerate}
 
 \end{document}
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: t
-%%% End:
-

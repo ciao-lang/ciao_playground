@@ -24,13 +24,14 @@ configurable):
   the top level and rendered in the preview area (see below). If the
   document contains runnable examples these can be executed there.
 
-@item The @bf{top-level area} @cindex{top-level area}
-  (on the right, or bottom if the window is
-  narrow) is where most communication with the system takes
-  place en. The top-level first shows @tt{Loading Ciao...}  while the
-  system is loading its dependencies.  When the top-level is
-  completely ready to use, it will show the prompt @tt{?- }. Now
-  programs can be loaded and queries issued.
+@item The @bf{top-level area} @cindex{top-level area} (on the right,
+  or bottom if the window is narrow) is where most communication with
+  the system takes place. The top-level first shows @tt{Loading
+  Ciao...}  while the system is loading its dependencies.  When the
+  top-level is completely ready to use, it will show the prompt @tt{?-
+  }. Now programs can be loaded and queries issued. This area is also
+  an editor that allows, e.g., editing the query, recalling previous
+  queries, etc.
 
 @item The @bf{preview area} @cindex{preview area}
   is where documents or program
@@ -72,8 +73,7 @@ configurable):
 
   @item If the editor contains a program, it loads the code into the
   top-level. It compiles it and, in case there are any errors, they
-  are printed in the right (bottom) editor and highlighted in the left
-  (top) one. Once you click this button, you can ask queries about
+  are printed in top-level area and highlighted in the . Once you click this button, you can ask queries about 
   your code in the top-level.
 
   @item If the editor contains a document source, it processes it in
@@ -119,6 +119,8 @@ top-level.
 @end{alert}
 
 @end{description}
+
+@section{Additionally}
 
 In addition, in the @key{More...} pull-down the following can be
 selected:
@@ -251,7 +253,7 @@ window will be reloaded to the top-level.
 @section{Current playground limitations}
 
 Please be aware of some current limitations of the playground with
-respect to a full, native installation:
+respect to a full, native installation of the Ciao system:
 
 @begin{itemize}
 
