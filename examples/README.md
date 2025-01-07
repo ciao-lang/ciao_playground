@@ -1,7 +1,15 @@
 
-As mentioned in the documentation, links to the playground can be
-included in any document (slides, manual, book, web site, article,
-spreadsheet, etc.) provided the tool used for editing allows including
-URLs. This includes google docs, Jupyter notebooks, and also Word,
-LaTeX, web site generators, etc., etc. This directory contains
-some examples of how to embed calls to the playground in documents.
+As mentioned in the documentation, the playground allows: 
+
+a) Developing notebooks (Active Logic Documents) that include runnable
+   and editable Prolog code examples.
+
+b) Including in slides, manuals, books, web sites, articles,
+   spreadsheets, etc., links that load Prolog code into the
+   playground. This only requires that the tool used for editing the
+   document allows including URLs. This includes of course Word,
+   LaTeX, google docs, Jupyter notebooks, web site generators, etc.,
+   etc.
+   
+Examples of a) can be found in the examples directory of the lpdoc
+bundle.  This directory contains some examples of b).
