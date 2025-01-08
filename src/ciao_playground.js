@@ -153,6 +153,9 @@ const playgroundCfg_defaults = {
     { k:'core/examples/general/qsort.pl', n:'&nbsp; Quick-sort' },
 //    { k:'core/examples/general/tak.pl', n:'&nbsp; Takeuchi' }
 // ----------------------------------------------------------------------------------------------------------------
+// 99: 
+    { k:'', n:'<a style="padding-left:0px;" href="https://cliplab.org/logalg/doc/99problemsALD.html/"><div style="color:var(--header); background-color:var(--bg)">&nbsp; 99 Prolog problems</div></A>'}, 
+// ----------------------------------------------------------------------------------------------------------------
 // ALDs: 
     { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html"><div style="color:var(--header); background-color:var(--bg)">Documents:</div></A>'}, 
 // ----------------------------------------------------------------------------------------------------------------
