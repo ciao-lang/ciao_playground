@@ -27,19 +27,23 @@ app([X|L1],L2,[X|L3]) :-
 % ?- app([1,2],[3,4],L).
 % ?- app(A,B,[1,2,3,4]).
 
-% Or choose 'New'->'New document' to start
-% a new Active Logic Document.
+% Or choose 'New'->'New document' to start a new
+% notebook-style Active Logic Document (ALD).
 `;
 // TODO: Better splash doc
 const splash_code_md = `\
-\\title A simple Active Logic Document (ALD)
+\\title A simple Active Logic Document
 
-This is a sample document. In it you can use:
+This is a sample *active logic document*: a notebook containing
+@em{embedded runnable Prolog code examples}, that can be edited,
+queried, etc.
 
-- @bf{LPdoc commands}, or
-- **LPdoc markdown**
+In it you can use:
 
-You can include **runnable examples** inside it:
+- **Markdown** (LPdoc flavor)
+- or @bf{LPdoc commands}. 
+
+Most importantly, you can include **runnable examples**:
 
 \`\`\`ciao_runnable
 :- module(_,_).
@@ -49,20 +53,47 @@ app([X|L1],L2,[X|L3]) :-
      app(L1,L2,L3).
 \`\`\`
 
-and **queries** to those examples:
+You can edit the example code and click on the \`?\` sign to load it.
+Then you can then **query** the examples:
 
 \`\`\`ciao_runnable
   ?- app([1,2],[3,4],L).
 \`\`\`
 
 \`\`\`ciao_runnable
-?- app(A,B,[1,2,3,4]).
+  ?- app(A,B,[1,2,3,4]).
 \`\`\`
 
-You can save the document source with the 'Save'
-button above and upload it at any other time.
+Some things to try **in the document**:
 
-Check out much more in the LPdoc manual!
+  - Edit the example above.
+  - (Re)load it by clicking on the \`?\`.
+  - Run queries in the query box. 
+  - Open the example in the playground with the arrow.
+  - If in presentation (fullscreen) mode, go/return to the editor by 
+    clicking on the pencil icon in the top right.
+
+Some things to try in the **editor/playground**:
+
+  - Edit the markdown source and hit the \`Load\` button. 
+  - Use the \`Share!\` button to generate a URL for the document that you can send, publish, etc.
+  - \`Save\` the document source to rour computer and \`Open\` it at any other time.
+  - Select \`More...\`, \`Toggle on-the-fly\` to see the document change as the markdown is changed.
+  - Select \`More...\`, \`Toggle presentation mode\` to see just the document. 
+    You can go back to the editor clicking on the pencil in the top right. 
+
+You can save the document source with the 'Save'
+button and upload it at any other time.
+
+You can also click on the 'Share!' button to obtain a URL
+that contains the document and which you can paste in other
+documents, send by email, etc. (see the
+[**manual**](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html)).
+
+Check out the [**markdown
+syntax**](/ciao/build/doc/lpdoc.html/Markdown.html) and the
+[**commands for including editable and runnable
+examples**](/ciao/build/doc/lpdoc.html/Runnables.html)!
 `;
 
 const playgroundCfg_defaults = {
@@ -99,25 +130,84 @@ const playgroundCfg_defaults = {
     '.md': splash_code_md
   }, 
   example_list: [
-    // TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
-    { k:'core/examples/general/bignums.pl', n:'bignums.pl' },
-//    { k:'core/examples/general/boyer.pl', n:'boyer.pl' },
-    { k:'core/examples/general/crypt.pl', n:'crypt.pl' },
-    { k:'core/examples/general/derivf.pl', n:'derivf.pl' },
-//    { k:'core/examples/general/fib.pl', n:'fib.pl' },
-//    { k:'core/examples/general/fft.pl', n:'fft.pl' },
-//    { k:'core/examples/general/guardians.pl', n:'guardians.pl' },
-//    { k:'core/examples/general/jugs.pl', n:'jugs.pl' },
-    { k:'core/examples/general/knights.pl', n:'knights.pl' },
-    { k:'core/examples/general/money_clpfd.pl', n:'money_clpfd.pl' },
-    { k:'core/examples/general/nqueens.pl', n:'nqueens.pl' },
-    { k:'core/examples/general/nqueens_clpfd.pl', n:'nqueens_clpfd.pl' },
-//    { k:'core/examples/general/poly.pl', n:'poly.pl' },
-//    { k:'core/examples/general/population_query.pl', n:'population_query.pl' },
-    { k:'core/examples/general/primes.pl', n:'primes.pl' },
-    { k:'core/examples/general/qsort.pl', n:'qsort.pl' },
-    { k:'core/examples/general/sudoku_clpfd.pl', n:'sudoku_clpfd.pl' }
-//    { k:'core/examples/general/tak.pl', n:'tak.pl' }
+// TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
+//       also, point to a tutorial (an ALD)
+
+// ----------------------------------------------------------------------------------------------------------------
+// TRADITIONAL PROLOG: 
+    { k:'', n:'<div style="color:var(--header); background-color:var(--bg)"> Traditional Prolog:</div>' },
+// ----------------------------------------------------------------------------------------------------------------
+    { k:'core/examples/general/population_query.pl', n:'&nbsp; Population query' },
+    { k:'lpdoc/examples/puzzle.pl', n:'&nbsp; Simple puzze' },
+    { k:'core/examples/general/bignums.pl', n:'&nbsp; Bignums' },
+//    { k:'core/examples/general/boyer.pl', n:'&nbsp; Boyer Prover' },
+    { k:'core/examples/general/crypt.pl', n:'&nbsp; Crypto-multiplication' },
+//    { k:'core/examples/general/fib.pl', n:'&nbsp; Fibonacci' },
+//    { k:'core/examples/general/fft.pl', n:'&nbsp; Fast Fourier Transform' },
+//    { k:'core/examples/general/guardians.pl', n:'&nbsp; Guradians puzzle' },
+//    { k:'core/examples/general/jugs.pl', n:'&nbsp; Jugs puzzle' },
+    { k:'core/examples/general/knights.pl', n:'&nbsp; Knights puzzle' },
+    { k:'core/examples/general/nqueens.pl', n:'&nbsp; N Queens' },
+//    { k:'core/examples/general/poly.pl', n:'&nbsp; Poly' },
+    { k:'core/examples/general/primes.pl', n:'&nbsp; Primes' },
+    { k:'core/examples/general/qsort.pl', n:'&nbsp; Quick-sort' },
+//    { k:'core/examples/general/tak.pl', n:'&nbsp; Takeuchi' }
+// ----------------------------------------------------------------------------------------------------------------
+// ALDs: 
+    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html"><div style="color:var(--header); background-color:var(--bg)">Documents:</div></A>'}, 
+// ----------------------------------------------------------------------------------------------------------------
+    { k:'lpdoc/examples/min_ald.md', n:'&nbsp; Minimal notebook' }, 
+//    { k:'lpdoc/examples/min_ald.lpdoc', n:'&nbsp; min_ald.lpdoc' },  // For testing with .lpdoc suffix
+    { k:'lpdoc/examples/puzzle_ald.md', n:'&nbsp; Simple puzzle' },
+    { k:'lpdoc/examples/factorial_peano_iso.md', n:'&nbsp; Factorial exercise' },
+    { k:'lpdoc/examples/slides_fairsr.md', n:'&nbsp; Slides example' },
+// ----------------------------------------------------------------------------------------------------------------
+// FUNCTIONAL: 
+    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao.html/fsyntax_doc.html"><div style="color:var(--header); background-color:var(--bg)">Functional notation</div></A>'}, 
+// ----------------------------------------------------------------------------------------------------------------
+    { k:'core/examples/general/derivf.pl', n:'&nbsp; Simbolic derivation' },
+    { k:'core/library/fsyntax/examples/revf.pl', n:'&nbsp; Naive reverse' },
+    { k:'core/library/fsyntax/examples/factf.pl', n:'&nbsp; Factorial' },
+    { k:'core/library/fsyntax/examples/lazyex.pl', n:'&nbsp; Lazy Fibonacci' },
+// ----------------------------------------------------------------------------------------------------------------
+// SR: 
+    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao.html/bf_doc.html"><div style="color:var(--header); background-color:var(--bg)">Search rules:</div></A>'}, 
+// ----------------------------------------------------------------------------------------------------------------
+    { k:'core/library/sr/examples/peano.pl', n:'&nbsp; Peano arithmetic' },
+// ----------------------------------------------------------------------------------------------------------------
+// DOCUMENTATION: /ciao/build/doc/lpdoc.html/
+//    { k:'', n:'<div style="color:var(--header); background-color:var(--bg)"> Documentation:</div>' },
+// ----------------------------------------------------------------------------------------------------------------
+//    { k:'lpdoc/examples/test_math.pl', n:'&nbsp; ctest_math.pl' },
+// ----------------------------------------------------------------------------------------------------------------
+    // ASSERTIONS: (Just types, modes, etc. for now)
+    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciaopp_tutorials.html/tut_assrts.html"><div style="color:var(--header); background-color:var(--bg)">Modes, types, etc.:</div></A>'}, 
+// ----------------------------------------------------------------------------------------------------------------
+//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_base.pl', n:'&nbsp; incompatible_type_base.pl' },
+//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_base_f.pl', n:'&nbsp; incompatible_type_base_f.pl' },
+//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_f_error.pl', n:'&nbsp; incompatible_type_f_error.pl' },
+//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_f_fixed.pl', n:'&nbsp; incompatible_type_f_fixed.pl' },
+    { k:'ciaopp/examples/assrt-tutorial/qsort_noassrt_warnings.pl', n:'&nbsp; QSort - some warnings' },
+    { k:'ciaopp/examples/assrt-tutorial/qsort_noassrt_nowarnings.pl', n:'&nbsp; QSort - nowarnings' },
+    { k:'ciaopp/examples/assrt-tutorial/qsort_assrt_det.pl', n:'&nbsp; QSort - assertions verified' },
+    { k:'ciaopp/examples/assrt-tutorial/qsort_det_may_fail.pl', n:'&nbsp; QSort - may fail detected' },
+    { k:'ciaopp/examples/assrt-tutorial/qsort_det_nondet.pl', n:'&nbsp; QSort - nondet detected' },
+    { k:'ciaopp/examples/assrt-tutorial/qsort_modes_doccomments_det.pl', n:'&nbsp; Qsort - docomments' },
+//    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl', n:'&nbsp; revf_n_o_det_error.pl' },
+//    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl', n:'&nbsp; revf_n_o_det_error.pl' },
+//    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_verified.pl', n:'&nbsp; revf_n_o_det_verified.pl' },
+//    { k:'ciaopp/examples/assrt-tutorial/revf_n_ub_det_error.pl', n:'&nbsp; revf_n_ub_det_error.pl' },
+//    { k:'ciaopp/examples/assrt-tutorial/revf_n_ub_det_verified.pl', n:'&nbsp; revf_n_ub_det_verified.pl' },
+// ----------------------------------------------------------------------------------------------------------------
+// CONSTRAINTS:
+    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao.html/clpfd_doc.html"><div style="color:var(--header); background-color:var(--bg)">Constraints (clpfd):</div></A>'}, 
+// ----------------------------------------------------------------------------------------------------------------
+    { k:'core/examples/general/money_clpfd.pl', n:'&nbsp; Send more money' },
+    { k:'core/examples/general/sudoku_clpfd.pl', n:'&nbsp; Sudoku' },
+    { k:'core/examples/general/nqueens_clpfd.pl', n:'&nbsp; N Queens' },
+// ----------------------------------------------------------------------------------------------------------------
+// ETC:
+    { k:'', n:'<a style="padding-left:0px;" href="/documentation.html"><div style="color:var(--header); background-color:var(--bg)">More...</div></A>'}
   ],
   // Delay for saving when content changes (milliseconds)
   // (do not set too low if files are large)
@@ -928,7 +1018,8 @@ class PGCell {
       if (presentation_mode) {
         // (button to go back from presentation mode)
         let el = elem_cn('div', 'lpdoc-runnable-buttons');
-        el.style.marginTop = '5px'; // TODO: use other class?
+        el.style.marginTop = '25px'; // TODO: use other class?
+        el.style.marginRight = '10px'; // TODO: use other class?
         let btn_el = btn('lpdoc-runnable-button', "Edit mode", '', (() => {
           toggle_presentation(this);
         }));
@@ -1509,10 +1600,10 @@ class PGCell {
   #setup_advanced_buttons(menu_el) {
     const adv_list = [];
     if (playgroundCfg.has_toggle_presentation_button) {
-      adv_list.push({ k:'toggle_presentation', n:'Toogle presentation mode', a:toggle_presentation });
+      adv_list.push({ k:'toggle_presentation', n:'Toggle presentation mode', a:toggle_presentation });
     }
     if (playgroundCfg.has_toggle_on_the_fly_button) {
-      adv_list.push({ k:'toggle_on_the_fly', n:'Toogle on-the-fly', a:toggle_on_the_fly });
+      adv_list.push({ k:'toggle_on_the_fly', n:'Toggle on-the-fly', a:toggle_on_the_fly });
     }
     if (playgroundCfg.has_run_tests_button) {
       adv_list.push({ k:'test', n:'Run tests (C-c u)', a:run_tests });
@@ -1527,7 +1618,7 @@ class PGCell {
       adv_list.push({ k:'acheck', n:'Analyze and check assertions (C-c V)', a:acheck });
     }
     if (playgroundCfg.has_acheck_button) {
-      adv_list.push({ k:'acheck_output', n:'Analyze and check assertions (w/ output)', a:acheck_output });
+      adv_list.push({ k:'acheck_output', n:'Analyze and check assertions (w/output)', a:acheck_output });
     }
     if (playgroundCfg.has_spec_button) {
       adv_list.push({ k:'spec', n:'Specialize code (C-c O)', a:spec_preview });
@@ -1548,7 +1639,7 @@ class PGCell {
 
   #setup_share_button(menu_el) {
     const el = elem_cn('button', 'menu-button');
-    el.title = 'Copy a link to this code';
+    el.title = 'Copy a link to this code or document';
     el.appendChild(share_svg.cloneNode(true));
     const msg_el = document.createTextNode("Share!");
     el.appendChild(msg_el);
@@ -1662,13 +1753,28 @@ function setup_mini_pg(el) {
 async function open_example(pg, path) {
   var pathsplit = path.split('/');
   var b = pathsplit[0]; // assume first component is bundle
-  //
-  let dir = await pg.cproc.w.get_bundle_wksp(b);
-  path = dir + '/' + path;
-  var str = await pg.cproc.w.readFile(path);
-  let ext = get_file_extension(path);
-  await pg.set_code_and_process({str:str, ext:ext});
-}  
+  if ( b !== 'core' ) {
+    await pg.cproc.w.use_bundle(b);
+    await pg.cproc.w.wait_no_deps();
+  };
+  console.log(`{getting bundle wksp '${b}'}`);
+  try {
+    let dir = await pg.cproc.w.get_bundle_wksp(b);
+    if ( b == 'core' ) {
+      path = dir + '/' + path;
+    } else {
+      path = dir + '/bndls' + '/' + path;
+    }
+    console.log(`{reading file '${path}'}`);
+    var str = await pg.cproc.w.readFile(path);
+    let ext = get_file_extension(path);
+    // console.log(`{getting code '${str}' '${ext}'}`);
+    await pg.set_code_and_process({str:str, ext:ext});
+  } catch (e) {
+    console.log('Could not open workspace ', e);
+    // return null;
+  }
+}
 
 /* Handle share */
 function handle_share(btn_el, msg_el, pg) {
@@ -3548,9 +3654,10 @@ function create_header() {
     return el0;
   }
   // right_header_el.appendChild(a("/ciao/build/doc/ciao_playground.html/", "Manual"));
-  right_header_el.appendChild(a("/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html", document.createTextNode("Embed")));
-  right_header_el.appendChild(a("/ciao/build/doc/ciao.html/", document.createTextNode("Docs")));
   right_header_el.appendChild(a("/ciao/build/doc/ciao_playground.html/ciao_playground_using.html", help_svg.cloneNode(true)));
+  right_header_el.appendChild(a("/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html", document.createTextNode("Embed")));
+  // right_header_el.appendChild(a("/ciao/build/doc/ciao.html/", document.createTextNode("Docs")));
+  right_header_el.appendChild(a("/documentation.html", document.createTextNode("Docs")));
   if (playgroundCfg.with_github_stars) {
     setup_github_stars(right_header_el);
   } else {
