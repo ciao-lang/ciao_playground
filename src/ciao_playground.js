@@ -165,6 +165,7 @@ const playgroundCfg_defaults = {
 // FUNCTIONAL: 
     { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao.html/fsyntax_doc.html"><div style="color:var(--header); background-color:var(--bg)">Functional notation</div></A>'}, 
 // ----------------------------------------------------------------------------------------------------------------
+    { k:'core/examples/general/population_query_f.pl', n:'&nbsp; Population query' },
     { k:'core/examples/general/derivf.pl', n:'&nbsp; Simbolic derivation' },
     { k:'core/library/fsyntax/examples/revf.pl', n:'&nbsp; Naive reverse' },
     { k:'core/library/fsyntax/examples/factf.pl', n:'&nbsp; Factorial' },
