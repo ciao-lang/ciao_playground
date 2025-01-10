@@ -96,6 +96,17 @@ syntax**](/ciao/build/doc/lpdoc.html/Markdown.html) and the
 examples**](/ciao/build/doc/lpdoc.html/Runnables.html)!
 `;
 
+// Helper for menus
+function menu_h(str) { // menu header
+  return { k:'', n:`<div style="font-weight: bold">${str}</div>` };
+}
+function menu_hlink(str, href) { // menu header with link
+  return { k:'', n:`<a style="padding-left:0px;" href="${href}"><div style="font-weight: bold">${str} &#8599;</div></a>` };
+}
+function menu_i(str, file) { // menu indented item
+  return { k:file, n:'&#x1F4C4; '+str };
+}
+
 const playgroundCfg_defaults = {
   title: "Prolog playground",
   with_header: true,
@@ -130,88 +141,82 @@ const playgroundCfg_defaults = {
     '.md': splash_code_md
   }, 
   example_list: [
-// TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
-//       also, point to a tutorial (an ALD)
+    // TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
+    //       also, point to a tutorial (an ALD)
 
-// ----------------------------------------------------------------------------------------------------------------
-// TRADITIONAL PROLOG: 
-    { k:'', n:'<div style="color:var(--header); background-color:var(--bg)"> Traditional Prolog:</div>' },
-// ----------------------------------------------------------------------------------------------------------------
-    { k:'core/examples/general/population_query.pl', n:'&nbsp; Population query' },
-    { k:'lpdoc/examples/puzzle.pl', n:'&nbsp; Simple puzze' },
-    { k:'core/examples/general/bignums.pl', n:'&nbsp; Bignums' },
-//    { k:'core/examples/general/boyer.pl', n:'&nbsp; Boyer Prover' },
-    { k:'core/examples/general/crypt.pl', n:'&nbsp; Crypto-multiplication' },
-//    { k:'core/examples/general/fib.pl', n:'&nbsp; Fibonacci' },
-//    { k:'core/examples/general/fft.pl', n:'&nbsp; Fast Fourier Transform' },
-//    { k:'core/examples/general/guardians.pl', n:'&nbsp; Guradians puzzle' },
-//    { k:'core/examples/general/jugs.pl', n:'&nbsp; Jugs puzzle' },
-    { k:'core/examples/general/knights.pl', n:'&nbsp; Knights puzzle' },
-    { k:'core/examples/general/nqueens.pl', n:'&nbsp; N Queens' },
-//    { k:'core/examples/general/poly.pl', n:'&nbsp; Poly' },
-    { k:'core/examples/general/primes.pl', n:'&nbsp; Primes' },
-    { k:'core/examples/general/qsort.pl', n:'&nbsp; Quick-sort' },
-//    { k:'core/examples/general/tak.pl', n:'&nbsp; Takeuchi' }
-// ----------------------------------------------------------------------------------------------------------------
-// 99: 
-    { k:'', n:'<a style="padding-left:0px;" href="https://cliplab.org/logalg/doc/99problemsALD.html/"><div style="color:var(--header); background-color:var(--bg)">&nbsp; 99 Prolog problems</div></A>'}, 
-// ----------------------------------------------------------------------------------------------------------------
-// ALDs: 
-    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html"><div style="color:var(--header); background-color:var(--bg)">Documents:</div></A>'}, 
-// ----------------------------------------------------------------------------------------------------------------
-    { k:'lpdoc/examples/min_ald.md', n:'&nbsp; Minimal notebook' }, 
-//    { k:'lpdoc/examples/min_ald.lpdoc', n:'&nbsp; min_ald.lpdoc' },  // For testing with .lpdoc suffix
-    { k:'lpdoc/examples/puzzle_ald.md', n:'&nbsp; Simple puzzle' },
-    { k:'lpdoc/examples/factorial_peano_iso.md', n:'&nbsp; Factorial exercise' },
-    { k:'lpdoc/examples/slides_fairsr.md', n:'&nbsp; Slides example' },
-// ----------------------------------------------------------------------------------------------------------------
-// FUNCTIONAL: 
-    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao.html/fsyntax_doc.html"><div style="color:var(--header); background-color:var(--bg)">Functional notation</div></A>'}, 
-// ----------------------------------------------------------------------------------------------------------------
-    { k:'core/examples/general/population_query_f.pl', n:'&nbsp; Population query' },
-    { k:'core/examples/general/derivf.pl', n:'&nbsp; Simbolic derivation' },
-    { k:'core/library/fsyntax/examples/revf.pl', n:'&nbsp; Naive reverse' },
-    { k:'core/library/fsyntax/examples/factf.pl', n:'&nbsp; Factorial' },
-    { k:'core/library/fsyntax/examples/lazyex.pl', n:'&nbsp; Lazy Fibonacci' },
-// ----------------------------------------------------------------------------------------------------------------
-// SR: 
-    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao.html/bf_doc.html"><div style="color:var(--header); background-color:var(--bg)">Search rules:</div></A>'}, 
-// ----------------------------------------------------------------------------------------------------------------
-    { k:'core/library/sr/examples/peano.pl', n:'&nbsp; Peano arithmetic' },
-// ----------------------------------------------------------------------------------------------------------------
-// DOCUMENTATION: /ciao/build/doc/lpdoc.html/
-//    { k:'', n:'<div style="color:var(--header); background-color:var(--bg)"> Documentation:</div>' },
-// ----------------------------------------------------------------------------------------------------------------
-//    { k:'lpdoc/examples/test_math.pl', n:'&nbsp; ctest_math.pl' },
-// ----------------------------------------------------------------------------------------------------------------
-    // ASSERTIONS: (Just types, modes, etc. for now)
-    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciaopp_tutorials.html/tut_assrts.html"><div style="color:var(--header); background-color:var(--bg)">Modes, types, etc.:</div></A>'}, 
-// ----------------------------------------------------------------------------------------------------------------
-//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_base.pl', n:'&nbsp; incompatible_type_base.pl' },
-//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_base_f.pl', n:'&nbsp; incompatible_type_base_f.pl' },
-//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_f_error.pl', n:'&nbsp; incompatible_type_f_error.pl' },
-//    { k:'ciaopp/examples/assrt-tutorial/incompatible_type_f_fixed.pl', n:'&nbsp; incompatible_type_f_fixed.pl' },
-    { k:'ciaopp/examples/assrt-tutorial/qsort_noassrt_warnings.pl', n:'&nbsp; QSort - some warnings' },
-    { k:'ciaopp/examples/assrt-tutorial/qsort_noassrt_nowarnings.pl', n:'&nbsp; QSort - nowarnings' },
-    { k:'ciaopp/examples/assrt-tutorial/qsort_assrt_det.pl', n:'&nbsp; QSort - assertions verified' },
-    { k:'ciaopp/examples/assrt-tutorial/qsort_det_may_fail.pl', n:'&nbsp; QSort - may fail detected' },
-    { k:'ciaopp/examples/assrt-tutorial/qsort_det_nondet.pl', n:'&nbsp; QSort - nondet detected' },
-    { k:'ciaopp/examples/assrt-tutorial/qsort_modes_doccomments_det.pl', n:'&nbsp; Qsort - doccomments' },
-//    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl', n:'&nbsp; revf_n_o_det_error.pl' },
-//    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl', n:'&nbsp; revf_n_o_det_error.pl' },
-//    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_verified.pl', n:'&nbsp; revf_n_o_det_verified.pl' },
-//    { k:'ciaopp/examples/assrt-tutorial/revf_n_ub_det_error.pl', n:'&nbsp; revf_n_ub_det_error.pl' },
-//    { k:'ciaopp/examples/assrt-tutorial/revf_n_ub_det_verified.pl', n:'&nbsp; revf_n_ub_det_verified.pl' },
-// ----------------------------------------------------------------------------------------------------------------
-// CONSTRAINTS:
-    { k:'', n:'<a style="padding-left:0px;" href="/ciao/build/doc/ciao.html/clpfd_doc.html"><div style="color:var(--header); background-color:var(--bg)">Constraints (clpfd):</div></A>'}, 
-// ----------------------------------------------------------------------------------------------------------------
-    { k:'core/examples/general/money_clpfd.pl', n:'&nbsp; Send more money' },
-    { k:'core/examples/general/sudoku_clpfd.pl', n:'&nbsp; Sudoku' },
-    { k:'core/examples/general/nqueens_clpfd.pl', n:'&nbsp; N Queens' },
-// ----------------------------------------------------------------------------------------------------------------
-// ETC:
-    { k:'', n:'<a style="padding-left:0px;" href="/documentation.html"><div style="color:var(--header); background-color:var(--bg)">More...</div></A>'}
+    // ---------------------------------------------------------------------------
+    // TRADITIONAL PROLOG: 
+    menu_h("Traditional Prolog"),
+    menu_i('Population query', 'core/examples/general/population_query.pl'),
+    menu_i('Simple puzze', 'lpdoc/examples/puzzle.pl'),
+    menu_i('Bignums', 'core/examples/general/bignums.pl'),
+    // menu_i('Boyer Prover', 'core/examples/general/boyer.pl'),
+    menu_i('Crypto-multiplication', 'core/examples/general/crypt.pl'),
+    // menu_i('Fibonacci', 'core/examples/general/fib.pl'),
+    // menu_i('Fast Fourier Transform', 'core/examples/general/fft.pl'),
+    // menu_i('Guradians puzzle', 'core/examples/general/guardians.pl'),
+    // menu_i('Jugs puzzle', 'core/examples/general/jugs.pl'),
+    menu_i('Knights puzzle', 'core/examples/general/knights.pl'),
+    menu_i('N Queens', 'core/examples/general/nqueens.pl'),
+    // menu_i('Poly', 'core/examples/general/poly.pl'),
+    menu_i('Primes', 'core/examples/general/primes.pl'),
+    menu_i('Quick-sort', 'core/examples/general/qsort.pl'),
+    // menu_i('Takeuchi', 'core/examples/general/tak.pl')
+    // ---------------------------------------------------------------------------
+    // 99 problems
+    menu_hlink("99 Prolog problems", "https://cliplab.org/logalg/doc/99problemsALD.html/"),
+    // ---------------------------------------------------------------------------
+    // ALDs
+    menu_hlink("Documents", "/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html"),
+    menu_i('Minimal notebook', 'lpdoc/examples/min_ald.md'), 
+    // menu_i('min_ald.lpdoc', 'lpdoc/examples/min_ald.lpdoc'),  // For testing with .lpdoc suffix
+    menu_i('Simple puzzle', 'lpdoc/examples/puzzle_ald.md'),
+    menu_i('Factorial exercise', 'lpdoc/examples/factorial_peano_iso.md'),
+    menu_i('Slides example', 'lpdoc/examples/slides_fairsr.md'),
+    // ---------------------------------------------------------------------------
+    // Functional: 
+    menu_hlink("Functional notation", "/ciao/build/doc/ciao.html/fsyntax_doc.html"),
+    menu_i('Population query', 'core/examples/general/population_query_f.pl'),
+    menu_i('Simbolic derivation', 'core/examples/general/derivf.pl'),
+    menu_i('Naive reverse', 'core/library/fsyntax/examples/revf.pl'),
+    menu_i('Factorial', 'core/library/fsyntax/examples/factf.pl'),
+    menu_i('Lazy Fibonacci', 'core/library/fsyntax/examples/lazyex.pl'),
+    // ---------------------------------------------------------------------------
+    // SR: 
+    menu_hlink("Search rules", "/ciao/build/doc/ciao.html/bf_doc.html"),
+    menu_i('Peano arithmetic', 'core/library/sr/examples/peano.pl'),
+    // ---------------------------------------------------------------------------
+    // Documentation: /ciao/build/doc/lpdoc.html/
+    // menu_i('<div style="color:var(--header); background-color:var(--bg)"> Documentation</div>', ''),
+    // ---------------------------------------------------------------------------
+    // menu_i('ctest_math.pl', 'lpdoc/examples/test_math.pl'),
+    // ---------------------------------------------------------------------------
+    // Assertions: (Just types, modes, etc. for now)
+    menu_hlink("Modes, types, etc.", "/ciao/build/doc/ciaopp_tutorials.html/tut_assrts.html"),
+    // menu_i('incompatible_type_base.pl', 'ciaopp/examples/assrt-tutorial/incompatible_type_base.pl'),
+    // menu_i('incompatible_type_base_f.pl', 'ciaopp/examples/assrt-tutorial/incompatible_type_base_f.pl'),
+    // menu_i('incompatible_type_f_error.pl', 'ciaopp/examples/assrt-tutorial/incompatible_type_f_error.pl'),
+    // menu_i('incompatible_type_f_fixed.pl', 'ciaopp/examples/assrt-tutorial/incompatible_type_f_fixed.pl'),
+    menu_i('QSort - some warnings', 'ciaopp/examples/assrt-tutorial/qsort_noassrt_warnings.pl'),
+    menu_i('QSort - nowarnings', 'ciaopp/examples/assrt-tutorial/qsort_noassrt_nowarnings.pl'),
+    menu_i('QSort - assertions verified', 'ciaopp/examples/assrt-tutorial/qsort_assrt_det.pl'),
+    menu_i('QSort - may fail detected', 'ciaopp/examples/assrt-tutorial/qsort_det_may_fail.pl'),
+    menu_i('QSort - nondet detected', 'ciaopp/examples/assrt-tutorial/qsort_det_nondet.pl'),
+    menu_i('Qsort - doccomments', 'ciaopp/examples/assrt-tutorial/qsort_modes_doccomments_det.pl'),
+    // menu_i('revf_n_o_det_error.pl', 'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl'),
+    // menu_i('revf_n_o_det_error.pl', 'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl'),
+    // menu_i('revf_n_o_det_verified.pl', 'ciaopp/examples/assrt-tutorial/revf_n_o_det_verified.pl'),
+    // menu_i('revf_n_ub_det_error.pl', 'ciaopp/examples/assrt-tutorial/revf_n_ub_det_error.pl'),
+    // menu_i('revf_n_ub_det_verified.pl', 'ciaopp/examples/assrt-tutorial/revf_n_ub_det_verified.pl'),
+    // ---------------------------------------------------------------------------
+    // Constraints:
+    menu_hlink("Constraints (clpfd)", "/ciao/build/doc/ciao.html/clpfd_doc.html"),
+    menu_i('Send more money', 'core/examples/general/money_clpfd.pl'),
+    menu_i('Sudoku', 'core/examples/general/sudoku_clpfd.pl'),
+    menu_i('N Queens', 'core/examples/general/nqueens_clpfd.pl'),
+    // ---------------------------------------------------------------------------
+    // Etc.:
+    menu_hlink("More...", "/documentation.html")
   ],
   // Delay for saving when content changes (milliseconds)
   // (do not set too low if files are large)
