@@ -196,7 +196,7 @@ const playgroundCfg_defaults = {
     { k:'ciaopp/examples/assrt-tutorial/qsort_assrt_det.pl', n:'&nbsp; QSort - assertions verified' },
     { k:'ciaopp/examples/assrt-tutorial/qsort_det_may_fail.pl', n:'&nbsp; QSort - may fail detected' },
     { k:'ciaopp/examples/assrt-tutorial/qsort_det_nondet.pl', n:'&nbsp; QSort - nondet detected' },
-    { k:'ciaopp/examples/assrt-tutorial/qsort_modes_doccomments_det.pl', n:'&nbsp; Qsort - docomments' },
+    { k:'ciaopp/examples/assrt-tutorial/qsort_modes_doccomments_det.pl', n:'&nbsp; Qsort - doccomments' },
 //    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl', n:'&nbsp; revf_n_o_det_error.pl' },
 //    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_error.pl', n:'&nbsp; revf_n_o_det_error.pl' },
 //    { k:'ciaopp/examples/assrt-tutorial/revf_n_o_det_verified.pl', n:'&nbsp; revf_n_o_det_verified.pl' },
@@ -1757,25 +1757,19 @@ function setup_mini_pg(el) {
 async function open_example(pg, path) {
   var pathsplit = path.split('/');
   var b = pathsplit[0]; // assume first component is bundle
-  if ( b !== 'core' ) {
-    await pg.cproc.w.use_bundle(b);
-    await pg.cproc.w.wait_no_deps();
-  };
-  console.log(`{getting bundle wksp '${b}'}`);
+  var rest = pathsplit.slice(1).join('/'); // rest of path
+  // load bundle if needed (also reload_bundleregs/0)
+  await pg.cproc.push_depends([b]);
   try {
-    let dir = await pg.cproc.w.get_bundle_wksp(b);
-    if ( b == 'core' ) {
-      path = dir + '/' + path;
-    } else {
-      path = dir + '/bndls' + '/' + path;
-    }
+    let srcdir = await pg.cproc.w.get_bundle_srcdir(b);
+    path = srcdir + '/' + rest;
     console.log(`{reading file '${path}'}`);
     var str = await pg.cproc.w.readFile(path);
     let ext = get_file_extension(path);
     // console.log(`{getting code '${str}' '${ext}'}`);
     await pg.set_code_and_process({str:str, ext:ext});
   } catch (e) {
-    console.log('Could not open workspace ', e);
+    console.log(`{error: could not open example: ${e}}`);
     // return null;
   }
 }
