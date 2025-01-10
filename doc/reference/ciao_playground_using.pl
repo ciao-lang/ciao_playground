@@ -82,13 +82,32 @@ configurable):
 
 @end{itemize}
 
+@item{@key{⇱⇲}} (Toggle presentation mode)
+  Switches to a full window view of
+  the document or any other content of the preview area. In this view:
+  @cindex{presentation mode}
+  @cindex{full-screen mode}
+  @cindex{slides}
+  @cindex{slides presenation mode}
+
+@begin{itemize}
+  @item The pencil @key{✎} icon allows returning to the editor mode.
+
+  @item The rectangular @key{▭} icon switches to @em{slides
+  presentation mode}, where each document section is presented as a
+  separate slide.
+
+  @item To exit slides presentation mode use the @key{ESC} key.
+@end{itemize}
+
 @item{@key{Share!}} Is an alternative form of save, very useful for
   sharing!: it copies into the clipboard a link that will open the
   playground with the current state of the program loaded in the
   editor area. In the case of documents this link will open directly
   the rendered document, and it can also be edited. These links can be
   sent by email, embedded in other documents, etc. (see
-  [Adding runnable examples to arbitrary documents](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.pl)).
+  [Adding links to runnable examples and notebooks to arbitrary
+  documents](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html)).
   @cindex{sharing programs}
   @cindex{sharing documents}
 
@@ -126,15 +145,6 @@ In addition, in the @key{More...} pull-down the following can be
 selected:
 
 @begin{description}
-
-@item{@key{Toggle presentation mode}} Switches to full window view of
-  the document or any other content of the preview area. In this view,
-  the @key{pencil} icon allows returning to the editor mode. The
-  @key{square} icon switches to @em{slides presentation mode}, where
-  each document section is presented as a separate slide.
-  @cindex{presentation mode}
-  @cindex{full-screen mode}
-  @cindex{slides}
 
 @item{@key{Toggle on-the-fly}} If turned on, the program is loaded or
  the document rendered continuously. This allows showing program errors

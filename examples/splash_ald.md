@@ -42,11 +42,11 @@ Some things to try **in the document**:
 Some things to try in the **editor/playground**:
 
   - Edit the markdown source and hit the `Load ⏵` button. 
-  - Use the `Share!` button to generate a URL for the document that you can send, publish, etc.
-  - `Save` the document source to rour computer and `Open` it at any other time.
-  - Select `More...`, `Toggle on-the-fly` to see the document change as the markdown is changed.
-  - Select `More...`, `Toggle presentation mode` to see just the document. 
+  - Click on the arrows button to toggle presentation mode and see just the document. 
     You can go back to the editor clicking on the pencil in the top right. 
+  - Use the `Share!` button to generate a URL for the document that you can send, publish, etc.
+  - `Save` the document source to your computer and `Open` it at any other time.
+  - Select `More...`, `Toggle on-the-fly` to see the document change as the markdown is changed.
 
 You can save the document source with the 'Save'
 button and upload it at any other time.

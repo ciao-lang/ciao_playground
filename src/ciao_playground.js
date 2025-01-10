@@ -76,11 +76,11 @@ Some things to try **in the document**:
 Some things to try in the **editor/playground**:
 
   - Edit the markdown source and hit the \`Load\` button. 
-  - Use the \`Share!\` button to generate a URL for the document that you can send, publish, etc.
-  - \`Save\` the document source to rour computer and \`Open\` it at any other time.
-  - Select \`More...\`, \`Toggle on-the-fly\` to see the document change as the markdown is changed.
-  - Select \`More...\`, \`Toggle presentation mode\` to see just the document. 
+  - Click on the arrows button to toggle presentation mode and see just the document. 
     You can go back to the editor clicking on the pencil in the top right. 
+  - Use the \`Share!\` button to generate a URL for the document that you can send, publish, etc.
+  - \`Save\` the document source to your computer and \`Open\` it at any other time.
+  - Select \`More...\`, \`Toggle on-the-fly\` to see the document change as the markdown is changed.
 
 You can save the document source with the 'Save'
 button and upload it at any other time.
@@ -848,6 +848,7 @@ class PGCell {
     if (playgroundCfg.has_examples_button) this.#setup_examples_button(menu_el);
     // (actions)
     if (playgroundCfg.has_load_button) this.#setup_load_button(menu_el);
+    if (playgroundCfg.has_toggle_presentation_button) this.#setup_toggle_presentation_button(menu_el);
     // (advanced actions)
     this.#setup_advanced_buttons(menu_el);
 
@@ -1584,7 +1585,7 @@ class PGCell {
   #setup_examples_button(menu_el) {
     const examples_button =
           new DropdownButton(menu_el,
-                             "Select example",
+                             "Select and load examples",
                              elem_from_str("<span>Examples &#128214;</span>"),
                              playgroundCfg.example_list,
                              value => {
@@ -1606,13 +1607,23 @@ class PGCell {
     menu_el.appendChild(el);
   }
 
+  #setup_toggle_presentation_button(menu_el) { // toggle presentation mode
+    const el = btn('menu-button',
+                   "Toggle presentation (full screen) mode for preview area",  // "Keybinding?",
+                   "<sup>&#x21F1;</sup><sub>&#x21F2;</sub>", () => { // Alt: &#xe5d0; &#x26F6;
+      toggle_presentation(this).then(() => {}); // TODO: use "async () => { ... }" instead?
+    }); 
+    menu_el.appendChild(el);
+  }
+  
   #setup_advanced_buttons(menu_el) {
     const adv_list = [];
-    if (playgroundCfg.has_toggle_presentation_button) {
-      adv_list.push({ k:'toggle_presentation', n:'Toggle presentation mode', a:toggle_presentation });
-    }
+    // Moved to a button button. 
+    // if (playgroundCfg.has_toggle_presentation_button) {
+    //      adv_list.push({ k:'toggle_presentation', n:'Toggle presentation mode', a:toggle_presentation });
+    // }
     if (playgroundCfg.has_toggle_on_the_fly_button) {
-      adv_list.push({ k:'toggle_on_the_fly', n:'Toggle on-the-fly', a:toggle_on_the_fly });
+      adv_list.push({ k:'toggle_on_the_fly', n:'Toggle on-the-fly', a:toggle_on_the_fly }); // &#8635; ?
     }
     if (playgroundCfg.has_run_tests_button) {
       adv_list.push({ k:'test', n:'Run tests (C-c u)', a:run_tests });
