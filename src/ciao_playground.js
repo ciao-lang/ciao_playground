@@ -1555,31 +1555,40 @@ class PGCell {
   };
 
   #setup_open_button(menu_el) { // open file (upload)
-    // (implicit label association)
-    const label_el = document.createElement('label');
-    let allowed_exts = get_allowed_file_exts();
-    const file_el = elem_from_str('<input type="file" accept="'+allowed_exts.join(',')+'" class="file-upload">');
-    label_el.appendChild(file_el);
-    label_el.appendChild(document.createTextNode("Open"));
-    menu_el.appendChild(label_el);
-    file_el.addEventListener('change', (e) => { handle_file_upload(e, file_el, this); }, false);
+    const el = btn('menu-button',
+                   "Upload file",
+                   "Open", () => {
+      this.upload_file();
+    }); 
+    menu_el.appendChild(el);
   }
 
   #setup_save_button(menu_el) { // save file
-    const el = elem_cn('button', 'menu-button');
-    el.onclick = () => { 
-      let name = this.curr_mod_name_ext(); // obtain name with extension
-      let file = new Blob([this.get_editor_value()], { type: 'text/plain' });
-      a_el.href = URL.createObjectURL(file);
-      a_el.download = name;
-    };
-    const a_el = elem_from_str(`<a href="" style="text-decoration: none; color: inherit;">Save</a>`);
-    el.appendChild(a_el);
+    const el = btn('menu-button',
+                   "Download file",
+                   "Save", () => {
+      this.download_file();
+    }); 
     menu_el.appendChild(el);
-    this.save_button = el;
   }
-  click_save_button() { // click the 'a' element
-    this.save_button.firstElementChild.click(); // click the 'a' element
+
+  upload_file() {
+    const allowed_exts = get_allowed_file_exts();
+    const file_el = document.createElement('input');
+    file_el.type = 'file';
+    file_el.accept = allowed_exts.join(',');
+    file_el.click(); // trigger input (allowed because it's triggered by a user gesture)
+    file_el.addEventListener('change', (e) => { handle_file_upload(e, file_el, this); });
+  }
+  download_file() {
+    const name = this.curr_mod_name_ext(); // obtain name with extension
+    const file = new Blob([this.get_editor_value()], { type: 'text/plain' });
+    const url = URL.createObjectURL(file);
+    const a_el = document.createElement('a');
+    a_el.href = url;
+    a_el.download = name;
+    a_el.click();
+    URL.revokeObjectURL(url);
   }
 
   #setup_examples_button(menu_el) {
@@ -1741,11 +1750,16 @@ function get_file_extension(filename) {
 }
 
 function handle_file_upload(event, file_el, pg) {
-  let ext = get_file_extension(file_el.value);
+  const file = event.target.files[0];
+  if (!file) {
+    alert('No file uploaded');
+    return;
+  }
+  let ext = get_file_extension(file.name);
   let allowed_exts = get_allowed_file_exts();
   if (!allowed_exts.includes(ext)) { // none of the accepted extensions
     alert('Invalid file type (expected: '+allowed_exts.join(', ')+').');
-    file_el.value = ''; 
+    file_el.value = '';  // reset file input
     return false;
   } else {
     const reader = new FileReader();
@@ -1754,8 +1768,7 @@ function handle_file_upload(event, file_el, pg) {
         await pg.set_code_and_process({str:event.target.result, ext:ext});
       })();
     };
-    reader.readAsText(event.target.files[0]);
-    // fileName = '/' + file_el.value.split(/(\\|\/)/g).pop(); // obtain name
+    reader.readAsText(file);
   }
 }
 
@@ -2467,7 +2480,7 @@ function add_playground_bindings(editor, pg) {
 
   // Save file to local file-system (C-x C-s)
   editor.addCommandFocused(KM.chord(KM.WinCtrl | KC.KeyX, KM.WinCtrl | KC.KeyS), () => {
-    pg.click_save_button(); // click the 'a' element
+    pg.download_file(); // like 'save' button
   });
 
   // Go to the other window (C-x o)
