@@ -242,6 +242,7 @@ const lang = {
       // [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
       // [/'([^'\\]|\\.)*$/, 'string.invalid'], // non-teminated string
 
+      // strings
       [/#\s*"/, 'string-doc', '@string_doc'],
       [/"/, 'string-double', '@string_double'],
       [/'/, 'string-single', '@string_single'],
@@ -267,20 +268,23 @@ const lang = {
     // ],
 
     string_doc: [
-      [/[^"]+/, "string-doc"],
-      [/(''|\\")/, "string-doc"],
+      [/[^\\"]+/, "string-doc"],
+      [/@escapes/, "string-doc.escape"],
+      // [/(''|\\")/, "string-doc"],
       [/"/, { token: "string-doc", next: "@pop" }],
     ],
 
     string_double: [
-      [/[^"]+/, "string-double"],
-      [/(''|\\")/, "string-double"],
+      [/[^\\"]+/, "string-double"],
+      [/@escapes/, "string-double.escape"],
+      // [/(''|\\")/, "string-double"],
       [/"/, { token: "string-double", next: "@pop" }],
     ],
 
     string_single: [
-      [/[^']+/, "string-single"],
-      [/(''|\\')/, "string-single"],
+      [/[^\\']+/, "string-single"],
+      [/@escapes/, "string-single.escape"],
+      // [/(''|\\')/, "string-single"],
       [/'/, { token: "string-single", next: "@pop" }],
     ],
 
