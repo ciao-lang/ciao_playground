@@ -50,29 +50,34 @@ configurable):
  allows selecting whether the new content of the editor will be a
  program (@tt{.pl}) or a document (@tt{.md}).
 
-@item{@key{Open}} Lets you upload your own Prolog code (@tt{.pl} file)
-  or document (@tt{.md} or @tt{.lpdoc} file) from your local
-  file system. This action also erases all previous content present in
-  the editor. The playground will switch to program mode or document
-  mode depending on the type of file uploaded.
+@item{@key{File}} allows the following: 
 
-@item{@key{Save} (@key{Ctrl}-@key{x} + @key{Ctrl}-@key{s})} Allows
-  downloading the code or document written in the playground directly
-  to your file system.  @cindex{saving}
+   @begin{description}
 
-@item{@key{Examples}} Allows loading some simple examples of programs
-  and active logic documents to get started.
-  @cindex{examples}
+   @item{@key{Open}} Lets you upload your own Prolog code (@tt{.pl}
+   file) or document (@tt{.md} or @tt{.lpdoc} file) from your local
+   file system. This action also erases all previous content present
+   in the editor. The playground will switch to program mode or
+   document mode depending on the type of file uploaded.
+
+   @item{@key{Save} (@key{Ctrl}-@key{x} + @key{Ctrl}-@key{s})} Allows
+        downloading the code or document written in the playground
+        directly to your file system.  @cindex{saving}
+
+   @end{description}
+
+@item{@key{Examples}} Allows loading a number of examples of programs
+  and active logic documents to get started.  @cindex{examples}
 
 @item{@key{Load} (@key{Ctrl}-@key{c} + @key{l})} Processes the content
   of the editor area: 
   @cindex{loading programs}
   @cindex{rendering documents}
 
-@begin{itemize}
+  @begin{itemize}
 
   @item If the editor contains a program, it loads the code into the
-  top-level. It compiles it and, in case there are any errors, they
+    top-level. It compiles it and, in case there are any errors, they
   are printed in top-level area and highlighted in the . Once you click this button, you can ask queries about 
   your code in the top-level.
 
@@ -80,7 +85,7 @@ configurable):
   the top level and renders it in the preview area. If the document
   contains runnable examples these can be executed there.
 
-@end{itemize}
+  @end{itemize}
 
 @item{@key{⇱⇲}} (Toggle presentation mode)
   Switches to a full window view of
@@ -90,7 +95,7 @@ configurable):
   @cindex{slides}
   @cindex{slides presenation mode}
 
-@begin{itemize}
+  @begin{itemize}
   @item The pencil @key{✎} icon allows returning to the editor mode.
 
   @item The rectangular @key{▭} icon switches to @em{slides
@@ -98,7 +103,22 @@ configurable):
   separate slide.
 
   @item To exit slides presentation mode use the @key{ESC} key.
-@end{itemize}
+  @end{itemize}
+
+
+@item{@key{🔎} (Debug, @key{Ctrl}-@key{c} + @key{d})} Debug (or stop
+  debugging) source and enable tracing the control flow of the program
+  for the next queries (see debugger documentation for more
+  information).  @cindex{program debugging}
+
+@item{@key{📖} (Preview documentation, @key{Ctrl}-@key{c} + @key{D})}
+  In code mode, generate and preview the documentation (using LPdoc)
+  for the code in the editor area. @cindex{documenting programs}
+
+@item{@key{↻} (Toggle on-the-fly)} If turned on, the program is loaded or
+ the document rendered continuously. This allows showing program errors
+ on the code as it is being modified, or seeing interactively the
+ results of editing the document source.
 
 @item{@key{Share!}} Is an alternative form of save, very useful for
   sharing!: it copies into the clipboard a link that will open the
@@ -130,12 +150,12 @@ adding a @tt{timeout(0)} global property, e.g.:
   @cindex{aborting}
 
 
-@begin{alert} 
-This button fully terminates the Ciao worker executing the Ciao
-process, so it may take a some time to reload dependencies after
-aborting. The code in the editor area will be reloaded into the
-top-level.
-@end{alert}
+  @begin{alert} 
+  This button fully terminates the Ciao worker executing the Ciao
+  process, so it may take a some time to reload dependencies after
+  aborting. The code in the editor area will be reloaded into the
+  top-level.
+  @end{alert}
 
 @end{description}
 
@@ -146,23 +166,9 @@ selected:
 
 @begin{description}
 
-@item{@key{Toggle on-the-fly}} If turned on, the program is loaded or
- the document rendered continuously. This allows showing program errors
- on the code as it is being modified, or seeing interactively the
- results of editing the document source.
-
 @item{@key{Run tests} (@key{Ctrl}-@key{c} + @key{u})} Loads the unit test library
   (@lib{unittest}) into the top-level and runs any unit tests (test
   assertions) that may appear in the code.  @cindex{running tests}
-
-@item{@key{Debug} (@key{Ctrl}-@key{c} + @key{d})} Debug (or stop debugging)
-  source and enable tracing the control flow of the program for the
-  next queries (see debugger documentation for more information).
-  @cindex{program debugging}
-
-@item{@key{Preview documentation} (@key{Ctrl}-@key{c} + @key{D})} In code mode, generate and
-  preview the documentation  (using LPdoc) for the code in the editor area.
-  @cindex{documenting programs}
 
 @item{@key{Analyze and check assertions} (@key{Ctrl}-@key{c} + @key{V})} Analyze
   the program and perform compile-time checking of the assertions
@@ -226,7 +232,7 @@ text to lower case.
 
 @end{itemize}
 
-@subsection{Loading key bindings}
+@subsection{Code processing key bindings}
 
 These commands perform Ciao or filesystem-related actions: 
 
@@ -234,9 +240,21 @@ These commands perform Ciao or filesystem-related actions:
 
 @item @key{Ctrl}-@key{x} + @key{Ctrl}-@key{s} - save file (same as button).
 @item @key{Ctrl}-@key{c} + @key{l} - load code into top-level (same as button).
-@item @key{Ctrl}-@key{c} + @key{u} - run tests in current module (same as button).
 
 @end{itemize}
+
+These commands perform actions on the source code: 
+
+@begin{itemize}
+
+@item @key{Ctrl}-@key{c} + @key{d} - (un)debug source code (same as button). 
+@item @key{Ctrl}-@key{c} + @key{D} - preview documentation (same as button).
+@item @key{Ctrl}-@key{c} + @key{u} - run any tests in the source code (same as button).
+@item @key{Ctrl}-@key{c} + @key{V} - analyze and check assertions in source code (same as button).
+@item @key{Ctrl}-@key{c} + @key{O} - run specializer on source code.
+
+@end{itemize}
+
 
 @section{Specific key bindings for the top-level}
 
@@ -268,9 +286,11 @@ respect to a full, native installation of the Ciao system:
 @begin{itemize}
 
 @item Binaries and libraries are downloaded into your browser and code
-  is executed locally (no connection required once loaded, no
-  information about your code is gathered). To reduce download times,
-  only some essential libraries are loaded by default.
+  is executed locally. This has the advantage that no connection is
+  required other than this initiad download, no server is necessary,
+  no information about your code is uploadede/gathered, etc. However,
+  to reduce download times, only a subset of the libraries are loaded
+  by default.
 
 @item Currently this platform is limited to 32-bit binaries, runs
   around 2-3x slower than native binaries, and only offers partial
@@ -278,9 +298,9 @@ respect to a full, native installation of the Ciao system:
   binaries (via the foreign interface) may not be currently available.
 
 @item The top level currently has some limitations regarding the
-  loading of packages, debugging, portraying answers, and others. We
-  are actively working on all of these and will be adding this
-  functionality shortly.
+  loading of packages, portraying answers, and others. We are actively
+  working on all of these and will be adding this functionality
+  shortly.
 
 @item Reading input from standard input (@tt{read/1}) is currently not
   directly supported, due to WebAssembly limitations. We plan also to
@@ -288,7 +308,7 @@ respect to a full, native installation of the Ciao system:
 
 @item Only a subset of analyses (abstract domains) and capabilities of
   CiaoPP are available for program verification (assertion checking,
-  etc.) in the playground.
+  etc.) and optimization.
 
 @end{itemize}
 

@@ -21,24 +21,29 @@ app([],X,X).
 app([X|L1],L2,[X|L3]) :-
      app(L1,L2,L3).
 
-% Press "Load" and you can then type your 
-% queries in the other pane, e.g.:
+% Some things you can do: 
+% - Press 'Load' and you can then type your 
+%   queries in the other pane, e.g.:
 %
 % ?- app([1,2],[3,4],L).
 % ?- app(A,B,[1,2,3,4]).
+%
+% - Click on the magnifier button to run the debugger.
+% - Load some examples.
+% - Click on the book icon to generate documentation.
 
-% Or choose 'New'->'New document' to start a new
-% notebook-style Active Logic Document (ALD).
+% - Choose 'New document' to start a new
+%   notebook (an 'active logic document')!
 `;
-// TODO: Better splash doc
 const splash_code_md = `\
 \\title A simple Active Logic Document
 
-This is a sample *active logic document*: a notebook containing
-@em{embedded runnable Prolog code examples}, that can be edited,
-queried, etc.
+This is a sample **active logic document**: a **notebook** containing
+_embedded runnable Prolog code examples_, that can be edited,
+queried, shared etc. and _runs locally in the browser, with no need for
+a server_.
 
-In it you can use:
+You can use:
 
 - **Markdown** (LPdoc flavor)
 - or @bf{LPdoc commands}. 
@@ -80,15 +85,16 @@ Some things to try in the **editor/playground**:
     You can go back to the editor clicking on the pencil in the top right. 
   - Use the \`Share!\` button to generate a URL for the document that you can send, publish, etc.
   - \`Save\` the document source to your computer and \`Open\` it at any other time.
-  - Select \`More...\`, \`Toggle on-the-fly\` to see the document change as the markdown is changed.
+  - Click on the \`Toggle on-the-fly\` button to see the document change as the markdown is changed.
 
 You can save the document source with the 'Save'
 button and upload it at any other time.
 
 You can also click on the 'Share!' button to obtain a URL
 that contains the document and which you can paste in other
-documents, send by email, etc. (see the
-[**manual**](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html)).
+documents, send by email, etc. (see 
+[**this chapter**](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html))
+of the manual).
 
 Check out the [**markdown
 syntax**](/ciao/build/doc/lpdoc.html/Markdown.html) and the
@@ -112,15 +118,17 @@ const playgroundCfg_defaults = {
   with_header: true,
   with_github_stars: true,
   has_new_button: true,
-  has_open_button: true,
-  has_save_button: true,
+  // TODO: Not used currently (in file button now)
+  // has_open_button: true,
+  // has_save_button: true,
+  has_file_button: true,
   //
   has_load_button: true,
+  has_doc_button: true,
+  has_debug_button: true,
   has_toggle_presentation_button: true,
   has_toggle_on_the_fly_button: true,
   has_run_tests_button: true,
-  has_debug_button: true,
-  has_doc_button: true,
   has_acheck_button: true,
   has_spec_button: true,
   has_browse_analysis_opts_button: true,
@@ -141,7 +149,7 @@ const playgroundCfg_defaults = {
     '.md': splash_code_md
   }, 
   example_list: [
-    // TODO: replace by a pedagogical list of smaller Ciao/Prolog/CLP examples; move this collection somewhere else
+    // TODO: move this collection of links outside the code?
     //       also, point to a tutorial (an ALD)
 
     // ---------------------------------------------------------------------------
@@ -227,6 +235,7 @@ const playgroundCfg_defaults = {
   auto_action: null, // This set later depending on whether .md, .pl, etc.
   // Do auto-* actions on the fly (as document changes)
   on_the_fly: false,
+  on_the_fly_nodeid: null,
   // Keep worker alive (only when lpdocPG=='runnable' at this moment)
   runnable_keep_alive: true
 };
@@ -236,20 +245,23 @@ const playgroundCfg_defaults = {
 var miniPlaygroundCfg = {
   with_header: false,
   has_new_button: false,
-  has_open_button: false,
-  has_save_button: false,
+  // TODO: Not used currently (in file button now)
+  // has_open_button: false,
+  // has_save_button: false,
+  has_file_button: false,
   has_load_button: false,
+  has_doc_button: false,
+  has_debug_button: false,
   has_toggle_presentation_button: false,
   has_toggle_on_the_fly_button: false,
   has_run_tests_button: false,
-  has_debug_button: false,
-  has_doc_button: false,
   has_acheck_button: false,
   has_spec_button: false,
   has_browse_analysis_opts_button: false,
   has_layout_button: false,
   has_share_button: false,
   on_the_fly: true,
+  on_the_fly_nodeid: null, // (not needed in miniPlayground)
   storage_key: null // (program is never stored)
 };
 
@@ -839,17 +851,22 @@ class PGCell {
   /** Editor menu (menubar) */
   #setup_menu(base_el) {
     let menu_el = elem_cn('div', 'main-menu');
-    //
+    // (layout)
     if (playgroundCfg.has_layout_button) this.#setup_layout_button(menu_el);
-    // (file options)
+    // (create/file options)
     if (playgroundCfg.has_new_button) this.#setup_new_button(menu_el);
-    if (playgroundCfg.has_open_button) this.#setup_open_button(menu_el);
-    if (playgroundCfg.has_save_button) this.#setup_save_button(menu_el);
+    // TODO: Not used currently (in file button now)
+    // if (playgroundCfg.has_open_button) this.#setup_open_button(menu_el);
+    // if (playgroundCfg.has_save_button) this.#setup_save_button(menu_el);
+    if (playgroundCfg.has_file_button) this.#setup_file_button(menu_el);
     if (playgroundCfg.has_examples_button) this.#setup_examples_button(menu_el);
     // (actions)
     if (playgroundCfg.has_load_button) this.#setup_load_button(menu_el);
+    if (playgroundCfg.has_debug_button) this.#setup_debug_button(menu_el);
+    if (playgroundCfg.has_doc_button) this.#setup_doc_button(menu_el);
     if (playgroundCfg.has_toggle_presentation_button) this.#setup_toggle_presentation_button(menu_el);
-    // (advanced actions)
+    if (playgroundCfg.has_toggle_on_the_fly_button) this.#setup_toggle_on_the_fly_button(menu_el);
+    // (advanced actions)x
     this.#setup_advanced_buttons(menu_el);
 
     // (right menu part)
@@ -1528,6 +1545,7 @@ class PGCell {
     this.update_layout_sel_button_marks();
   }
 
+  // Decided to keep as a separate button (for code/ALD mode change)
   #setup_new_button(menu_el) { 
     const new_list = [];
     for (let ext of get_allowed_file_exts()) {
@@ -1554,6 +1572,7 @@ class PGCell {
     }
   };
 
+  // TODO: Not used currently (button now)
   #setup_open_button(menu_el) { // open file (upload)
     const el = btn('menu-button',
                    "Upload file",
@@ -1563,6 +1582,7 @@ class PGCell {
     menu_el.appendChild(el);
   }
 
+  // TODO: Not used currently (button now)
   #setup_save_button(menu_el) { // save file
     const el = btn('menu-button',
                    "Download file",
@@ -1571,6 +1591,33 @@ class PGCell {
     }); 
     menu_el.appendChild(el);
   }
+
+  #setup_file_button(menu_el) { 
+    const new_list = [];
+    // Keeping 'New' menu separate (see above)
+    // for (let ext of get_allowed_file_exts()) {
+    //   if (file_ext_def[ext].hide === true) continue;
+    //   new_list.push({ k:'new'+ext,
+    //                   n:'New '+file_ext_def[ext].desc,
+    //                   a:(async(pg) => { return await new_code(pg, ext); })
+    //                 });
+    // }
+    new_list.push({ k:'open',
+                    n:'Open local file',
+                    a:(async(pg) => { return await this.upload_file(); })
+                  });
+    new_list.push({ k:'save',
+                    n:'Save locally (download)',
+                    a:(async(pg) => { return await this.download_file() })
+                  });
+    const new_button =
+          btn_dropdown_act(this, menu_el,
+                           "Load. save, or reset files in editor area",
+                           elem_from_str("<span>File</span>"),
+                           new_list);
+    new_button.btn_el.classList.add('menu-button');
+    new_button.btn_el.style.height = '100%';
+  };
 
   upload_file() {
     const allowed_exts = get_allowed_file_exts();
@@ -1593,9 +1640,9 @@ class PGCell {
 
   #setup_examples_button(menu_el) {
     const examples_button =
-          new DropdownButton(menu_el,
+          new DropdownButton(menu_el, // Examples menu
                              "Select and load examples",
-                             elem_from_str("<span>Examples &#128214;</span>"),
+                             elem_from_str("<span>Examples</span>"),
                              playgroundCfg.example_list,
                              value => {
                                (async() => {
@@ -1606,17 +1653,46 @@ class PGCell {
     examples_button.btn_el.style.height = '100%';
   }
 
-  #setup_load_button(menu_el) { // load into toplevel or generate ALD
+  #setup_load_button(menu_el) { // Load into top level or generate ALD
     const el = btn('menu-button',
-                   // "Press C-c l to load into top level",
-                   "Press C-c l to load",
-                   "Load &nbsp;&#9654", () => {
-      load_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
+                   "Load code into top level or preview document (C-c l)",
+                   "Load &nbsp;&#9654",
+                   () => {
+                     load_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
     menu_el.appendChild(el);
   }
 
-  #setup_toggle_presentation_button(menu_el) { // toggle presentation mode
+  #setup_doc_button(menu_el) { // Preview documentation
+    const el = btn('menu-button',
+                   "Generate and preview documentation (C-c D)",
+                   "&#128214;",
+                   () => {
+                     gen_doc_preview(this).then(() => {})} ); // TODO: use "async () => { ... }" instead?
+    menu_el.appendChild(el);
+  }
+
+  #setup_debug_button(menu_el) { // Debug
+    const el = btn('menu-button',
+                   "Debug code (C-c d)",
+                   "&#128270;", // 128270 (magnifier) 128295 (wrench) - 1F6DF (lifesaver) 1F6E0 (tools) 
+                   () => {
+                     debug(this).then(() => {})} ); // TODO: use "async () => { ... }" instead?
+    menu_el.appendChild(el);
+  }
+
+  #setup_toggle_on_the_fly_button(menu_el) { // Toggle on-the-fly mode
+    const el = btn('menu-button',
+                   "Toggle on-the-fly mode for preview, analysis, etc.",  // "Keybinding?",
+                   `&#8635;`, // See toggle code also
+                   () => {
+                     toggle_on_the_fly(this).then(() => {}); // TODO: use "async () => { ... }" instead?
+    }); 
+    menu_el.on_the_fly_nodeid=el; // Saved for later modification 
+    menu_el.appendChild(el);
+  }
+  
+  #setup_toggle_presentation_button(menu_el) { // Toggle presentation mode
     const el = btn('menu-button',
                    "Toggle presentation (full screen) mode for preview area",  // "Keybinding?",
                    "<sup>&#x21F1;</sup><sub>&#x21F2;</sub>", () => { // Alt: &#xe5d0; &#x26F6;
@@ -1627,22 +1703,25 @@ class PGCell {
   
   #setup_advanced_buttons(menu_el) {
     const adv_list = [];
-    // Moved to a button button. 
+    // TODO: Moved to button:
     // if (playgroundCfg.has_toggle_presentation_button) {
     //      adv_list.push({ k:'toggle_presentation', n:'Toggle presentation mode', a:toggle_presentation });
     // }
-    if (playgroundCfg.has_toggle_on_the_fly_button) {
-      adv_list.push({ k:'toggle_on_the_fly', n:'Toggle on-the-fly', a:toggle_on_the_fly }); // &#8635; ?
-    }
+    // TODO: Moved to button:
+    // if (playgroundCfg.has_toggle_on_the_fly_button) {
+    //  adv_list.push({ k:'toggle_on_the_fly', n:'Toggle on-the-fly', a:toggle_on_the_fly }); // &#8635; ?
+    // }
     if (playgroundCfg.has_run_tests_button) {
-      adv_list.push({ k:'test', n:'Run tests (C-c u)', a:run_tests });
+      adv_list.push({ k:'test', n:'Run tests (if any) (C-c u)', a:run_tests });
     }
-    if (playgroundCfg.has_debug_button) {
-      adv_list.push({ k:'debug', n:'Debug (C-c d)', a:debug });
-    }
-    if (playgroundCfg.has_doc_button) {
-      adv_list.push({ k:'doc', n:'Preview documentation (C-c D)', a:gen_doc_preview });
-    }
+    // TODO: Moved to button:
+    // if (playgroundCfg.has_debug_button) { 
+    //  adv_list.push({ k:'debug', n:'Debug (C-c d)', a:debug });
+    // }
+    // TODO: Moved to button:
+    // if (playgroundCfg.has_doc_button) {
+    //   adv_list.push({ k:'doc', n:'Preview documentation (C-c D)', a:gen_doc_preview });
+    // }
     if (playgroundCfg.has_acheck_button) {
       adv_list.push({ k:'acheck', n:'Analyze and check assertions (C-c V)', a:acheck });
     }
@@ -2006,10 +2085,14 @@ async function toggle_presentation(pg) {
   pg.update_inner_layout();
 }
 
-/** Toggle on-the-fly mode */
+/** Toggle on-the-fly mode (and button label) */
 async function toggle_on_the_fly(pg) {
-  // TODO: show status
   playgroundCfg.on_the_fly = !playgroundCfg.on_the_fly;
+  // Toggle label too
+  // if (playgroundCfg.on_the_fly) { s = `<span style="color: red">&#8635;</div>`; } else { s = "&#8635;"; }; // &#9679;
+  // let elm = pg.menu_el.on_the_fly_nodeid;
+  // elm.innerHTML = s;
+  pg.menu_el.on_the_fly_nodeid.innerHTML = (playgroundCfg.on_the_fly ? `<span style="color: red">&#8635;</div>` : "&#8635;");
 }
 
 /** Run tests */
@@ -2565,14 +2648,18 @@ function parse_error_msg(msgs) {
   let warnings = [];
   let errors = [];
 
-  const regexp = /{[^{}]*\b(WARNING|ERROR|Reading|In|Compiling|Checking|Loading)\b([^{}]+)}/g; 
+  // const regexp = /{[^{}]*\b(WARNING|ERROR|Reading|In|Compiling|Checking|Loading)\b([^{}]+)}/g; 
+  const regexp = /{[^{}]*\b(WARNING|ERROR|FAILED|Reading|In|Compiling|Checking|Loading)\b([^{}]+)}/g;  // ***
   const w_regexp = /(Reading|In|Compiling|Checking|Loading)/g; 
+  // const foo = /{[^{}]*(WARNING|ERROR|Reading|In|Compiling|Checking|Loading|PASSED|FAILED)[^{}]+}/g;  // ***
+  const foo = '\n';  // ***
 
   msgs.match(regexp)?.forEach(e =>  {
     let lines = undefined;
     let msg = undefined;    
     if (e.match(w_regexp)) {
-      e.split('\n').filter(line => line.includes('WARNING') || line.includes('ERROR'))
+      // e.split('\n').filter(line => line.includes('WARNING') || line.includes('ERROR')) // ***
+      e.split(foo).filter(line => line.includes('WARNING') || line.includes('ERROR') || line.includes('FAILED'))  // ***
       .forEach(line => {
 	let errmsg = line.slice(line.indexOf(':') + 2);
         if (line.includes('lns')) {
@@ -2587,7 +2674,8 @@ function parse_error_msg(msgs) {
             lines: lines,
             msg: msg
           });
-        } else if (line.includes('ERROR')) {
+        // } else if (line.includes('ERROR')) {
+        } else if (line.includes('ERROR') || line.includes('FAILED')) { // ***
           errors.push({
             file: file,
             lines: lines,
@@ -2611,7 +2699,8 @@ function parse_error_msg(msgs) {
           lines: lines,
           msg: msg
         });
-      } else if (e.includes('ERROR')) {
+      // } else if (e.includes('ERROR')) { 
+      } else if (e.includes('ERROR') || e.includes('FAILED') ) { // ***
         errors.push({
           file: file,
           lines: lines,
