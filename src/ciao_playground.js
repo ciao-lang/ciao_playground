@@ -118,9 +118,7 @@ const playgroundCfg_defaults = {
   with_header: true,
   with_github_stars: true,
   has_new_button: true,
-  // TODO: Not used currently (in file button now)
-  // has_open_button: true,
-  // has_save_button: true,
+  has_ext_mode_button: true,
   has_file_button: true,
   //
   has_load_button: true,
@@ -146,7 +144,8 @@ const playgroundCfg_defaults = {
   // Note: we use those keys to enable/disable each particular new button
   splash_code: {
     '.pl': splash_code_pl, 
-    '.md': splash_code_md
+    '.md': splash_code_md,
+    '.lpdoc': splash_code_md // TODO: just testing so that .lpdoc files can also be opened
   }, 
   example_list: [
     // TODO: move this collection of links outside the code?
@@ -235,7 +234,12 @@ const playgroundCfg_defaults = {
   auto_action: null, // This set later depending on whether .md, .pl, etc.
   // Do auto-* actions on the fly (as document changes)
   on_the_fly: false,
-  on_the_fly_nodeid: null,
+  // Buttons quick access 
+  on_the_fly_button_nodeid: null,
+  ext_mode_button_nodeid: null,
+  load_button_nodeid: null,
+  debug_button_nodeid: null,
+  more_button_nodeid: null,
   // Keep worker alive (only when lpdocPG=='runnable' at this moment)
   runnable_keep_alive: true
 };
@@ -245,11 +249,9 @@ const playgroundCfg_defaults = {
 var miniPlaygroundCfg = {
   with_header: false,
   has_new_button: false,
-  // TODO: Not used currently (in file button now)
-  // has_open_button: false,
-  // has_save_button: false,
   has_file_button: false,
   has_load_button: false,
+  has_ext_mode_button: false,
   has_doc_button: false,
   has_debug_button: false,
   has_toggle_presentation_button: false,
@@ -261,7 +263,11 @@ var miniPlaygroundCfg = {
   has_layout_button: false,
   has_share_button: false,
   on_the_fly: true,
-  on_the_fly_nodeid: null, // (not needed in miniPlayground)
+  on_the_fly_button_nodeid: null, // (not needed in miniPlayground)
+  ext_mode_button_nodeid: null, // (not needed in miniPlayground)
+  load_button_nodeid: null, // (not needed in miniPlayground)
+  debug_button_nodeid: null, // (not needed in miniPlayground)
+  more_button_nodeid: null, // (not needed in miniPlayground)
   storage_key: null // (program is never stored)
 };
 
@@ -273,9 +279,11 @@ playgroundCfg = Object.assign({...playgroundCfg_defaults}, playgroundCfg);
 
 // Definition of file extensions
 var file_ext_def = {};
-file_ext_def['.pl'] = { desc:'code', action:'load', kind:'prolog' };
-file_ext_def['.md'] = { desc:'document', action:'doc', kind:'markdown' };
-file_ext_def['.lpdoc'] = { desc:'document', action:'doc', kind:'markdown', hide:true }; // Do not include in menu
+file_ext_def['.pl'] = { desc:'code', button_text:'.pl', action:'load', kind:'prolog',
+                        load_menu:true, debug_menu:true, more_menu:true };
+file_ext_def['.md'] = { desc:'document', button_text:'.md', action:'doc', kind:'markdown'};
+file_ext_def['.lpdoc'] = { desc:'document', button_text:'.md', action:'doc', kind:'markdown',
+                           hide:true }; // Do not include in "New" menu (would be repeated)
 
 /* Get an array of active file extensions in this playground */
 function get_allowed_file_exts() {
@@ -430,7 +438,7 @@ class Modal {
     window.addEventListener('keydown', this.key_handler);
   }
 
-  // Set unvisible and remove
+  // Set invisible and remove
   close() {
     this.set_visible(false);
     this.remove();
@@ -740,6 +748,7 @@ class PGCell {
     }
     this.set_auto_action(file_ext_def[code.ext].action);
     this.set_editor_code(code);
+    update_menu_buttons(this);
     this.#cancel_autosave();
     if (!this.is_R) { // TODO: treat is_R == true case
       await process_code(this);
@@ -802,6 +811,7 @@ class PGCell {
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
       this.set_auto_action(file_ext_def[this.code_ext].action);
+      update_menu_buttons(this);
     } else {
       this.editor_el = null;
     }
@@ -855,11 +865,9 @@ class PGCell {
     if (playgroundCfg.has_layout_button) this.#setup_layout_button(menu_el);
     // (create/file options)
     if (playgroundCfg.has_new_button) this.#setup_new_button(menu_el);
-    // TODO: Not used currently (in file button now)
-    // if (playgroundCfg.has_open_button) this.#setup_open_button(menu_el);
-    // if (playgroundCfg.has_save_button) this.#setup_save_button(menu_el);
     if (playgroundCfg.has_file_button) this.#setup_file_button(menu_el);
     if (playgroundCfg.has_examples_button) this.#setup_examples_button(menu_el);
+    if (playgroundCfg.has_ext_mode_button) this.#setup_ext_mode_button(menu_el);
     // (actions)
     if (playgroundCfg.has_load_button) this.#setup_load_button(menu_el);
     if (playgroundCfg.has_debug_button) this.#setup_debug_button(menu_el);
@@ -1572,36 +1580,8 @@ class PGCell {
     }
   };
 
-  // TODO: Not used currently (button now)
-  #setup_open_button(menu_el) { // open file (upload)
-    const el = btn('menu-button',
-                   "Upload file",
-                   "Open", () => {
-      this.upload_file();
-    }); 
-    menu_el.appendChild(el);
-  }
-
-  // TODO: Not used currently (button now)
-  #setup_save_button(menu_el) { // save file
-    const el = btn('menu-button',
-                   "Download file",
-                   "Save", () => {
-      this.download_file();
-    }); 
-    menu_el.appendChild(el);
-  }
-
   #setup_file_button(menu_el) { 
     const new_list = [];
-    // Keeping 'New' menu separate (see above)
-    // for (let ext of get_allowed_file_exts()) {
-    //   if (file_ext_def[ext].hide === true) continue;
-    //   new_list.push({ k:'new'+ext,
-    //                   n:'New '+file_ext_def[ext].desc,
-    //                   a:(async(pg) => { return await new_code(pg, ext); })
-    //                 });
-    // }
     new_list.push({ k:'open',
                     n:'Open local file',
                     a:(async(pg) => { return await this.upload_file(); })
@@ -1660,9 +1640,22 @@ class PGCell {
                    () => {
                      load_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
+    menu_el.load_button_nodeid=el; // Saved for later modification 
     menu_el.appendChild(el);
   }
 
+  #setup_ext_mode_button(menu_el) { // Toggle presentation mode
+    const el = btn('menu-button',
+                   "Current mode: code or notebook. Can be toggled.",  // "Keybinding?",
+                   // file_ext_def[this.code_ext].button_text, 
+                   `<div style="min-width: 30px"></div>`, // Will be  filled in later 
+                   () => { 
+      toggle_file_ext_mode(this).then(() => {}); // TODO: use "async () => { ... }" instead?
+    });
+    menu_el.ext_mode_button_nodeid=el; // Saved for later modification 
+    menu_el.appendChild(el);
+  }
+  
   #setup_doc_button(menu_el) { // Preview documentation
     const el = btn('menu-button',
                    "Generate and preview documentation (C-c D)",
@@ -1678,6 +1671,7 @@ class PGCell {
                    "&#128270;", // 128270 (magnifier) 128295 (wrench) - 1F6DF (lifesaver) 1F6E0 (tools) 
                    () => {
                      debug(this).then(() => {})} ); // TODO: use "async () => { ... }" instead?
+    menu_el.debug_button_nodeid=el; // Saved for later modification 
     menu_el.appendChild(el);
   }
 
@@ -1688,7 +1682,7 @@ class PGCell {
                    () => {
                      toggle_on_the_fly(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
-    menu_el.on_the_fly_nodeid=el; // Saved for later modification 
+    menu_el.on_the_fly_button_nodeid=el; // Saved for later modification 
     menu_el.appendChild(el);
   }
   
@@ -1703,25 +1697,9 @@ class PGCell {
   
   #setup_advanced_buttons(menu_el) {
     const adv_list = [];
-    // TODO: Moved to button:
-    // if (playgroundCfg.has_toggle_presentation_button) {
-    //      adv_list.push({ k:'toggle_presentation', n:'Toggle presentation mode', a:toggle_presentation });
-    // }
-    // TODO: Moved to button:
-    // if (playgroundCfg.has_toggle_on_the_fly_button) {
-    //  adv_list.push({ k:'toggle_on_the_fly', n:'Toggle on-the-fly', a:toggle_on_the_fly }); // &#8635; ?
-    // }
     if (playgroundCfg.has_run_tests_button) {
       adv_list.push({ k:'test', n:'Run tests (if any) (C-c u)', a:run_tests });
     }
-    // TODO: Moved to button:
-    // if (playgroundCfg.has_debug_button) { 
-    //  adv_list.push({ k:'debug', n:'Debug (C-c d)', a:debug });
-    // }
-    // TODO: Moved to button:
-    // if (playgroundCfg.has_doc_button) {
-    //   adv_list.push({ k:'doc', n:'Preview documentation (C-c D)', a:gen_doc_preview });
-    // }
     if (playgroundCfg.has_acheck_button) {
       adv_list.push({ k:'acheck', n:'Analyze and check assertions (C-c V)', a:acheck });
     }
@@ -1742,6 +1720,7 @@ class PGCell {
                              adv_list);
       adv_button.btn_el.classList.add('menu-button');
       adv_button.btn_el.style.height = '100%';
+      menu_el.more_button_nodeid = adv_button.btn_el; // Saved for later modification 
     }
   }
 
@@ -2085,14 +2064,47 @@ async function toggle_presentation(pg) {
   pg.update_inner_layout();
 }
 
+/** Toggle file extension (.pl/.md) mode */
+async function toggle_file_ext_mode(pg) {
+  if (pg.is_R) return; /* (do nothing) */
+  pg.code_ext = ( file_ext_is_doc(pg.code_ext) ? '.pl' : '.md' ); 
+  update_menu_buttons(pg);
+}
+
+async function update_menu_buttons(pg) {
+  if (pg.is_R) return; /* (do nothing) */
+  pg.menu_el.ext_mode_button_nodeid.innerHTML =
+    `<div style="min-width: 30px">`+file_ext_def[pg.code_ext].button_text+'</div>'; 
+
+  if (file_ext_def[pg.code_ext].load_menu === true) {
+    pg.menu_el.load_button_nodeid.style.display = 'block';
+  }
+  else {
+    pg.menu_el.load_button_nodeid.style.display = 'none';
+  };
+  if (file_ext_def[pg.code_ext].load_menu === true) {
+    pg.menu_el.debug_button_nodeid.style.display = 'block';
+  }
+  else {
+    pg.menu_el.debug_button_nodeid.style.display = 'none';
+  };
+  if (file_ext_def[pg.code_ext].load_menu === true) {
+    pg.menu_el.more_button_nodeid.style.display = 'block';
+  }
+  else {
+    pg.menu_el.more_button_nodeid.style.display = 'none';
+  };
+}
+
 /** Toggle on-the-fly mode (and button label) */
 async function toggle_on_the_fly(pg) {
   playgroundCfg.on_the_fly = !playgroundCfg.on_the_fly;
   // Toggle label too
   // if (playgroundCfg.on_the_fly) { s = `<span style="color: red">&#8635;</div>`; } else { s = "&#8635;"; }; // &#9679;
-  // let elm = pg.menu_el.on_the_fly_nodeid;
+  // let elm = pg.menu_el.on_the_fly_button_nodeid;
   // elm.innerHTML = s;
-  pg.menu_el.on_the_fly_nodeid.innerHTML = (playgroundCfg.on_the_fly ? `<span style="color: red">&#8635;</div>` : "&#8635;");
+  pg.menu_el.on_the_fly_button_nodeid.innerHTML =
+    (playgroundCfg.on_the_fly ? `<span style="color: red">&#8635;</div>` : "&#8635;");
 }
 
 /** Run tests */
@@ -2233,7 +2245,7 @@ async function doc_preview(pg) {
     await show_lpdoc_html(pg, d);
   }
 }
-// Extract main div element from the html string of a LPdoc .html file
+// Extract main div element from the html string of an LPdoc .html file
 function extract_lpdoc_main_el(str) {
   let d = document.createElement('template');
   d.innerHTML = str;

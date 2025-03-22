@@ -46,11 +46,13 @@ configurable):
 
 @item{@key{Area selector}} Allows selecting which areas are visible.
 
-@item{@key{New}} Erases all previous content from the editor. It
- allows selecting whether the new content of the editor will be a
- program (@tt{.pl}) or a document (@tt{.md}).
+@item{@key{New}} Erases all previous content from the editor and
+ allows loading a small sample program or document.  This also
+ switches the new content in the editor area to be treated as a
+ program (@tt{.pl}) or as a document (@tt{.md}).
 
-@item{@key{File}} allows the following: 
+
+@item{@key{File}} 
 
    @begin{description}
 
@@ -69,31 +71,46 @@ configurable):
 @item{@key{Examples}} Allows loading a number of examples of programs
   and active logic documents to get started.  @cindex{examples}
 
-@item{@key{Load} (@key{Ctrl}-@key{c} + @key{l})} Processes the content
-  of the editor area: 
-  @cindex{loading programs}
-  @cindex{rendering documents}
+@item{@key{.pl} / @key{.md} (Playground mode)} Indicates if the playground is
+  in code (@key{.pl}) or document (@key{.md}) mode. It also allows
+  toggling between these two modes.
+  @cindex{selecting playground modes}
 
-  @begin{itemize}
+@item{@key{Load} (@key{Ctrl}-@key{c} + @key{l})} In code mode, loads
+  the program in the editor area into the top level. It compiles it
+  and, in case there are any errors, they are printed in top-level
+  area and highlighted in the editor. Once you click this button, you
+  can ask queries about your code in the top-level. @cindex{loading
+  programs}
 
-  @item If the editor contains a program, it loads the code into the
-    top-level. It compiles it and, in case there are any errors, they
-  are printed in top-level area and highlighted in the . Once you click this button, you can ask queries about 
-  your code in the top-level.
+@item{@key{🔎} (Debug, @key{Ctrl}-@key{c} + @key{d})} In code mode,
+  load code source in debug mode and enable tracing the control flow
+  of the program for subsequent queries. Clicking again turns debug
+  mode off.  See the debugger documentation for more information.
+  @cindex{program debugging}
 
-  @item If the editor contains a document source, it processes it in
-  the top level and renders it in the preview area. If the document
-  contains runnable examples these can be executed there.
+@item{@key{📖} (Preview documentation, @key{Ctrl}-@key{c} + @key{D})}
 
-  @end{itemize}
+   @begin{itemize}
 
-@item{@key{⇱⇲}} (Toggle presentation mode)
+   @item In code mode (@key{.pl}) generate and preview the
+   documentation for the code in the editor area using
+   LPdoc. @cindex{documenting programs}
+
+   @item In document mode (@key{.md}) process the document source in
+   the editor it in the top level and render it in the preview area
+   using LPdoc. If the document contains runnable examples these can
+   be executed there.
+
+   @end{itemize}
+
+@item{@key{⇱⇲} (Toggle presentation mode)}
   Switches to a full window view of
   the document or any other content of the preview area. In this view:
   @cindex{presentation mode}
   @cindex{full-screen mode}
   @cindex{slides}
-  @cindex{slides presenation mode}
+  @cindex{slides presentation mode}
 
   @begin{itemize}
   @item The pencil @key{✎} icon allows returning to the editor mode.
@@ -106,30 +123,34 @@ configurable):
   @end{itemize}
 
 
-@item{@key{🔎} (Debug, @key{Ctrl}-@key{c} + @key{d})} Debug (or stop
-  debugging) source and enable tracing the control flow of the program
-  for the next queries (see debugger documentation for more
-  information).  @cindex{program debugging}
-
-@item{@key{📖} (Preview documentation, @key{Ctrl}-@key{c} + @key{D})}
-  In code mode, generate and preview the documentation (using LPdoc)
-  for the code in the editor area. @cindex{documenting programs}
-
-@item{@key{↻} (Toggle on-the-fly)} If turned on, the program is loaded or
- the document rendered continuously. This allows showing program errors
- on the code as it is being modified, or seeing interactively the
- results of editing the document source.
+@item{@key{↻} (Toggle on-the-fly mode)} If turned on, documents are
+  rendered interactively, as they are edited, and programs are also
+  processed in this way.  Program errors and warnings are then shown
+  on the code as it is being modified, or the results of editing a
+  document source are shown progressively as the document is edited.
+  This button is highlighted in red when on-the-fly mode is on. 
 
 @item{@key{Share!}} Is an alternative form of save, very useful for
-  sharing!: it copies into the clipboard a link that will open the
-  playground with the current state of the program loaded in the
-  editor area. In the case of documents this link will open directly
-  the rendered document, and it can also be edited. These links can be
-  sent by email, embedded in other documents, etc. (see
-  [Adding links to runnable examples and notebooks to arbitrary
-  documents](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html)).
-  @cindex{sharing programs}
-  @cindex{sharing documents}
+  sharing!:
+
+   @begin{itemize}
+
+   @item In code mode (@key{.pl}) it copies into the clipboard a
+   shareable link which, when clicked, will open a playground with the
+   current state of the program loaded in the editor area.
+   @cindex{sharing programs}
+
+   @item In document mode (@key{.md}) it copies into the clipboard a
+   shareable link which, when clicked, will open directly
+   the rendered document, which can then also be edited. 
+   @cindex{sharing documents}
+
+   @end{itemize}
+
+   These links can be sent by email, embedded in other documents, etc.
+   See also [adding links to runnable examples and notebooks to
+   arbitrary
+   documents](/ciao/build/doc/ciao_playground.html/ciao_playground_embedding.html)).
 
 @comment{ % begin comment
 @begin{alert} 
@@ -182,10 +203,10 @@ selected:
  program annotated with the analysis results.
 
 @item{@key{Specialize code} (@key{Ctrl}-@key{c} + @key{O})} Run the CiaoPP
- specializer on the code in the editor area.
+ specializer (partial evaluator) on the code in the editor area.
 
 @item{@key{Browse analysis/checking/optimizing options}} Open the
- CiaoPP graphical menu to select different options for analysis,
+ CiaoPP graphical menu for selecting different options for analysis,
  assertion checking, and optimization.
 
 @end{description}
@@ -198,7 +219,8 @@ functionality.
 
 @subsection{Editing key bindings}
 
-These commands are useful to edit and move around the editor areas:
+These commands and bindings are useful for editing and moving around in
+the editor area, top levels, etc.:
 
 @begin{itemize}
 
@@ -249,9 +271,9 @@ These commands perform actions on the source code:
 
 @item @key{Ctrl}-@key{c} + @key{d} - (un)debug source code (same as button). 
 @item @key{Ctrl}-@key{c} + @key{D} - preview documentation (same as button).
-@item @key{Ctrl}-@key{c} + @key{u} - run any tests in the source code (same as button).
-@item @key{Ctrl}-@key{c} + @key{V} - analyze and check assertions in source code (same as button).
-@item @key{Ctrl}-@key{c} + @key{O} - run specializer on source code.
+@item @key{Ctrl}-@key{c} + @key{u} - run any tests in the source code (same as menu).
+@item @key{Ctrl}-@key{c} + @key{V} - analyze and check assertions in source code (same as menu).
+@item @key{Ctrl}-@key{c} + @key{O} - run specializer on source code (same as menu).
 
 @end{itemize}
 
@@ -278,19 +300,22 @@ window will be reloaded to the top-level.
 
 @end{alert}
 
-@section{Current playground limitations}
+@section{Some playground characteristics and current limitations}
 
-Please be aware of some current limitations of the playground with
-respect to a full, native installation of the Ciao system:
+In this platform the Ciao system code (binaries) and libraries are
+downloaded into your browser and all code is executed locally. This
+has the advantage that no connection is required other than this
+initial download, no server is necessary, etc. Also note that with
+this approach no information about your code or document will be
+uploaded or gathered.
+
+Please also be aware of some current limitations of the playground
+with respect to a full, native installation of the Ciao system:
 
 @begin{itemize}
 
-@item Binaries and libraries are downloaded into your browser and code
-  is executed locally. This has the advantage that no connection is
-  required other than this initiad download, no server is necessary,
-  no information about your code is uploadede/gathered, etc. However,
-  to reduce download times, only a subset of the libraries are loaded
-  by default.
+@item To reduce download times, only a subset of the libraries are
+  loaded by default.
 
 @item Currently this platform is limited to 32-bit binaries, runs
   around 2-3x slower than native binaries, and only offers partial
@@ -299,22 +324,21 @@ respect to a full, native installation of the Ciao system:
 
 @item The top level currently has some limitations regarding the
   loading of packages, portraying answers, and others. We are actively
-  working on all of these and will be adding this functionality
-  shortly.
+  working on all of these and are adding functionality continuously.
 
 @item Reading input from standard input (@tt{read/1}) is currently not
-  directly supported, due to WebAssembly limitations. We plan also to
-  fix this soon.
+  directly supported, due to WebAssembly limitations. We also plan to
+  fix this soon. 
 
-@item Only a subset of analyses (abstract domains) and capabilities of
-  CiaoPP are available for program verification (assertion checking,
-  etc.) and optimization.
+@item To save space, only a subset of the analyses (abstract domains)
+  and the capabilities of CiaoPP for program verification (assertion
+  checking, etc.) and optimization are currently available.
 
 @end{itemize}
 
 Please @bf{ask us} if some useful library or feature is missing; if
-technically possible, we will add it. However, for intensive use we
-recommend [installing Ciao Prolog natively](/install.html), for
+technically possible, we will add it. In any case, for intensive use
+we recommend [installing Ciao Prolog natively](/install.html), for
 improved performance and full features.
 
 ").
@@ -332,6 +356,7 @@ the browser. For example, they can employ the browser's
 @tt{alert} feature with a predicate like this one:
 
 @begin{verbatim}
+:- use_package(foreign_js).
 :- export(alert/1).
 alert(Str) :- js_call(alert(string(Str))).
 js_def(alert("x"), [], "alert(x);").
