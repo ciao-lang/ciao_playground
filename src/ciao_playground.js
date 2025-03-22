@@ -2660,18 +2660,14 @@ function parse_error_msg(msgs) {
   let warnings = [];
   let errors = [];
 
-  // const regexp = /{[^{}]*\b(WARNING|ERROR|Reading|In|Compiling|Checking|Loading)\b([^{}]+)}/g; 
-  const regexp = /{[^{}]*\b(WARNING|ERROR|FAILED|Reading|In|Compiling|Checking|Loading)\b([^{}]+)}/g;  // ***
-  const w_regexp = /(Reading|In|Compiling|Checking|Loading)/g; 
-  // const foo = /{[^{}]*(WARNING|ERROR|Reading|In|Compiling|Checking|Loading|PASSED|FAILED)[^{}]+}/g;  // ***
-  const foo = '\n';  // ***
+  const regexp = /{[^{}]*\b(WARNING|ERROR|FAILED|Reading|In|Compiling|Analyzing|Checking|Loading)\b([^{}]+)}/g;
+  const w_regexp = /(Reading|In|Compiling|Analyzing|Checking|Loading)/g; 
 
   msgs.match(regexp)?.forEach(e =>  {
     let lines = undefined;
     let msg = undefined;    
     if (e.match(w_regexp)) {
-      // e.split('\n').filter(line => line.includes('WARNING') || line.includes('ERROR')) // ***
-      e.split(foo).filter(line => line.includes('WARNING') || line.includes('ERROR') || line.includes('FAILED'))  // ***
+      e.split('\n').filter(line => line.includes('WARNING') || line.includes('ERROR') || line.includes('FAILED'))
       .forEach(line => {
 	let errmsg = line.slice(line.indexOf(':') + 2);
         if (line.includes('lns')) {
@@ -2684,14 +2680,14 @@ function parse_error_msg(msgs) {
           warnings.push({
             file: file,
             lines: lines,
-            msg: msg
+            msg: e
           });
         // } else if (line.includes('ERROR')) {
-        } else if (line.includes('ERROR') || line.includes('FAILED')) { // ***
+        } else if (line.includes('ERROR') || line.includes('FAILED')) {
           errors.push({
             file: file,
             lines: lines,
-            msg: msg
+            msg: e
           });
         } else {
           return;
@@ -2709,14 +2705,14 @@ function parse_error_msg(msgs) {
         warnings.push({
           file: file,
           lines: lines,
-          msg: msg
+          msg: e
         });
       // } else if (e.includes('ERROR')) { 
-      } else if (e.includes('ERROR') || e.includes('FAILED') ) { // ***
+      } else if (e.includes('ERROR') || e.includes('FAILED') ) {
         errors.push({
           file: file,
           lines: lines,
-          msg: msg
+          msg: e
         });
       }         
     }
