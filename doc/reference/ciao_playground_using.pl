@@ -71,9 +71,9 @@ configurable):
 @item{@key{Examples}} Allows loading a number of examples of programs
   and active logic documents to get started.  @cindex{examples}
 
-@item{@key{.pl} / @key{.md} (Playground mode)} Indicates if the playground is
-  in code (@key{.pl}) or document (@key{.md}) mode. It also allows
-  toggling between these two modes.
+@item{@key{.pl} / @key{.md} (Playground mode)} Indicates if the
+  playground is in code (@key{.pl}) or document (@key{.md})
+  development mode. It also allows toggling between these two modes.
   @cindex{selecting playground modes}
 
 @item{@key{Load} (@key{Ctrl}-@key{c} + @key{l})} In code mode, loads
