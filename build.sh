@@ -6,10 +6,21 @@
 # 
 # ---------------------------------------------------------------------------
 
+# Physical directory where the script is located
+_base=$(e=$0;while test -L "$e";do d=$(dirname "$e");e=$(readlink "$e");\
+      cd "$d";done;cd "$(dirname "$e")";pwd -P)
+
+set -e
+
+# ---------------------------------------------------------------------------
+
+ciaoroot=$_base/../.. # TODO: only works for monorepo!
+
 has_bundle() {
     ciao info "$1" > /dev/null 2>&1
 }
 
+# TODO: unused
 bundle_dir() {
     ciao info "$1" | sed -n '/src:/s/^[[:space:]]*src:[[:space:]]*//p' 
 }
@@ -34,7 +45,7 @@ check_emcc() {
         cat <<EOF
 ERROR: Could not find 'emcc' in the path. 
 
-Please install and activate emscripten:
+Please install and activate emscripten (>= 4.0.9):
 
   https://emscripten.org/docs/getting_started/downloads.html
 
@@ -56,9 +67,9 @@ build_ciaowasm() {
     check_emcc
     # (build and install ciaowasm)
     if [ x"$FORCE_ENG_REBUILD" = x"yes" ]; then # make sure engine is rebuilt
-        if [ -r ../../core/engine/ciaoengine_common.pl ]; then
-            touch ../../core/engine/ciaoengine_common.pl
-            rm -rf ../../build/eng/ciaoengwasm/
+        if [ -r "$ciaoroot"/core/engine/ciaoengine_common.pl ]; then
+            touch "$ciaoroot"/core/engine/ciaoengine_common.pl
+            rm -rf "$ciaoroot"/build/eng/ciaoengwasm/
         else
             cat <<EOF
 Cannot locate ciaoengine_common.pl
@@ -81,7 +92,7 @@ build_ciao_playground() {
     ciao custom_run ciao_playground fetch_externals
     # (build and install ciao_playground, including docs)
     ciao build --bin ciao_playground
-    # rm -rf ../../build/doc/ciao_playground.*
+    # rm -rf "$ciaoroot"/build/doc/ciao_playground.*
     ciao build --docs ciao_playground
     ciao install ciao_playground 
     ciao custom_run ciao_playground dist
@@ -98,7 +109,7 @@ build_bundles() {
     ciao install --grade=wasm builder
 
     # [[website]]
-    # rm -rf ../../build/site/index.cachedoc; ciao custom_run website dist
+    # rm -rf "$ciaoroot"/build/site/index.cachedoc; ciao custom_run website dist
     if has_bundle website; then
         ciao build --bin website
         ciao build --grade=wasm website
