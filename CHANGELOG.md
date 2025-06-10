@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.24.0] - 2024-10-13
+
+### Added
+
+ - Support for multiple file types. The playground can edit both
+   markdown/lpdoc (documentation) and code.
+
+ - Added "presentation mode" (hides all editor components)
+ - Added "slideshow mode" (presents sections as slides)
+ - Share links include both contents and file type.
+ - Register language keywords `ciao-prolog`, `ciao`,
+   `ciao_runnable` (for markdown coloring).
+ - New URL fetch method for local URIs relative to build/site
+   (requires `ciao-serve-mt`; `SERVER/playground/#/tmp/foo.md` points to
+   `CIAOROOT/build/site/tmp/foo.md`)
+ - CiaoPP Flags Interactive Menu.
+
+### Improved
+
+ - Load button for ALDs now generates documentation.
+ - Better implementation of nested playgrounds.
+ - Support URL versioning suffix.
+
+### Fixed
+
+ - Fixed M-d bindings as deleteWordRight (it was actually
+   overwriting C-d)
+ - Do not reload ALD code on abort, reset status to unknown.
+ - Fix non-monotonic slideshow scaling (use thin scrollbar and
+   scale ignoring scrollbar width, see commit message for details).
+ - Use CSS zoom instead of transform (zoom is not standard but
+   widely supported, it computes layout correctly).
+ - Do not capture arrow keys in slideshow navigation when
+   focusing some editable component.
+ - Do not save persistent storage in runnables (ALD).
+
 ## [1.23.0] - 2024-3-04
 
 ### Added
