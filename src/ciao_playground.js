@@ -1668,7 +1668,7 @@ class PGCell {
   #setup_debug_button(menu_el) { // Debug
     const el = btn('menu-button',
                    "Debug code (C-c d)",
-                   "&#128270;", // 128270 (magnifier) 128295 (wrench) - 1F6DF (lifesaver) 1F6E0 (tools) 
+                   "&#x1F41E;",
                    () => {
                      debug(this).then(() => {})} ); // TODO: use "async () => { ... }" instead?
     menu_el.debug_button_nodeid=el; // Saved for later modification 
@@ -1678,7 +1678,7 @@ class PGCell {
   #setup_toggle_on_the_fly_button(menu_el) { // Toggle on-the-fly mode
     const el = btn('menu-button',
                    "Toggle on-the-fly mode for preview, analysis, etc.",  // "Keybinding?",
-                   `&#8635;`, // See toggle code also
+                   '<span style="opacity: 0.5">&#x26A1;</span>', // See toggle code also
                    () => {
                      toggle_on_the_fly(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
@@ -1689,7 +1689,7 @@ class PGCell {
   #setup_toggle_presentation_button(menu_el) { // Toggle presentation mode
     const el = btn('menu-button',
                    "Toggle presentation (full screen) mode for preview area",  // "Keybinding?",
-                   "<sup>&#x21F1;</sup><sub>&#x21F2;</sub>", () => { // Alt: &#xe5d0; &#x26F6;
+                   "&#x26F6;", () => {
       toggle_presentation(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
     menu_el.appendChild(el);
@@ -1716,7 +1716,7 @@ class PGCell {
       const adv_button =
             btn_dropdown_act(this, menu_el,
                              "Advanced actions",
-                             elem_from_str("<span>More...</span>"),
+                             elem_from_str("<span>&#x22EF;</span>"), // "More..."
                              adv_list);
       adv_button.btn_el.classList.add('menu-button');
       adv_button.btn_el.style.height = '100%';
@@ -2104,7 +2104,7 @@ async function toggle_on_the_fly(pg) {
   // let elm = pg.menu_el.on_the_fly_button_nodeid;
   // elm.innerHTML = s;
   pg.menu_el.on_the_fly_button_nodeid.innerHTML =
-    (playgroundCfg.on_the_fly ? `<span style="color: red">&#8635;</div>` : "&#8635;");
+    (playgroundCfg.on_the_fly ? '&#x26A1;' : '<span style="opacity: 0.5">&#x26A1;</span>');
 }
 
 /** Run tests */
