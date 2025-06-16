@@ -2656,7 +2656,6 @@ const WARNING = 1;
  */
 // TODO: this parser is incomplete; it does not deal correctly with 'file'
 function parse_error_msg(msgs) {
-  let file = undefined;
   let warnings = [];
   let errors = [];
 
@@ -2664,57 +2663,52 @@ function parse_error_msg(msgs) {
   const w_regexp = /(Reading|In|Compiling|Analyzing|Checking|Loading)/g; 
 
   msgs.match(regexp)?.forEach(e =>  {
+    let file = undefined; // TODO: not filled!
     let lines = undefined;
-    let msg = undefined;    
-    if (e.match(w_regexp)) {
-      e.split('\n').filter(line => line.includes('WARNING') || line.includes('ERROR') || line.includes('FAILED'))
-      .forEach(line => {
-	let errmsg = line.slice(line.indexOf(':') + 2);
-        if (line.includes('lns')) {
-          lines = errmsg.slice(errmsg.indexOf('(') + 5, errmsg.indexOf(')'));
-          msg = errmsg.slice(errmsg.indexOf(')') + 2);
-        } else {
-          msg = errmsg;   
-        }
-        if (line.includes('WARNING')) {
-          warnings.push({
-            file: file,
-            lines: lines,
-            msg: e
-          });
-        // } else if (line.includes('ERROR')) {
-        } else if (line.includes('ERROR') || line.includes('FAILED')) {
-          errors.push({
-            file: file,
-            lines: lines,
-            msg: e
-          });
-        } else {
-          return;
-        }
-      });
-    } else {
-      const errmsg = e.slice(e.indexOf(':') + 2);
+    let queue = undefined;
+    let group = [];
+    const begin_msg = (e) => { // begin new message
+      group = [];
+      // TODO: poor matching, fix it
+      if (e.includes('WARNING')) {
+        queue = warnings;
+      } else if (e.includes('ERROR') || e.includes('FAILED')) {
+        queue = errors;
+      } else {
+        return;
+      }
+      let errmsg = e.slice(e.indexOf(':') + 2);
       if (e.includes('lns')) {
         lines = errmsg.slice(errmsg.indexOf('(') + 5, errmsg.indexOf(')'));
-        msg = errmsg.slice(errmsg.indexOf(')') + 2, errmsg.indexOf('}') - 1);
-      } else {
-        msg = errmsg.slice(0, errmsg.indexOf('}') - 1);  
+        group.push(errmsg.slice(errmsg.indexOf(')') + 2));
+      } else { // TODO: keep previous 'lines', is it OK?
+        group.push(errmsg);
       }
-      if (e.includes('WARNING')) {
-        warnings.push({
-          file: file,
-          lines: lines,
-          msg: e
-        });
-      // } else if (e.includes('ERROR')) { 
-      } else if (e.includes('ERROR') || e.includes('FAILED') ) {
-        errors.push({
-          file: file,
-          lines: lines,
-          msg: e
-        });
-      }         
+    };
+    const add_msg = (e) => { // add text to the message
+      group.push(e);
+    };
+    const flush_msg = () => { // emit pending message
+      if (group.length == 0 || queue == undefined) return;
+      queue.push({ file: file, lines: lines, msg: group.join('\n') });
+      group = [];
+    };
+    if (e.match(w_regexp)) { // message in a '{...}' group
+      e.split('\n').forEach(line => {
+        // TODO: poor matching, fix it
+        if (line.includes('WARNING') || line.includes('ERROR') || e.includes('FAILED')) { // begin new message
+          flush_msg();
+          begin_msg(line);
+        } else if (line == '}') {
+          flush_msg();
+        } else { // just accumulate line in group
+          add_msg(line);
+        }
+      });
+      flush_msg();
+    } else { // single message in '{...}'
+      begin_msg(e.slice(0, e.indexOf('}') - 1));
+      flush_msg();
     }
   });
     
