@@ -234,12 +234,6 @@ const playgroundCfg_defaults = {
   auto_action: null, // This set later depending on whether .md, .pl, etc.
   // Do auto-* actions on the fly (as document changes)
   on_the_fly: false,
-  // Buttons quick access 
-  on_the_fly_button_nodeid: null,
-  ext_mode_button_nodeid: null,
-  load_button_nodeid: null,
-  debug_button_nodeid: null,
-  more_button_nodeid: null,
   // Keep worker alive (only when lpdocPG=='runnable' at this moment)
   runnable_keep_alive: true
 };
@@ -249,9 +243,10 @@ const playgroundCfg_defaults = {
 var miniPlaygroundCfg = {
   with_header: false,
   has_new_button: false,
-  has_file_button: false,
-  has_load_button: false,
   has_ext_mode_button: false,
+  has_file_button: false,
+  //
+  has_load_button: false,
   has_doc_button: false,
   has_debug_button: false,
   has_toggle_presentation_button: false,
@@ -260,14 +255,11 @@ var miniPlaygroundCfg = {
   has_acheck_button: false,
   has_spec_button: false,
   has_browse_analysis_opts_button: false,
-  has_layout_button: false,
+  //
   has_share_button: false,
+  //
+  has_layout_button: false,
   on_the_fly: true,
-  on_the_fly_button_nodeid: null, // (not needed in miniPlayground)
-  ext_mode_button_nodeid: null, // (not needed in miniPlayground)
-  load_button_nodeid: null, // (not needed in miniPlayground)
-  debug_button_nodeid: null, // (not needed in miniPlayground)
-  more_button_nodeid: null, // (not needed in miniPlayground)
   storage_key: null // (program is never stored)
 };
 
@@ -748,7 +740,7 @@ class PGCell {
     }
     this.set_auto_action(file_ext_def[code.ext].action);
     this.set_editor_code(code);
-    update_menu_buttons(this);
+    this.update_menu_buttons();
     this.#cancel_autosave();
     if (!this.is_R) { // TODO: treat is_R == true case
       await process_code(this);
@@ -801,6 +793,11 @@ class PGCell {
     }
     // Menu
     this.menu_el = null;
+    this.ext_mode_button_el = undefined; // nothing
+    this.load_button_el = undefined; // nothing
+    this.debug_button_el = undefined; // nothing
+    this.more_button_el = undefined; // nothing
+    this.on_the_fly_button_el = undefined; // nothing
     if (this.is_R) {
       this.#setup_menu_R(base_el);
     } else {
@@ -811,7 +808,7 @@ class PGCell {
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
       this.set_auto_action(file_ext_def[this.code_ext].action);
-      update_menu_buttons(this);
+      this.update_menu_buttons();
     } else {
       this.editor_el = null;
     }
@@ -874,7 +871,7 @@ class PGCell {
     if (playgroundCfg.has_doc_button) this.#setup_doc_button(menu_el);
     if (playgroundCfg.has_toggle_presentation_button) this.#setup_toggle_presentation_button(menu_el);
     if (playgroundCfg.has_toggle_on_the_fly_button) this.#setup_toggle_on_the_fly_button(menu_el);
-    // (advanced actions)x
+    // (advanced actions)
     this.#setup_advanced_buttons(menu_el);
 
     // (right menu part)
@@ -1640,7 +1637,7 @@ class PGCell {
                    () => {
                      load_code(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
-    menu_el.load_button_nodeid=el; // Saved for later modification 
+    this.load_button_el=el; // Saved for later modification 
     menu_el.appendChild(el);
   }
 
@@ -1652,7 +1649,7 @@ class PGCell {
                    () => { 
       toggle_file_ext_mode(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     });
-    menu_el.ext_mode_button_nodeid=el; // Saved for later modification 
+    this.ext_mode_button_el=el; // Saved for later modification 
     menu_el.appendChild(el);
   }
   
@@ -1671,7 +1668,7 @@ class PGCell {
                    "&#x1F41E;",
                    () => {
                      debug(this).then(() => {})} ); // TODO: use "async () => { ... }" instead?
-    menu_el.debug_button_nodeid=el; // Saved for later modification 
+    this.debug_button_el=el; // Saved for later modification 
     menu_el.appendChild(el);
   }
 
@@ -1682,7 +1679,7 @@ class PGCell {
                    () => {
                      toggle_on_the_fly(this).then(() => {}); // TODO: use "async () => { ... }" instead?
     }); 
-    menu_el.on_the_fly_button_nodeid=el; // Saved for later modification 
+    this.on_the_fly_button_el=el; // Saved for later modification 
     menu_el.appendChild(el);
   }
   
@@ -1720,7 +1717,7 @@ class PGCell {
                              adv_list);
       adv_button.btn_el.classList.add('menu-button');
       adv_button.btn_el.style.height = '100%';
-      menu_el.more_button_nodeid = adv_button.btn_el; // Saved for later modification 
+      this.more_button_el = adv_button.btn_el; // Saved for later modification 
     }
   }
 
@@ -1732,6 +1729,14 @@ class PGCell {
     el.appendChild(msg_el);
     el.onclick = () => { handle_share(el, msg_el, this); };
     menu_el.appendChild(el);
+  }
+
+  update_menu_buttons() {
+    if (this.ext_mode_button_el !== undefined) this.ext_mode_button_el.innerHTML = `<div style="min-width: 30px">`+file_ext_def[this.code_ext].button_text+'</div>'; 
+    if (this.load_button_el !== undefined) this.load_button_el.style.display = ( file_ext_def[this.code_ext].load_menu ? 'block' : 'none' );
+    if (this.debug_button_el !== undefined) this.debug_button_el.style.display = ( file_ext_def[this.code_ext].debug_menu ? 'block' : 'none' );
+    if (this.more_button_el !== undefined) this.more_button_el.style.display = ( file_ext_def[this.code_ext].more_menu ? 'block' : 'none' );
+    if (this.on_the_fly_button_el !== undefined) this.on_the_fly_button_el.innerHTML = (playgroundCfg.on_the_fly ? '&#x26A1;' : '<span style="opacity: 0.5">&#x26A1;</span>');
   }
 
   /* ---------------------------------------------------------------------- */
@@ -2068,43 +2073,13 @@ async function toggle_presentation(pg) {
 async function toggle_file_ext_mode(pg) {
   if (pg.is_R) return; /* (do nothing) */
   pg.code_ext = ( file_ext_is_doc(pg.code_ext) ? '.pl' : '.md' ); 
-  update_menu_buttons(pg);
-}
-
-async function update_menu_buttons(pg) {
-  if (pg.is_R) return; /* (do nothing) */
-  pg.menu_el.ext_mode_button_nodeid.innerHTML =
-    `<div style="min-width: 30px">`+file_ext_def[pg.code_ext].button_text+'</div>'; 
-
-  if (file_ext_def[pg.code_ext].load_menu === true) {
-    pg.menu_el.load_button_nodeid.style.display = 'block';
-  }
-  else {
-    pg.menu_el.load_button_nodeid.style.display = 'none';
-  };
-  if (file_ext_def[pg.code_ext].load_menu === true) {
-    pg.menu_el.debug_button_nodeid.style.display = 'block';
-  }
-  else {
-    pg.menu_el.debug_button_nodeid.style.display = 'none';
-  };
-  if (file_ext_def[pg.code_ext].load_menu === true) {
-    pg.menu_el.more_button_nodeid.style.display = 'block';
-  }
-  else {
-    pg.menu_el.more_button_nodeid.style.display = 'none';
-  };
+  pg.update_menu_buttons();
 }
 
 /** Toggle on-the-fly mode (and button label) */
 async function toggle_on_the_fly(pg) {
   playgroundCfg.on_the_fly = !playgroundCfg.on_the_fly;
-  // Toggle label too
-  // if (playgroundCfg.on_the_fly) { s = `<span style="color: red">&#8635;</div>`; } else { s = "&#8635;"; }; // &#9679;
-  // let elm = pg.menu_el.on_the_fly_button_nodeid;
-  // elm.innerHTML = s;
-  pg.menu_el.on_the_fly_button_nodeid.innerHTML =
-    (playgroundCfg.on_the_fly ? '&#x26A1;' : '<span style="opacity: 0.5">&#x26A1;</span>');
+  pg.update_menu_buttons();
 }
 
 /** Run tests */
