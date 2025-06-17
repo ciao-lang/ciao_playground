@@ -271,11 +271,19 @@ playgroundCfg = Object.assign({...playgroundCfg_defaults}, playgroundCfg);
 
 // Definition of file extensions
 var file_ext_def = {};
-file_ext_def['.pl'] = { desc:'code', button_text:'.pl', action:'load', kind:'prolog',
-                        load_menu:true, debug_menu:true, more_menu:true };
-file_ext_def['.md'] = { desc:'document', button_text:'.md', action:'doc', kind:'markdown'};
-file_ext_def['.lpdoc'] = { desc:'document', button_text:'.md', action:'doc', kind:'markdown',
-                           hide:true }; // Do not include in "New" menu (would be repeated)
+file_ext_def['.pl'] = {
+  desc:'code', button_text:'.pl', action:'load', kind:'prolog',
+  load_menu:true, debug_menu:true, more_menu:true
+};
+file_ext_def['.md'] = {
+  desc:'document', button_text:'.md', action:'doc', kind:'markdown',
+  load_menu:false, debug_menu:false, more_menu:false
+};
+file_ext_def['.lpdoc'] = {
+  desc:'document', button_text:'.md', action:'doc', kind:'markdown',
+  hide:true, // Do not include in "New" menu (would be repeated)
+  load_menu:false, debug_menu:false, more_menu:false
+};
 
 /* Get an array of active file extensions in this playground */
 function get_allowed_file_exts() {
@@ -740,7 +748,7 @@ class PGCell {
     }
     this.set_auto_action(file_ext_def[code.ext].action);
     this.set_editor_code(code);
-    this.update_menu_buttons();
+    this.update_menu_buttons(); // TODO: needed? menu buttons do not change here (JF)
     this.#cancel_autosave();
     if (!this.is_R) { // TODO: treat is_R == true case
       await process_code(this);
@@ -808,7 +816,7 @@ class PGCell {
     if (initial_code !== null) {
       this.#setup_editor(initial_code);
       this.set_auto_action(file_ext_def[this.code_ext].action);
-      this.update_menu_buttons();
+      this.update_menu_buttons(); // TODO: why only here? (JF)
     } else {
       this.editor_el = null;
     }
@@ -1053,7 +1061,7 @@ class PGCell {
         el.style.marginTop = '25px'; // TODO: use other class?
         el.style.marginRight = '10px'; // TODO: use other class?
         let btn_el = btn('lpdoc-runnable-button', "Edit mode", '', (() => {
-          toggle_presentation(this);
+          toggle_presentation(this).then(() => {}); // TODO: use "async () => { ... }" instead?
         }));
         btn_el.appendChild(edit_svg.cloneNode(true));
         btn_el.classList.add("opacity-transition");
@@ -1566,6 +1574,7 @@ class PGCell {
         });
         menu_el.appendChild(el);
       } else { // Dropdown
+        // TODO: refactor
         const new_button =
               btn_dropdown_act(this, menu_el,
                                "New",
@@ -1589,7 +1598,7 @@ class PGCell {
                   });
     const new_button =
           btn_dropdown_act(this, menu_el,
-                           "Load. save, or reset files in editor area",
+                           "Load, save, or reset files in editor area",
                            elem_from_str("<span>File</span>"),
                            new_list);
     new_button.btn_el.classList.add('menu-button');
@@ -1915,6 +1924,26 @@ function read_state_from_hash() {
   return state;
 }
 
+/** Toggle presentation mode */
+async function toggle_presentation(pg) {
+  if (pg.is_R) return; /* (do nothing) */
+  pg.vis.set('presentation', !pg.vis.get('presentation'));
+  pg.update_inner_layout();
+}
+
+/** Toggle file extension (.pl/.md) mode */
+async function toggle_file_ext_mode(pg) {
+  if (pg.is_R) return; /* (do nothing) */
+  pg.code_ext = ( file_ext_is_doc(pg.code_ext) ? '.pl' : '.md' ); 
+  pg.update_menu_buttons();
+}
+
+/** Toggle on-the-fly mode (and button label) */
+async function toggle_on_the_fly(pg) {
+  playgroundCfg.on_the_fly = !playgroundCfg.on_the_fly;
+  pg.update_menu_buttons();
+}
+
 // ---------------------------------------------------------------------------
 // * Update editor theme
 
@@ -2060,26 +2089,6 @@ async function spec_preview(pg) {
   await opt_mod(pg);
   await preview_co(pg);
   pg.set_auto_action('spec');
-}
-
-/** Toggle presentation mode */
-async function toggle_presentation(pg) {
-  if (pg.is_R) return; /* (do nothing) */
-  pg.vis.set('presentation', !pg.vis.get('presentation'));
-  pg.update_inner_layout();
-}
-
-/** Toggle file extension (.pl/.md) mode */
-async function toggle_file_ext_mode(pg) {
-  if (pg.is_R) return; /* (do nothing) */
-  pg.code_ext = ( file_ext_is_doc(pg.code_ext) ? '.pl' : '.md' ); 
-  pg.update_menu_buttons();
-}
-
-/** Toggle on-the-fly mode (and button label) */
-async function toggle_on_the_fly(pg) {
-  playgroundCfg.on_the_fly = !playgroundCfg.on_the_fly;
-  pg.update_menu_buttons();
 }
 
 /** Run tests */
