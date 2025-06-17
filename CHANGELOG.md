@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0] - 2025-6-10
+
+@begin{alert}
+The release of 1.25 is in progress. The highlights in this list are in
+a draft state.
+@end{alert}
+
 ## [1.24.0] - 2024-10-13
 
 ### Added
